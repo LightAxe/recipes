@@ -1,0 +1,65 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import CardGrid from '../components/CardGrid.astro';
+
+const recipes = (await getCollection('recipes')).sort(
+  (a, b) =>
+    (b.data.datePublished?.getTime() ?? 0) - (a.data.datePublished?.getTime() ?? 0),
+);
+const latest = recipes.slice(0, 6);
+---
+
+<Base
+  title="Ogilvie Family Recipes"
+  description="A home for our family's recipes — to cook from, print, and pass down."
+>
+  <section class="wrap hero">
+    <p class="eyebrow">The family cookbook</p>
+    <h1>Ogilvie Family Recipes</h1>
+    <p class="lede">
+      Our family's recipes, gathered in one place — to cook from, print, and pass down.
+    </p>
+  </section>
+
+  <section class="wrap">
+    <div class="head">
+      <h2>Latest</h2>
+      <a class="all" href="/recipes/">All recipes →</a>
+    </div>
+    <CardGrid recipes={latest} />
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding-block: 3rem 1.5rem;
+  }
+  .hero h1 {
+    font-size: var(--text-h1);
+    margin: 1rem 0 0.75rem;
+  }
+  .hero .lede {
+    font-size: var(--text-lede);
+    color: var(--muted);
+    max-width: 44ch;
+    margin: 0;
+  }
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 1.5rem 0 1.25rem;
+  }
+  .head h2 {
+    margin: 0;
+    font-size: 1.6rem;
+  }
+  .all {
+    font-family: var(--font-display);
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+</style>

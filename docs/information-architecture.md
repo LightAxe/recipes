@@ -2,7 +2,7 @@
 
 *Drafted 2026-06-29. The site map, URL structure, navigation, and page inventory for
 Ogilvie Family Recipes. Builds on `architecture.md` (static Astro, progressive
-enhancement), `design.md` (Enamelware), and `recipe-schema.md`. Living document.*
+enhancement), `design.md` (Counter), and `recipe-schema.md`. Living document.*
 
 ## 1. Principles
 

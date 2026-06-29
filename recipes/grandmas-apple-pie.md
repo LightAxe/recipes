@@ -4,10 +4,10 @@ description: A buttery double-crust apple pie passed down three generations — 
 contributor: Grandma Ruth
 course: dessert
 cuisine: American
-tags: [apple, pie, dessert, fall, thanksgiving]
+tags: [apple, pie, fall, thanksgiving]
 image:
-  src: hero.jpg
-  alt: Golden lattice-topped apple pie with juices bubbling through the crust
+  src: ./images/grandmas-apple-pie/hero.jpg
+  alt: Placeholder — a cream enamel tile with a teal-and-tomato petal motif; a real photo is coming soon
 servings: 8
 yield: 1 nine-inch pie
 prepTime: PT30M

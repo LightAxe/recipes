@@ -1,0 +1,34 @@
+---
+---
+
+<a class="wordmark" href="/" aria-label="Ogilvie Family Recipes — home">
+  Ogilvie <span>Family Recipes</span>
+</a>
+
+<style>
+  .wordmark {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    text-decoration: none;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+  }
+  .wordmark span {
+    font-weight: 600;
+    color: var(--muted);
+    transition: color 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .wordmark:hover span,
+  .wordmark:focus-visible span {
+    color: var(--accent-ink);
+  }
+  @media (max-width: 30rem) {
+    .wordmark {
+      font-size: 1.1rem;
+    }
+  }
+</style>

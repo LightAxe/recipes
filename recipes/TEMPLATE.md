@@ -6,7 +6,7 @@ course: ""                     # course SLUG from taxonomy.md: breakfast|appetiz
 cuisine: ""                    # Optional cuisine from taxonomy.md, e.g. American
 tags: []                       # Optional lowercase-kebab keywords, e.g. [apple, pie, fall]
 image:                         # Optional hero photo
-  src: ""                      # e.g. hero.jpg (lives in recipes/images/<slug>/)
+  src: ""                      # path relative to this file, e.g. ./images/<slug>/hero.jpg
   alt: ""                      # Meaningful alt text (describe the dish, not "photo")
 servings: 0                    # Base servings the quantities are written for
 yield: ""                      # Optional, e.g. "1 nine-inch pie"

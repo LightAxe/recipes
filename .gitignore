@@ -22,6 +22,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# frontend-design ships `license: LICENSE.txt` we don't vendor — keep it local, don't
-# redistribute it in this public repo. Other skills (with their own notices) ARE tracked.
-.claude/skills/frontend-design/
+# External / vendored Claude skills stay local to each clone — NOT committed (user
+# preference: keep external skills out of the repo). Our own .claude/agents/ ARE committed.
+.claude/skills/

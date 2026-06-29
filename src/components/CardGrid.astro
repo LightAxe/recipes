@@ -1,0 +1,40 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import RecipeCard from './RecipeCard.astro';
+
+interface Props {
+  recipes: CollectionEntry<'recipes'>[];
+}
+const { recipes } = Astro.props;
+---
+
+<ul class="grid" role="list">
+  {
+    recipes.map((recipe) => (
+      <li>
+        <RecipeCard recipe={recipe} />
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 38rem) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 60rem) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>

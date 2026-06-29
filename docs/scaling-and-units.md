@@ -136,7 +136,9 @@ amounts ("to taste") always pass through.
 
 ## 8. Edge cases
 
-- **Ranges** ("2–3 apples"): scale both ends; keep the en-dash.
+- **Ranges** ("2–3 apples"): **deferred for v1** — `qty` is a single number (see
+  `recipe-schema.md`), so express a range in `note`/`prep` text for now. When range-typed
+  `qty` is added later, scale both ends and keep the en-dash.
 - **Fraction in source** (`qty: 0.33`): treat `0.33`/`0.66` as ⅓/⅔ on render.
 - **Zero/again-no qty:** render item alone (e.g. "Salt, to taste").
 - **Mixed grams coverage:** Weight view shows grams-backed items by weight and flags the

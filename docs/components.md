@@ -2,7 +2,7 @@
 
 *Drafted 2026-06-29. The implementation contract for every UI component: anatomy, states,
 accessibility (roles/ARIA/keyboard), behavior (incl. the no-JS path), and which design
-tokens it uses. Realizes `design.md` (Enamelware) across the pages in
+tokens it uses. Realizes `design.md` (Counter) across the pages in
 `information-architecture.md`. When built (Astro), these live in `src/components/` with
 behavior in `src/scripts/`.*
 

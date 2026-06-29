@@ -1,0 +1,176 @@
+@import "tailwindcss";
+
+/* ════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — "Counter"
+   This is the one place to tweak the look. Components reference these tokens
+   only; they never hardcode colors, fonts, radii, or shadows. Change a value
+   here and it updates everywhere, in both light and dark.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Structural tokens (theme-independent): fonts + radii. */
+@theme {
+  --font-display: "Archivo Variable", system-ui, sans-serif;
+  --font-body: "Public Sans Variable", system-ui, sans-serif;
+
+  --radius-xs: 0.3rem;
+  --radius-sm: 0.5rem;
+  --radius: 0.85rem;
+  --radius-lg: 0.9rem;
+}
+
+/* ── "Day" (light) — the default theme ──────────────────────────────────── */
+:root {
+  --bg: #fbfbf9;
+  --surface: #ffffff;
+  --sunken: #f1ede6;
+  --text: #18181b;
+  --muted: #6b6b70;
+  --line: #e9e7e2;
+
+  --accent: #e2452f; /* fills (step numbers) — pair with --on-accent */
+  --accent-ink: #c33a25; /* accent as text/links on --bg (AA contrast)   */
+  --accent-soft: #fdeee9; /* tinted backgrounds (eyebrow, notes)          */
+  --on-accent: #ffffff;
+
+  --focus: var(--accent);
+  --shadow-card: 0 18px 40px -30px rgba(24, 24, 27, 0.22);
+
+  /* type scale — headline/lede sizing knobs */
+  --text-h1: clamp(2.5rem, 7vw, 4.4rem);
+  --text-h2: 1.45rem;
+  --text-lede: 1.25rem;
+  --text-eyebrow: 0.7rem;
+  color-scheme: light;
+}
+
+/* ── "Night" (dark) — shared by explicit choice and system preference ───── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #131315;
+    --surface: #1b1b1e;
+    --sunken: #1e1e22;
+    --text: #eae8e4;
+    --muted: #9b9aa0;
+    --line: rgba(255, 255, 255, 0.09);
+    --accent: #ff6a4d;
+    --accent-ink: #ff8268;
+    --accent-soft: rgba(255, 106, 77, 0.12);
+    --on-accent: #15110e;
+    --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 24px 48px -32px rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+[data-theme="dark"] {
+  --bg: #131315;
+  --surface: #1b1b1e;
+  --sunken: #1e1e22;
+  --text: #eae8e4;
+  --muted: #9b9aa0;
+  --line: rgba(255, 255, 255, 0.09);
+  --accent: #ff6a4d;
+  --accent-ink: #ff8268;
+  --accent-soft: rgba(255, 106, 77, 0.12);
+  --on-accent: #15110e;
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 24px 48px -32px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   BASE
+   ════════════════════════════════════════════════════════════════════════ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Cross-gen legible base; fluid 18–20px. */
+  font-size: clamp(18px, 1rem + 0.25vw, 20px);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--accent-ink);
+  text-underline-offset: 3px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 0.6rem 1rem;
+  border-radius: 0 0 var(--radius) 0;
+  z-index: 100;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+/* Standard content column. */
+.wrap {
+  width: min(62rem, 100% - 2.5rem);
+  margin-inline: auto;
+}
+
+/* Small uppercase label (eyebrow / kicker), used across components. */
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: var(--text-eyebrow);
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

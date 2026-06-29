@@ -8,7 +8,7 @@ gets added to the hub registry `personal-site/src/data/site.ts` as a new project
 category tag (proposed: `family`); (3) it aligns its stack with the Astro siblings —
 **Astro 6 + Tailwind CSS 4 (`@tailwindcss/vite`) + Node ≥22 + TypeScript + content
 collections** — and uses Cloudflare Web Analytics; and (4) per the family's design ethos
-(and the Databricks `frontend-design` skill installed in `.claude/skills/`), it commits
+(and Anthropic's `frontend-design` skill installed in `.claude/skills/`), it commits
 to its **own distinct bold aesthetic** rather than copying a sibling — no two universe
 sites look alike.
 

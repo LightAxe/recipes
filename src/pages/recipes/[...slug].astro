@@ -1,0 +1,323 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { Picture } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import { groupIngredients, normalizeSteps, gramLabel } from '../../lib/recipe';
+import { courseLabel } from '../../lib/taxonomy';
+import { formatQty, formatDuration } from '../../lib/format';
+
+export async function getStaticPaths() {
+  const recipes = await getCollection('recipes');
+  return recipes.map((recipe) => ({ params: { slug: recipe.id }, props: { recipe } }));
+}
+
+interface Props {
+  recipe: CollectionEntry<'recipes'>;
+}
+const { recipe } = Astro.props;
+const { data } = recipe;
+const { Content } = await render(recipe);
+const hasStory = (recipe.body ?? '').trim().length > 0;
+const groups = groupIngredients(data.ingredients);
+const steps = normalizeSteps(data.instructions);
+const times = (
+  [
+    ['Prep', data.prepTime],
+    ['Cook', data.cookTime],
+    ['Total', data.totalTime],
+  ] as const
+)
+  .map(([k, v]) => [k, formatDuration(v)] as const)
+  .filter(([, v]) => v);
+---
+
+<Base title={data.title} description={data.description}>
+  <article class="recipe wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a> <span aria-hidden="true">›</span>
+      <a href="/recipes/">Recipes</a> <span aria-hidden="true">›</span>
+      {data.title}
+    </nav>
+
+    <header class="head">
+      <p class="eyebrow">{courseLabel(data.course)}</p>
+      <h1>{data.title}</h1>
+      <div class="meta">
+        <span class="by">{data.contributor}</span>
+        {times.map(([k, v]) => (<span><b>{k}</b> {v}</span>))}
+        <span><b>Serves</b> {data.servings}{data.yield ? ` · ${data.yield}` : ''}</span>
+      </div>
+      <p class="lede">{data.description}</p>
+    </header>
+
+    {
+      data.image && (
+        <figure class="shell">
+          <Picture
+            src={data.image.src}
+            formats={['avif', 'webp']}
+            widths={[480, 960, 1440]}
+            sizes="(max-width: 60rem) 100vw, 56rem"
+            alt={data.image.alt}
+            loading="eager"
+          />
+        </figure>
+      )
+    }
+
+    <div class="cols">
+      <aside class="ing">
+        <div class="ing-inner">
+          <h2>Ingredients</h2>
+          {
+            groups.map((g) => (
+              <div class="grp">
+                {g.section && <h3>{g.section}</h3>}
+                <ul>
+                  {g.items.map((i) => (
+                    <li>
+                      <span class="q">
+                        {formatQty(i.qty)}
+                        {i.unit ? ` ${i.unit}` : ''}
+                      </span>
+                      <span class="n">
+                        {i.item}
+                        {i.prep && <em>, {i.prep}</em>}
+                        {i.note && <em> ({i.note})</em>}
+                        {gramLabel(i) && <span class="g">{gramLabel(i)}</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+        </div>
+      </aside>
+
+      <section class="method">
+        <h2>Method</h2>
+        <ol>
+          {
+            steps.map((s) => (
+              <li>
+                <p>{s.text}</p>
+                {s.timer && <span class="timer">⏱ {formatDuration(s.timer)}</span>}
+              </li>
+            ))
+          }
+        </ol>
+
+        {
+          data.notes && data.notes.length > 0 && (
+            <div class="notes">
+              <h3>From the family</h3>
+              <ul>
+                {data.notes.map((n) => (
+                  <li>{n}</li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+
+        {
+          hasStory && (
+            <details class="story">
+              <summary>Read the story</summary>
+              <div class="prose">
+                <Content />
+              </div>
+            </details>
+          )
+        }
+      </section>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .recipe {
+    padding-block: 1.75rem 1rem;
+  }
+  .crumbs {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+  .crumbs a {
+    color: var(--muted);
+  }
+  .head h1 {
+    font-size: var(--text-h1);
+    margin: 0.9rem 0 1rem;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+  .meta b {
+    color: var(--text);
+    font-weight: 700;
+  }
+  .meta .by {
+    color: var(--accent-ink);
+    font-weight: 700;
+  }
+  .lede {
+    font-size: var(--text-lede);
+    line-height: 1.5;
+    max-width: 46ch;
+    margin: 0 0 2.25rem;
+  }
+  .shell {
+    margin: 0 0 3rem;
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 0.4rem;
+  }
+  .shell :global(picture),
+  .shell :global(img) {
+    display: block;
+    width: 100%;
+  }
+  .shell :global(img) {
+    aspect-ratio: 16 / 7;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+  }
+  .cols {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 52rem) {
+    .cols {
+      grid-template-columns: 19rem 1fr;
+    }
+    .ing {
+      position: sticky;
+      top: 5rem;
+      align-self: start;
+    }
+  }
+  h2 {
+    font-size: var(--text-h2);
+    margin: 0 0 1.25rem;
+  }
+  .ing-inner {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.6rem;
+    box-shadow: var(--shadow-card);
+  }
+  .grp h3 {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent-ink);
+    margin: 1.25rem 0 0.5rem;
+  }
+  .ing ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .ing li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 1rem;
+  }
+  .ing .q {
+    font-weight: 700;
+    color: var(--accent-ink);
+    white-space: nowrap;
+  }
+  .ing .n em {
+    color: var(--muted);
+    font-style: normal;
+  }
+  .ing .g {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 0.1rem;
+  }
+  .method ol {
+    list-style: none;
+    counter-reset: s;
+    margin: 0;
+    padding: 0;
+  }
+  .method li {
+    counter-increment: s;
+    display: grid;
+    grid-template-columns: 2.4rem 1fr;
+    gap: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+  .method li::before {
+    content: counter(s, decimal-leading-zero);
+    width: 2.4rem;
+    height: 2.4rem;
+    display: grid;
+    place-items: center;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.95rem;
+    border-radius: var(--radius-sm);
+  }
+  .method p {
+    margin: 0.2rem 0 0;
+    font-size: 1.06rem;
+    max-width: 60ch;
+  }
+  .timer {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--accent-ink);
+    font-weight: 700;
+  }
+  .notes {
+    margin-top: 2rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.6rem;
+  }
+  .notes h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.05rem;
+  }
+  .notes ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .notes li {
+    margin-bottom: 0.4rem;
+  }
+  .story {
+    margin-top: 1.75rem;
+  }
+  .story summary {
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 0.5rem 0;
+  }
+  .prose {
+    max-width: 60ch;
+  }
+</style>

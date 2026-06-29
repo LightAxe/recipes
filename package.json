@@ -1,0 +1,31 @@
+{
+  "name": "ogilvie-family-recipes",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "format": "prettier --write \"src/**/*.{astro,ts,css}\" \"scripts/**/*.mjs\" \"*.{mjs,json}\"",
+    "format:check": "prettier --check \"src/**/*.{astro,ts,css}\" \"scripts/**/*.mjs\" \"*.{mjs,json}\"",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5.2.8",
+    "@fontsource-variable/public-sans": "^5.2.7",
+    "@tailwindcss/postcss": "^4.2.4",
+    "astro": "~6.1.8",
+    "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9",
+    "prettier": "^3",
+    "prettier-plugin-astro": "^0.14",
+    "typescript": "^5"
+  }
+}

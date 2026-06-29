@@ -1,0 +1,38 @@
+---
+const year = 2026;
+---
+
+<footer class="site-footer">
+  <div class="wrap row">
+    <p class="copy">© {year} Ogilvie Family</p>
+    <p class="universe">
+      Part of the <a href="https://axpr.net">axpr</a> cinematic universe
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 4rem;
+    border-top: 1px solid var(--line);
+    background: var(--sunken);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-block: 1.5rem;
+  }
+  .copy,
+  .universe {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .universe a {
+    color: var(--accent-ink);
+    font-weight: 700;
+  }
+</style>

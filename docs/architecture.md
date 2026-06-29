@@ -120,7 +120,7 @@ reactive state. This is a reversible call.
 - **Design tokens** (color, type scale, spacing, radii, shadows) defined once in a
   Tailwind v4 `@theme` block + CSS custom properties — the single place the aesthetic
   lives, exactly like subterrans' `@theme`.
-- **The aesthetic is "Enamelware"**, designed via the Databricks `frontend-design` skill
+- **The aesthetic is "Counter"** (ADR-0010), designed via Anthropic's `frontend-design` skill
   (installed in `.claude/skills/`) and documented in **`docs/design.md`**: a distinct,
   bold mid-century-kitchen direction meeting the cross-generational accessibility baseline
   (≈18–20px base, ≥4.5:1 contrast, ~48px targets, no hover-only).
@@ -217,7 +217,7 @@ reactive state. This is a reversible call.
    browse coherent as the collection grows.
 
 *Resolved since first draft:* hosting (S3+CloudFront, ADR-0006); design direction
-("Enamelware", `design.md`); themes (both light+dark at v1); illustration scope (minimal).
+("Counter", `design.md`, ADR-0010); themes (both light+dark at v1).
 
 ## 14. Proposed build phases (after architecture & design are locked)
 

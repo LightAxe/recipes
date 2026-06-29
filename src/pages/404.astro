@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Not found">
+  <section class="wrap notfound">
+    <p class="eyebrow">404</p>
+    <h1>This page isn't in the recipe box</h1>
+    <p class="sub">The page you're looking for doesn't exist (or hasn't been added yet).</p>
+    <p><a href="/recipes/">Browse all recipes →</a></p>
+  </section>
+</Base>
+
+<style>
+  .notfound {
+    padding-block: 4rem 5rem;
+    text-align: center;
+  }
+  .notfound h1 {
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    margin: 1rem 0 0.75rem;
+  }
+  .notfound .sub {
+    font-size: 1.1rem;
+    color: var(--muted);
+  }
+  .notfound a {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+</style>
