@@ -98,7 +98,7 @@ that family members of every age can use.
 ├── CONTEXT.md             # Domain glossary (ubiquitous language)
 ├── .claude/
 │   ├── agents/           # Custom subagents (e.g. recipe-intake) — committed
-│   └── skills/           # Installed third-party skills (frontend-design) — local only, gitignored
+│   └── skills/           # grill-me-codex (tracked); frontend-design (local-only, gitignored)
 ├── docs/
 │   ├── adr/               # Architecture Decision Records (see docs/adr/README.md)
 │   ├── agents/            # Per-repo agent operating config (e.g. intake.md)

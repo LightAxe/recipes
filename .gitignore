@@ -22,6 +22,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Third-party skill kept locally but NOT redistributed in this public repo
-# (ships `license: LICENSE.txt` we don't vendor). Our own agents/ ARE committed.
-.claude/skills/
+# frontend-design ships `license: LICENSE.txt` we don't vendor — keep it local, don't
+# redistribute it in this public repo. Other skills (with their own notices) ARE tracked.
+.claude/skills/frontend-design/
