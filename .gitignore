@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output (set once a generator is chosen, e.g. Astro `dist/`, Hugo `public/`)
+dist/
+public/
+.astro/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Third-party skill kept locally but NOT redistributed in this public repo
+# (ships `license: LICENSE.txt` we don't vendor). Our own agents/ ARE committed.
+.claude/skills/

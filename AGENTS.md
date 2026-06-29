@@ -1,0 +1,135 @@
+# AGENTS.md
+
+> Single source of truth for humans and AI agents working in this repo.
+> Cross-platform by design — `CLAUDE.md` and any other tool-specific files point here.
+
+## What we're building
+
+A **family recipe collection website**. We have an old family recipe book plus
+decades of additions from family members. None of it is stored electronically, and
+sharing with new/younger family members is hard. This project digitizes the existing
+recipes and makes them easy to browse, cook from, print, and grow over time.
+
+**This is a family archive, not a social network.** No feeds, likes, follows, or
+algorithmic anything. The goal is a calm, durable, beautiful home for our recipes
+that family members of every age can use.
+
+## Core goals
+
+1. **Capture** all existing paper recipes as durable, structured data.
+2. **Present** them in a way that works for everyone — boomers through Gen Alpha —
+   on **mobile, desktop, and in print**.
+3. **Grow** the collection over time. Family members contribute by **emailing a
+   recipe** to the maintainer, who adds it to the site.
+4. **Preserve the family character** — handwritten notes, attributions, the
+   "Grandma always added a pinch more" lore — without burying the actual recipe.
+5. **Last for decades.** Favor durable, portable, plain-text-friendly formats and
+   low-maintenance, low-cost hosting over trendy platforms.
+
+## Hard requirements
+
+- Mobile-friendly **and** desktop-friendly (responsive).
+- A clean **printable** version of each recipe.
+- Support for **photos** (finished dish, and ideally step/heritage photos).
+- Easy for a **non-technical maintainer** to add recipes from emailed submissions.
+- Accessible across generations: large readable type, high contrast, big tap
+  targets, simple navigation, no hover-only interactions.
+- Space for **cooking tips / technique / reference content** alongside recipes.
+
+## Non-goals (for now)
+
+- User accounts, comments, ratings, social features.
+- A public free-for-all submission form (intake is curated via email → maintainer).
+- Mobile apps. (A good responsive website is the target.)
+
+## Stack & data format
+
+> **Decided.** Research is in `research/` (start with
+> [`research/00-summary.md`](./research/00-summary.md)); each choice is recorded as an
+> ADR in `docs/adr/`. Summary:
+
+- **Recipe data format:** Markdown + YAML frontmatter, structured & schema.org-aligned;
+  schema.org/Recipe JSON-LD generated at build. ADR [0002]. Spec: [`docs/recipe-schema.md`](./docs/recipe-schema.md).
+- **Site framework:** **Astro 6 + Tailwind CSS 4 + TypeScript + Node ≥22**, static site,
+  content collections + Zod. ADR [0003], [0007]. Matches the Astro siblings.
+- **Hosting:** **AWS S3 + CloudFront** (GitHub Actions OIDC) + Route 53 + Cloudflare
+  Analytics — like the rest of the universe. ADR [0006].
+- **Visibility:** **public**, with schema.org JSON-LD for SEO. ADR [0004].
+- **Photo handling:** optimized at build with sharp (`astro:assets`), committed in-repo;
+  **EXIF stripped**.
+- **Intake:** maintainer provides recipes to **Claude Code**, which writes the files.
+  ADR [0005]. Procedure: [`docs/agents/intake.md`](./docs/agents/intake.md). A dedicated
+  **`recipe-intake` agent** ([`.claude/agents/recipe-intake.md`](./.claude/agents/recipe-intake.md))
+  automates it and **researches/stores ingredient weights in grams** (ADR [0008]).
+- **Cook by weight:** grams are researched at intake (with confidence) and a Weight
+  display/print option + "prefer weight" preference. ADR [0008]. Logic:
+  [`docs/scaling-and-units.md`](./docs/scaling-and-units.md).
+- **Universe:** signature footer + hub-registry entry (tag `family`); own distinct
+  aesthetic. ADR [0007].
+- **Visual design:** **"Enamelware"** (mid-century kitchen). System: [`docs/design.md`](./docs/design.md).
+- **Architecture:** progressive-enhancement static site. Review: [`docs/architecture.md`](./docs/architecture.md).
+
+[0002]: ./docs/adr/0002-recipes-as-markdown-with-yaml-frontmatter.md
+[0003]: ./docs/adr/0003-astro-static-site-on-cloudflare-pages.md
+[0004]: ./docs/adr/0004-public-site-with-schema-org-json-ld.md
+[0005]: ./docs/adr/0005-recipe-intake-via-claude-code.md
+[0006]: ./docs/adr/0006-deploy-to-s3-cloudfront-to-match-the-universe.md
+[0007]: ./docs/adr/0007-join-the-axpr-cinematic-universe.md
+[0008]: ./docs/adr/0008-weight-first-research-grams-at-intake.md
+
+## v1 scope
+
+- **Full interactive recipe pages:** cook mode (screen-wake-lock), serving scaler,
+  metric/imperial + volume/weight toggle, tap-to-check ingredients & steps, tappable
+  timers — plus responsive layout, accessibility baseline, and a print view (incl. 4×6
+  card). See `research/03-cross-generational-ux.md` for the full requirements checklist.
+- **Lean heritage for now:** basic `contributor` attribution and free-form `notes` only.
+  Scanned original cards, full provenance chains, oral-history audio, and a moderated
+  "Family Notes" feature are a **later phase** (also for privacy, since the site is public).
+- **Reference content** (technique how-tos, glossary, conversion charts) is desired;
+  schedule after the core recipe experience.
+
+## Repo structure
+
+```
+.
+├── AGENTS.md              # You are here — project context & conventions
+├── CLAUDE.md              # Thin pointer to AGENTS.md (cross-platform)
+├── CONTEXT.md             # Domain glossary (ubiquitous language)
+├── .claude/
+│   ├── agents/           # Custom subagents (e.g. recipe-intake) — committed
+│   └── skills/           # Installed third-party skills (frontend-design) — local only, gitignored
+├── docs/
+│   ├── adr/               # Architecture Decision Records (see docs/adr/README.md)
+│   ├── agents/            # Per-repo agent operating config (e.g. intake.md)
+│   ├── architecture.md    # Architecture review (build plan, stack, phases)
+│   ├── design.md          # "Enamelware" design system
+│   ├── components.md      # Component inventory (specs, states, a11y) for every UI piece
+│   ├── information-architecture.md  # Site map, URLs, navigation, page inventory
+│   ├── taxonomy.md        # Controlled vocabulary: course / cuisine / tags / contributor
+│   ├── scaling-and-units.md  # Serving scaler + unit-conversion logic spec
+│   └── recipe-schema.md   # The canonical recipe file schema
+├── recipes/               # Source-of-truth recipe files (Markdown + frontmatter)
+│   ├── TEMPLATE.md        # Copy-paste skeleton
+│   ├── images/<slug>/     # Per-recipe photos (committed, EXIF-stripped)
+│   └── *.md               # One file per recipe
+├── research/              # Background research informing our decisions
+└── ...                    # Astro site code (added when the site is scaffolded)
+```
+
+## How we make decisions
+
+Significant choices (data format, framework, hosting, etc.) are recorded as
+**Architecture Decision Records** in `docs/adr/`. Before changing a previously
+decided direction, read the relevant ADR and supersede it with a new one rather than
+editing history. See `docs/adr/README.md` for the format and how to add one.
+
+## Working agreements for agents
+
+- Keep this file current. When a major decision is made, record an ADR and update the
+  **Stack & data format** section above.
+- Prefer durable, boring, well-supported technology. This archive should outlive any
+  given framework hype cycle.
+- Optimize every reader-facing choice for the **least technical, oldest family member**
+  first, then make sure it still delights younger users.
+- Don't add social/engagement features without an ADR justifying them.
