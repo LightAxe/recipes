@@ -1,0 +1,40 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import CardGrid from '../../components/CardGrid.astro';
+
+const recipes = (await getCollection('recipes')).sort((a, b) =>
+  a.data.title.localeCompare(b.data.title),
+);
+---
+
+<Base title="All Recipes" description="Every recipe in the Ogilvie family collection.">
+  <section class="wrap">
+    <nav aria-label="Breadcrumb" class="crumbs">
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span> All Recipes
+    </nav>
+    <h1>All Recipes</h1>
+    <p class="count">{recipes.length} recipe{recipes.length === 1 ? '' : 's'}</p>
+    <CardGrid recipes={recipes} />
+  </section>
+</Base>
+
+<style>
+  .crumbs {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding-block: 1.5rem 0.5rem;
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.6rem);
+    margin: 0 0 0.25rem;
+  }
+  .count {
+    margin: 0 0 1.5rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+</style>

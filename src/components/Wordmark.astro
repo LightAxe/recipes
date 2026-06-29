@@ -1,0 +1,32 @@
+---
+import Petal from './Petal.astro';
+---
+
+<a class="wordmark" href="/" aria-label="Ogilvie Family Recipes — home">
+  <Petal class="mark" />
+  <span class="text">Ogilvie Family Recipes</span>
+</a>
+
+<style>
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+  .mark {
+    color: var(--brand);
+    flex: none;
+  }
+  @media (max-width: 30rem) {
+    .wordmark .text {
+      /* Keep the mark + a shorter label on very narrow screens. */
+      font-size: 1.1rem;
+    }
+  }
+</style>

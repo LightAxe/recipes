@@ -84,7 +84,7 @@ here so it never blocks the recipe card. A "Read more" disclosure renders this o
 ## Conventions
 
 - **File name** = `kebab-case` of the title, e.g. `grandmas-apple-pie.md`. This is the URL slug.
-- **Images** live alongside in `recipes/images/<slug>/` (e.g. `recipes/images/grandmas-apple-pie/hero.jpg`); reference as `hero.jpg` in `image.src`. Optimized at build (AVIF/WebP) and committed. **Strip EXIF/GPS before committing** (`exiftool -all= -overwrite_original_in_place <file>`).
+- **Images** live alongside in `recipes/images/<slug>/`; reference them with a **path relative to the recipe `.md` file** in `image.src`, e.g. `./images/grandmas-apple-pie/hero.jpg` (Astro's content `image()` helper resolves relative to the Markdown file). Optimized at build (AVIF/WebP) and committed. **Strip EXIF/GPS before committing** (`exiftool -all= -overwrite_original_in_place <file>`, or any tool that drops metadata).
 - **Durations** are always ISO-8601 (`PT`, then hours `H` / minutes `M`): `PT15M`, `PT1H30M`.
 - **Don't hand-write JSON-LD** — it's generated from these fields at build.
 

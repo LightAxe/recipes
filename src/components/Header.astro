@@ -1,0 +1,54 @@
+---
+import Wordmark from './Wordmark.astro';
+import ThemeToggle from './ThemeToggle.astro';
+
+// Phase 1: only live routes in the nav (no dead links). Categories/Tips/About/
+// Search arrive in later phases.
+const path = Astro.url.pathname;
+const onRecipes = path.startsWith('/recipes');
+---
+
+<header class="site-header">
+  <div class="wrap bar">
+    <Wordmark />
+    <nav aria-label="Primary" class="nav">
+      <a href="/recipes/" aria-current={onRecipes ? 'page' : undefined}>Recipes</a>
+      <ThemeToggle />
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    border-bottom: 3px solid var(--border);
+    background: var(--surface);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.85rem;
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+  .nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding-inline: 0.25rem;
+    color: var(--text);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 500;
+  }
+  .nav a[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-color: var(--action);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 6px;
+  }
+</style>

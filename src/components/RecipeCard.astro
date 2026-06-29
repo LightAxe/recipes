@@ -1,0 +1,96 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { Picture } from 'astro:assets';
+import Petal from './Petal.astro';
+import { courseLabel } from '../lib/taxonomy';
+import { formatDuration } from '../lib/format';
+
+interface Props {
+  recipe: CollectionEntry<'recipes'>;
+}
+const { recipe } = Astro.props;
+const { data, id } = recipe;
+const time = formatDuration(data.totalTime) ?? formatDuration(data.cookTime);
+---
+
+<a class="card" href={`/recipes/${id}/`}>
+  <div class="thumb">
+    {
+      data.image ? (
+        <Picture
+          src={data.image.src}
+          formats={['avif', 'webp']}
+          widths={[300, 600]}
+          sizes="(max-width: 40rem) 100vw, 22rem"
+          alt={data.image.alt}
+          loading="lazy"
+        />
+      ) : (
+        <span class="thumb-fallback" aria-hidden="true">
+          <Petal />
+        </span>
+      )
+    }
+  </div>
+  <div class="body">
+    <h3 class="title">{data.title}</h3>
+    <p class="meta">
+      <span>{courseLabel(data.course)}</span>
+      {time && <span>· {time}</span>}
+      <span>· Serves {data.servings}</span>
+    </p>
+  </div>
+</a>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 3px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-enamel);
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.12s ease;
+  }
+  .card:hover,
+  .card:focus-visible {
+    transform: translateY(-3px);
+  }
+  .thumb {
+    aspect-ratio: 3 / 2;
+    background: var(--sunken);
+    display: grid;
+    place-items: center;
+    border-bottom: 3px solid var(--border);
+  }
+  .thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .thumb-fallback {
+    color: var(--brand);
+    font-size: 2.5rem;
+    display: inline-flex;
+  }
+  .body {
+    padding: 0.9rem 1.1rem 1.1rem;
+  }
+  .title {
+    margin: 0 0 0.35rem;
+    font-size: 1.25rem;
+  }
+  .meta {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+</style>

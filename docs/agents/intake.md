@@ -51,7 +51,8 @@ photo of a card, or forwarded email — into a recipe file. See ADR
    `datePublished` to today if new. Use a unique slug; if a recipe with that name exists,
    confirm whether this is an edit or a distinct variation.
 9. **Photos**, if provided:
-   - Save under `recipes/images/<slug>/`, reference the filename in `image.src`.
+   - Save under `recipes/images/<slug>/`, and set `image.src` to a path **relative to the
+     recipe file**, e.g. `./images/<slug>/hero.jpg`.
    - Write **meaningful `alt`** text describing the dish.
    - **Strip EXIF/GPS before committing:** `exiftool -all= -overwrite_original_in_place <file>`
      (the site is public — geotags can leak a home address; see ADR

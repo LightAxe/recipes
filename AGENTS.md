@@ -50,8 +50,9 @@ that family members of every age can use.
 
 - **Recipe data format:** Markdown + YAML frontmatter, structured & schema.org-aligned;
   schema.org/Recipe JSON-LD generated at build. ADR [0002]. Spec: [`docs/recipe-schema.md`](./docs/recipe-schema.md).
-- **Site framework:** **Astro 6 + Tailwind CSS 4 + TypeScript + Node ≥22**, static site,
-  content collections + Zod. ADR [0003], [0007]. Matches the Astro siblings.
+- **Site framework:** **Astro 6 (~6.1.x) + Tailwind CSS 4 + TypeScript + Node ≥22**, static
+  site, content collections + Zod. ADR [0003], [0007]. Tailwind is wired via **PostCSS**
+  (`@tailwindcss/postcss`), not the Vite plugin — ADR [0009]. Matches the Astro siblings.
 - **Hosting:** **AWS S3 + CloudFront** (GitHub Actions OIDC) + Route 53 + Cloudflare
   Analytics — like the rest of the universe. ADR [0006].
 - **Visibility:** **public**, with schema.org JSON-LD for SEO. ADR [0004].
@@ -76,6 +77,7 @@ that family members of every age can use.
 [0006]: ./docs/adr/0006-deploy-to-s3-cloudfront-to-match-the-universe.md
 [0007]: ./docs/adr/0007-join-the-axpr-cinematic-universe.md
 [0008]: ./docs/adr/0008-weight-first-research-grams-at-intake.md
+[0009]: ./docs/adr/0009-tailwind-v4-via-postcss.md
 
 ## v1 scope
 

@@ -1,0 +1,175 @@
+@import 'tailwindcss';
+
+/* ── Static design tokens (Tailwind v4 @theme — must be top-level) ───────────── */
+@theme {
+  --font-display: 'Fredoka', ui-rounded, system-ui, sans-serif;
+  --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, monospace;
+
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+}
+
+/* ── Runtime-themeable semantic tokens (plain custom properties) ─────────────
+   "Counter" (light) is the default. "Night Kitchen" (dark) is applied either by
+   [data-theme="dark"] (explicit choice, set pre-paint) or, with no explicit choice
+   and no JS, by the system preference via prefers-color-scheme. */
+:root {
+  --bg: #f7efe0; /* cream */
+  --surface: #fcf7ec; /* cream-raised */
+  --sunken: #efe3cd; /* sand */
+  --text: #2a2622; /* ink — 13:1 on bg */
+  --text-muted: #5a5048; /* ink-soft — 6.5:1 */
+  --border: #211c18; /* steel */
+  --brand: #1e8e8e; /* teal (decorative) */
+  --brand-strong: #0f7a7a; /* teal fill + white text */
+  --brand-ink: #0b5c5c; /* teal text on bg */
+  --action: #c0291a; /* tomato-strong: buttons + white text */
+  --action-ink: #b5301c; /* tomato text/links on bg */
+  --accent: #f2c14e; /* butter highlight */
+  --accent-soft: #f7d585;
+  --on-fill: #ffffff;
+  --focus: var(--action);
+
+  --shadow-enamel: inset 0 2px 0 rgba(255, 255, 255, 0.55), 0 8px 20px rgba(33, 28, 24, 0.12);
+  --shadow-tin: 3px 3px 0 var(--border);
+}
+
+/* Night Kitchen palette, shared by explicit + system-pref selectors. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #1a1815;
+    --surface: #232019;
+    --sunken: #2c2820;
+    --text: #f2e8d6;
+    --text-muted: #c3b6a0;
+    --border: #0e0c0a;
+    --brand: #38b9ac;
+    --brand-strong: #38b9ac;
+    --brand-ink: #5bd0c2;
+    --action: #f2715b;
+    --action-ink: #f58a77;
+    --accent: #f2c14e;
+    --accent-soft: #d9a83f;
+    --on-fill: #1a1815;
+  }
+}
+[data-theme='dark'] {
+  --bg: #1a1815;
+  --surface: #232019;
+  --sunken: #2c2820;
+  --text: #f2e8d6;
+  --text-muted: #c3b6a0;
+  --border: #0e0c0a;
+  --brand: #38b9ac;
+  --brand-strong: #38b9ac;
+  --brand-ink: #5bd0c2;
+  --action: #f2715b;
+  --action-ink: #f58a77;
+  --accent: #f2c14e;
+  --accent-soft: #d9a83f;
+  --on-fill: #1a1815;
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Cross-gen legible base; fluid 18–20px (docs/design.md §3). */
+  font-size: clamp(18px, 1rem + 0.25vw, 20px);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+a {
+  color: var(--action-ink);
+  text-underline-offset: 3px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Visible focus on every interactive element. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skip link. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--action);
+  color: var(--on-fill);
+  padding: 0.6rem 1rem;
+  border-radius: 0 0 var(--radius) 0;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+.wrap {
+  width: min(72rem, 100% - 2.5rem);
+  margin-inline: auto;
+}
+
+/* Decorative petal divider. */
+.petal-divider {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 2rem 0;
+}
+.petal-divider span {
+  width: 12px;
+  height: 18px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+}
+.petal-divider span:nth-child(odd) {
+  background: var(--brand);
+}
+.petal-divider span:nth-child(even) {
+  background: var(--action);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

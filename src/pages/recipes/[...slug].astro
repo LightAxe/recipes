@@ -1,0 +1,366 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { Picture } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Petal from '../../components/Petal.astro';
+import { courseLabel } from '../../lib/taxonomy';
+import { formatDuration, formatQty } from '../../lib/format';
+
+export async function getStaticPaths() {
+  const recipes = await getCollection('recipes');
+  return recipes.map((recipe) => ({ params: { slug: recipe.id }, props: { recipe } }));
+}
+
+interface Props {
+  recipe: CollectionEntry<'recipes'>;
+}
+const { recipe } = Astro.props;
+const { data } = recipe;
+const { Content } = await render(recipe);
+const hasStory = (recipe.body ?? '').trim().length > 0;
+
+type Sectioned = { section: string };
+function groupBySection<T extends Sectioned>(items: T[]) {
+  const groups: { section: string; items: T[] }[] = [];
+  for (const it of items) {
+    const sec = it.section ?? '';
+    let g = groups.find((x) => x.section === sec);
+    if (!g) {
+      g = { section: sec, items: [] };
+      groups.push(g);
+    }
+    g.items.push(it);
+  }
+  return groups;
+}
+
+const ingredientGroups = groupBySection(
+  data.ingredients.map((i) => ({ ...i, section: i.section ?? '' })),
+);
+const steps = data.instructions.map((s) =>
+  typeof s === 'string'
+    ? { text: s, section: '', timer: undefined }
+    : { ...s, section: s.section ?? '' },
+);
+const stepGroups = groupBySection(steps);
+const stepsAreSectioned = stepGroups.length > 1 || stepGroups[0]?.section !== '';
+
+const times = [
+  { label: 'Prep', value: formatDuration(data.prepTime) },
+  { label: 'Cook', value: formatDuration(data.cookTime) },
+  { label: 'Total', value: formatDuration(data.totalTime) },
+].filter((t) => t.value);
+---
+
+<Base title={data.title} description={data.description}>
+  <article class="recipe wrap">
+    <nav aria-label="Breadcrumb" class="crumbs">
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span>
+      <a href="/recipes/">Recipes</a>
+      <span aria-hidden="true">›</span>
+      {data.title}
+    </nav>
+
+    <header class="head">
+      <p class="course">{courseLabel(data.course)}</p>
+      <h1>{data.title}</h1>
+      <p class="byline">from <strong>{data.contributor}</strong></p>
+      <p class="desc">{data.description}</p>
+      <ul class="stats" role="list">
+        {
+          times.map((t) => (
+            <li>
+              <span class="k">{t.label}</span> {t.value}
+            </li>
+          ))
+        }
+        <li>
+          <span class="k">Serves</span>
+          {data.servings}{data.yield ? ` · ${data.yield}` : ''}
+        </li>
+      </ul>
+    </header>
+
+    {
+      data.image && (
+        <figure class="hero">
+          <Picture
+            src={data.image.src}
+            formats={['avif', 'webp']}
+            widths={[480, 960, 1440]}
+            sizes="(max-width: 60rem) 100vw, 56rem"
+            alt={data.image.alt}
+            loading="eager"
+          />
+        </figure>
+      )
+    }
+
+    <div class="cols">
+      <section class="ingredients" aria-labelledby="ing-h">
+        <h2 id="ing-h">Ingredients</h2>
+        {
+          ingredientGroups.map((g) => (
+            <div class="ing-group">
+              {g.section && <h3>{g.section}</h3>}
+              <ul role="list">
+                {g.items.map((i) => {
+                  const qty = formatQty(i.qty);
+                  const grams = i.grams ? `${i.gramsApprox ? '≈ ' : ''}${i.grams} g` : null;
+                  return (
+                    <li>
+                      <Petal class="bullet" />
+                      <span>
+                        {qty && (
+                          <span class="qty">
+                            {qty}
+                            {i.unit ? ` ${i.unit}` : ''}{' '}
+                          </span>
+                        )}
+                        {i.item}
+                        {i.prep && <span class="muted">, {i.prep}</span>}
+                        {i.note && <span class="muted"> ({i.note})</span>}
+                        {grams && <span class="grams"> · {grams}</span>}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))
+        }
+      </section>
+
+      <section class="method" aria-labelledby="method-h">
+        <h2 id="method-h">Method</h2>
+        {
+          stepGroups.map((g) => (
+            <div class="step-group">
+              {stepsAreSectioned && g.section && <h3>{g.section}</h3>}
+              <ol class="steps">
+                {g.items.map((s) => (
+                  <li>
+                    <p>{s.text}</p>
+                    {s.timer && <p class="timer">⏱ {formatDuration(s.timer)}</p>}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))
+        }
+      </section>
+    </div>
+
+    {
+      data.notes && data.notes.length > 0 && (
+        <section class="notes" aria-labelledby="notes-h">
+          <h2 id="notes-h">Notes</h2>
+          <ul role="list">
+            {data.notes.map((n) => (
+              <li>
+                <Petal class="bullet" />
+                {n}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      hasStory && (
+        <details class="story">
+          <summary>Read the story</summary>
+          <div class="prose">
+            <Content />
+          </div>
+        </details>
+      )
+    }
+
+    <div class="petal-divider" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .recipe {
+    padding-block: 1.5rem 1rem;
+    max-width: 56rem;
+  }
+  .crumbs {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  .course {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--brand-ink);
+    margin: 0 0 0.25rem;
+  }
+  .head h1 {
+    font-size: clamp(2.1rem, 5vw, 3rem);
+    margin: 0 0 0.4rem;
+  }
+  .byline {
+    margin: 0 0 0.75rem;
+    color: var(--text-muted);
+  }
+  .desc {
+    font-size: 1.15rem;
+    max-width: 44rem;
+    margin: 0 0 1.25rem;
+  }
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .stats .k {
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+  }
+  .hero {
+    margin: 0 0 2rem;
+  }
+  .hero :global(img) {
+    width: 100%;
+    height: auto;
+    border: 3px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-enamel);
+    display: block;
+  }
+  .cols {
+    display: grid;
+    gap: 2.5rem;
+  }
+  @media (min-width: 48rem) {
+    .cols {
+      grid-template-columns: 20rem 1fr;
+      align-items: start;
+    }
+    .ingredients {
+      position: sticky;
+      top: 1.5rem;
+    }
+  }
+  h2 {
+    font-size: 1.6rem;
+    margin: 0 0 1rem;
+  }
+  .ing-group h3,
+  .step-group h3 {
+    font-size: 1.1rem;
+    margin: 1rem 0 0.5rem;
+    color: var(--brand-ink);
+  }
+  .ingredients ul,
+  .notes ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .ingredients li,
+  .notes li {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--text-muted) 25%, transparent);
+  }
+  .bullet {
+    color: var(--brand);
+    flex: none;
+    transform: translateY(2px);
+  }
+  .qty {
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+  .muted {
+    color: var(--text-muted);
+  }
+  .grams {
+    font-family: var(--font-mono);
+    color: var(--brand-ink);
+    font-size: 0.85em;
+  }
+  .steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 0;
+    padding: 0;
+  }
+  .steps li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.85rem;
+    margin-bottom: 1.1rem;
+  }
+  .steps li::before {
+    content: counter(step);
+    grid-row: 1 / span 3;
+    width: 2.1rem;
+    height: 2.1rem;
+    display: grid;
+    place-items: center;
+    background: var(--brand-strong);
+    color: var(--on-fill);
+    font-family: var(--font-display);
+    font-weight: 600;
+    border-radius: var(--radius-pill);
+  }
+  .steps li p {
+    margin: 0;
+    align-self: center;
+    font-size: 1.05rem;
+  }
+  .steps .timer {
+    grid-column: 2;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--action-ink);
+  }
+  .notes {
+    margin-top: 2.5rem;
+    background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+    border: 3px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+  }
+  .notes h2 {
+    margin-top: 0;
+  }
+  .notes li {
+    border: none;
+  }
+  .story {
+    margin-top: 2rem;
+  }
+  .story summary {
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.1rem;
+    padding: 0.5rem 0;
+  }
+  .prose {
+    max-width: 44rem;
+    color: var(--text);
+  }
+</style>

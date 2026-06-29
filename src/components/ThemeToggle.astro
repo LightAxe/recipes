@@ -1,0 +1,83 @@
+---
+// Counter ⇄ Night Kitchen toggle. Hidden until JS reveals it (no-JS users get
+// their system theme via the prefers-color-scheme fallback in global.css).
+---
+
+<button id="theme-toggle" class="theme-toggle" type="button" hidden aria-pressed="false">
+  <span class="label">Theme</span>
+  <svg class="sun" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <circle cx="12" cy="12" r="5" fill="currentColor"></circle>
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="12" y1="1" x2="12" y2="4"></line>
+      <line x1="12" y1="20" x2="12" y2="23"></line>
+      <line x1="1" y1="12" x2="4" y2="12"></line>
+      <line x1="20" y1="12" x2="23" y2="12"></line>
+      <line x1="4" y1="4" x2="6" y2="6"></line>
+      <line x1="18" y1="18" x2="20" y2="20"></line>
+      <line x1="4" y1="20" x2="6" y2="18"></line>
+      <line x1="18" y1="6" x2="20" y2="4"></line>
+    </g>
+  </svg>
+  <svg class="moon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" fill="currentColor"></path>
+  </svg>
+</button>
+
+<style>
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0.5rem;
+    background: var(--surface);
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+  }
+  .theme-toggle .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .theme-toggle .moon {
+    display: none;
+  }
+  .theme-toggle[aria-pressed='true'] .sun {
+    display: none;
+  }
+  .theme-toggle[aria-pressed='true'] .moon {
+    display: inline;
+  }
+</style>
+
+<script>
+  const btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.hidden = false;
+    const current = () =>
+      document.documentElement.getAttribute('data-theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const sync = () => {
+      const dark = current() === 'dark';
+      btn.setAttribute('aria-pressed', String(dark));
+      btn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+    };
+    sync();
+    btn.addEventListener('click', () => {
+      const next = current() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try {
+        localStorage.setItem('theme', next);
+      } catch {
+        /* ignore */
+      }
+      sync();
+    });
+  }
+</script>
