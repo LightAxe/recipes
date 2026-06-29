@@ -50,3 +50,4 @@ Add these **only when they earn their place** (most ADRs won't need them):
 | [0007](./0007-join-the-axpr-cinematic-universe.md) | Join the axpr cinematic universe (footer, hub registry, stack alignment, distinct aesthetic) | accepted |
 | [0008](./0008-weight-first-research-grams-at-intake.md) | Weight-first: research and store gram weights at intake; weight display/print option | accepted |
 | [0009](./0009-tailwind-v4-via-postcss.md) | Tailwind CSS v4 is wired via PostCSS, not the @tailwindcss/vite plugin | accepted |
+| [0010](./0010-counter-design-system.md) | Adopt the "Counter" design system (modular, token-driven); supersedes Enamelware | accepted |

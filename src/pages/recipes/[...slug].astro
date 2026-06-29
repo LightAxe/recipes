@@ -2,9 +2,9 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import { Picture } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
-import Petal from '../../components/Petal.astro';
+import { groupIngredients, normalizeSteps, gramLabel } from '../../lib/recipe';
 import { courseLabel } from '../../lib/taxonomy';
-import { formatDuration, formatQty } from '../../lib/format';
+import { formatQty, formatDuration } from '../../lib/format';
 
 export async function getStaticPaths() {
   const recipes = await getCollection('recipes');
@@ -18,73 +18,41 @@ const { recipe } = Astro.props;
 const { data } = recipe;
 const { Content } = await render(recipe);
 const hasStory = (recipe.body ?? '').trim().length > 0;
-
-type Sectioned = { section: string };
-function groupBySection<T extends Sectioned>(items: T[]) {
-  const groups: { section: string; items: T[] }[] = [];
-  for (const it of items) {
-    const sec = it.section ?? '';
-    let g = groups.find((x) => x.section === sec);
-    if (!g) {
-      g = { section: sec, items: [] };
-      groups.push(g);
-    }
-    g.items.push(it);
-  }
-  return groups;
-}
-
-const ingredientGroups = groupBySection(
-  data.ingredients.map((i) => ({ ...i, section: i.section ?? '' })),
-);
-const steps = data.instructions.map((s) =>
-  typeof s === 'string'
-    ? { text: s, section: '', timer: undefined }
-    : { ...s, section: s.section ?? '' },
-);
-const stepGroups = groupBySection(steps);
-const stepsAreSectioned = stepGroups.length > 1 || stepGroups[0]?.section !== '';
-
-const times = [
-  { label: 'Prep', value: formatDuration(data.prepTime) },
-  { label: 'Cook', value: formatDuration(data.cookTime) },
-  { label: 'Total', value: formatDuration(data.totalTime) },
-].filter((t) => t.value);
+const groups = groupIngredients(data.ingredients);
+const steps = normalizeSteps(data.instructions);
+const times = (
+  [
+    ['Prep', data.prepTime],
+    ['Cook', data.cookTime],
+    ['Total', data.totalTime],
+  ] as const
+)
+  .map(([k, v]) => [k, formatDuration(v)] as const)
+  .filter(([, v]) => v);
 ---
 
 <Base title={data.title} description={data.description}>
   <article class="recipe wrap">
-    <nav aria-label="Breadcrumb" class="crumbs">
-      <a href="/">Home</a>
-      <span aria-hidden="true">›</span>
-      <a href="/recipes/">Recipes</a>
-      <span aria-hidden="true">›</span>
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a> <span aria-hidden="true">›</span>
+      <a href="/recipes/">Recipes</a> <span aria-hidden="true">›</span>
       {data.title}
     </nav>
 
     <header class="head">
-      <p class="course">{courseLabel(data.course)}</p>
+      <p class="eyebrow">{courseLabel(data.course)}</p>
       <h1>{data.title}</h1>
-      <p class="byline">from <strong>{data.contributor}</strong></p>
-      <p class="desc">{data.description}</p>
-      <ul class="stats" role="list">
-        {
-          times.map((t) => (
-            <li>
-              <span class="k">{t.label}</span> {t.value}
-            </li>
-          ))
-        }
-        <li>
-          <span class="k">Serves</span>
-          {data.servings}{data.yield ? ` · ${data.yield}` : ''}
-        </li>
-      </ul>
+      <div class="meta">
+        <span class="by">{data.contributor}</span>
+        {times.map(([k, v]) => (<span><b>{k}</b> {v}</span>))}
+        <span><b>Serves</b> {data.servings}{data.yield ? ` · ${data.yield}` : ''}</span>
+      </div>
+      <p class="lede">{data.description}</p>
     </header>
 
     {
       data.image && (
-        <figure class="hero">
+        <figure class="shell">
           <Picture
             src={data.image.src}
             formats={['avif', 'webp']}
@@ -98,269 +66,258 @@ const times = [
     }
 
     <div class="cols">
-      <section class="ingredients" aria-labelledby="ing-h">
-        <h2 id="ing-h">Ingredients</h2>
-        {
-          ingredientGroups.map((g) => (
-            <div class="ing-group">
-              {g.section && <h3>{g.section}</h3>}
-              <ul role="list">
-                {g.items.map((i) => {
-                  const qty = formatQty(i.qty);
-                  const grams = i.grams ? `${i.gramsApprox ? '≈ ' : ''}${i.grams} g` : null;
-                  return (
+      <aside class="ing">
+        <div class="ing-inner">
+          <h2>Ingredients</h2>
+          {
+            groups.map((g) => (
+              <div class="grp">
+                {g.section && <h3>{g.section}</h3>}
+                <ul>
+                  {g.items.map((i) => (
                     <li>
-                      <Petal class="bullet" />
-                      <span>
-                        {qty && (
-                          <span class="qty">
-                            {qty}
-                            {i.unit ? ` ${i.unit}` : ''}{' '}
-                          </span>
-                        )}
+                      <span class="q">
+                        {formatQty(i.qty)}
+                        {i.unit ? ` ${i.unit}` : ''}
+                      </span>
+                      <span class="n">
                         {i.item}
-                        {i.prep && <span class="muted">, {i.prep}</span>}
-                        {i.note && <span class="muted"> ({i.note})</span>}
-                        {grams && <span class="grams"> · {grams}</span>}
+                        {i.prep && <em>, {i.prep}</em>}
+                        {i.note && <em> ({i.note})</em>}
+                        {gramLabel(i) && <span class="g">{gramLabel(i)}</span>}
                       </span>
                     </li>
-                  );
-                })}
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+        </div>
+      </aside>
+
+      <section class="method">
+        <h2>Method</h2>
+        <ol>
+          {
+            steps.map((s) => (
+              <li>
+                <p>{s.text}</p>
+                {s.timer && <span class="timer">⏱ {formatDuration(s.timer)}</span>}
+              </li>
+            ))
+          }
+        </ol>
+
+        {
+          data.notes && data.notes.length > 0 && (
+            <div class="notes">
+              <h3>From the family</h3>
+              <ul>
+                {data.notes.map((n) => (
+                  <li>{n}</li>
+                ))}
               </ul>
             </div>
-          ))
+          )
         }
-      </section>
 
-      <section class="method" aria-labelledby="method-h">
-        <h2 id="method-h">Method</h2>
         {
-          stepGroups.map((g) => (
-            <div class="step-group">
-              {stepsAreSectioned && g.section && <h3>{g.section}</h3>}
-              <ol class="steps">
-                {g.items.map((s) => (
-                  <li>
-                    <p>{s.text}</p>
-                    {s.timer && <p class="timer">⏱ {formatDuration(s.timer)}</p>}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          ))
+          hasStory && (
+            <details class="story">
+              <summary>Read the story</summary>
+              <div class="prose">
+                <Content />
+              </div>
+            </details>
+          )
         }
       </section>
-    </div>
-
-    {
-      data.notes && data.notes.length > 0 && (
-        <section class="notes" aria-labelledby="notes-h">
-          <h2 id="notes-h">Notes</h2>
-          <ul role="list">
-            {data.notes.map((n) => (
-              <li>
-                <Petal class="bullet" />
-                {n}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )
-    }
-
-    {
-      hasStory && (
-        <details class="story">
-          <summary>Read the story</summary>
-          <div class="prose">
-            <Content />
-          </div>
-        </details>
-      )
-    }
-
-    <div class="petal-divider" aria-hidden="true">
-      <span></span><span></span><span></span>
     </div>
   </article>
 </Base>
 
 <style>
   .recipe {
-    padding-block: 1.5rem 1rem;
-    max-width: 56rem;
+    padding-block: 1.75rem 1rem;
   }
   .crumbs {
-    font-family: var(--font-mono);
     font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-bottom: 1rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
   }
-  .course {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--brand-ink);
-    margin: 0 0 0.25rem;
+  .crumbs a {
+    color: var(--muted);
   }
   .head h1 {
-    font-size: clamp(2.1rem, 5vw, 3rem);
-    margin: 0 0 0.4rem;
+    font-size: var(--text-h1);
+    margin: 0.9rem 0 1rem;
   }
-  .byline {
-    margin: 0 0 0.75rem;
-    color: var(--text-muted);
-  }
-  .desc {
-    font-size: 1.15rem;
-    max-width: 44rem;
-    margin: 0 0 1.25rem;
-  }
-  .stats {
+  .meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1.25rem;
-    margin: 0 0 1.5rem;
-    padding: 0;
-    list-style: none;
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
+    gap: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
   }
-  .stats .k {
-    color: var(--text-muted);
-    text-transform: uppercase;
-    font-size: 0.72rem;
-    letter-spacing: 0.05em;
+  .meta b {
+    color: var(--text);
+    font-weight: 700;
   }
-  .hero {
-    margin: 0 0 2rem;
+  .meta .by {
+    color: var(--accent-ink);
+    font-weight: 700;
   }
-  .hero :global(img) {
-    width: 100%;
-    height: auto;
-    border: 3px solid var(--border);
+  .lede {
+    font-size: var(--text-lede);
+    line-height: 1.5;
+    max-width: 46ch;
+    margin: 0 0 2.25rem;
+  }
+  .shell {
+    margin: 0 0 3rem;
+    background: var(--sunken);
+    border: 1px solid var(--line);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-enamel);
+    padding: 0.4rem;
+  }
+  .shell :global(picture),
+  .shell :global(img) {
     display: block;
+    width: 100%;
+  }
+  .shell :global(img) {
+    aspect-ratio: 16 / 7;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
   }
   .cols {
     display: grid;
-    gap: 2.5rem;
+    gap: 3rem;
   }
-  @media (min-width: 48rem) {
+  @media (min-width: 52rem) {
     .cols {
-      grid-template-columns: 20rem 1fr;
-      align-items: start;
+      grid-template-columns: 19rem 1fr;
     }
-    .ingredients {
+    .ing {
       position: sticky;
-      top: 1.5rem;
+      top: 5rem;
+      align-self: start;
     }
   }
   h2 {
-    font-size: 1.6rem;
-    margin: 0 0 1rem;
+    font-size: var(--text-h2);
+    margin: 0 0 1.25rem;
   }
-  .ing-group h3,
-  .step-group h3 {
-    font-size: 1.1rem;
-    margin: 1rem 0 0.5rem;
-    color: var(--brand-ink);
+  .ing-inner {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.6rem;
+    box-shadow: var(--shadow-card);
   }
-  .ingredients ul,
-  .notes ul {
+  .grp h3 {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent-ink);
+    margin: 1.25rem 0 0.5rem;
+  }
+  .ing ul {
     list-style: none;
     margin: 0;
     padding: 0;
   }
-  .ingredients li,
-  .notes li {
-    display: flex;
-    gap: 0.6rem;
-    align-items: baseline;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--text-muted) 25%, transparent);
-  }
-  .bullet {
-    color: var(--brand);
-    flex: none;
-    transform: translateY(2px);
-  }
-  .qty {
-    font-family: var(--font-mono);
-    font-weight: 500;
-  }
-  .muted {
-    color: var(--text-muted);
-  }
-  .grams {
-    font-family: var(--font-mono);
-    color: var(--brand-ink);
-    font-size: 0.85em;
-  }
-  .steps {
-    list-style: none;
-    counter-reset: step;
-    margin: 0;
-    padding: 0;
-  }
-  .steps li {
-    counter-increment: step;
+  .ing li {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 0.85rem;
-    margin-bottom: 1.1rem;
+    gap: 0.75rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 1rem;
   }
-  .steps li::before {
-    content: counter(step);
-    grid-row: 1 / span 3;
-    width: 2.1rem;
-    height: 2.1rem;
+  .ing .q {
+    font-weight: 700;
+    color: var(--accent-ink);
+    white-space: nowrap;
+  }
+  .ing .n em {
+    color: var(--muted);
+    font-style: normal;
+  }
+  .ing .g {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 0.1rem;
+  }
+  .method ol {
+    list-style: none;
+    counter-reset: s;
+    margin: 0;
+    padding: 0;
+  }
+  .method li {
+    counter-increment: s;
+    display: grid;
+    grid-template-columns: 2.4rem 1fr;
+    gap: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+  .method li::before {
+    content: counter(s, decimal-leading-zero);
+    width: 2.4rem;
+    height: 2.4rem;
     display: grid;
     place-items: center;
-    background: var(--brand-strong);
-    color: var(--on-fill);
+    background: var(--accent);
+    color: var(--on-accent);
     font-family: var(--font-display);
-    font-weight: 600;
-    border-radius: var(--radius-pill);
+    font-weight: 800;
+    font-size: 0.95rem;
+    border-radius: var(--radius-sm);
   }
-  .steps li p {
-    margin: 0;
-    align-self: center;
-    font-size: 1.05rem;
+  .method p {
+    margin: 0.2rem 0 0;
+    font-size: 1.06rem;
+    max-width: 60ch;
   }
-  .steps .timer {
-    grid-column: 2;
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    color: var(--action-ink);
+  .timer {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--accent-ink);
+    font-weight: 700;
   }
   .notes {
-    margin-top: 2.5rem;
-    background: color-mix(in srgb, var(--accent) 22%, var(--surface));
-    border: 3px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 1.25rem 1.5rem;
+    margin-top: 2rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.6rem;
   }
-  .notes h2 {
-    margin-top: 0;
+  .notes h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.05rem;
+  }
+  .notes ul {
+    margin: 0;
+    padding-left: 1.1rem;
   }
   .notes li {
-    border: none;
+    margin-bottom: 0.4rem;
   }
   .story {
-    margin-top: 2rem;
+    margin-top: 1.75rem;
   }
   .story summary {
     cursor: pointer;
     font-family: var(--font-display);
-    font-weight: 500;
-    font-size: 1.1rem;
+    font-weight: 700;
+    font-size: 1.05rem;
     padding: 0.5rem 0;
   }
   .prose {
-    max-width: 44rem;
-    color: var(--text);
+    max-width: 60ch;
   }
 </style>

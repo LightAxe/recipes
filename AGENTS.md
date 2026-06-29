@@ -67,7 +67,8 @@ that family members of every age can use.
   [`docs/scaling-and-units.md`](./docs/scaling-and-units.md).
 - **Universe:** signature footer + hub-registry entry (tag `family`); own distinct
   aesthetic. ADR [0007].
-- **Visual design:** **"Enamelware"** (mid-century kitchen). System: [`docs/design.md`](./docs/design.md).
+- **Visual design:** **"Counter"** (clean modern reader; modular token system, light+dark).
+  System: [`docs/design.md`](./docs/design.md). ADR [0010].
 - **Architecture:** progressive-enhancement static site. Review: [`docs/architecture.md`](./docs/architecture.md).
 
 [0002]: ./docs/adr/0002-recipes-as-markdown-with-yaml-frontmatter.md
@@ -78,6 +79,7 @@ that family members of every age can use.
 [0007]: ./docs/adr/0007-join-the-axpr-cinematic-universe.md
 [0008]: ./docs/adr/0008-weight-first-research-grams-at-intake.md
 [0009]: ./docs/adr/0009-tailwind-v4-via-postcss.md
+[0010]: ./docs/adr/0010-counter-design-system.md
 
 ## v1 scope
 
@@ -105,7 +107,7 @@ that family members of every age can use.
 │   ├── adr/               # Architecture Decision Records (see docs/adr/README.md)
 │   ├── agents/            # Per-repo agent operating config (e.g. intake.md)
 │   ├── architecture.md    # Architecture review (build plan, stack, phases)
-│   ├── design.md          # "Enamelware" design system
+│   ├── design.md          # "Counter" design system (modular tokens)
 │   ├── components.md      # Component inventory (specs, states, a11y) for every UI piece
 │   ├── information-architecture.md  # Site map, URLs, navigation, page inventory
 │   ├── taxonomy.md        # Controlled vocabulary: course / cuisine / tags / contributor

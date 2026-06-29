@@ -1,11 +1,11 @@
 ---
-// Counter ⇄ Night Kitchen toggle. Hidden until JS reveals it (no-JS users get
-// their system theme via the prefers-color-scheme fallback in global.css).
+// Day ⇄ Night toggle. Hidden until JS reveals it (no-JS users get their system
+// theme via the prefers-color-scheme fallback in global.css).
 ---
 
 <button id="theme-toggle" class="theme-toggle" type="button" hidden aria-pressed="false">
   <span class="label">Theme</span>
-  <svg class="sun" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+  <svg class="sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
     <circle cx="12" cy="12" r="5" fill="currentColor"></circle>
     <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
       <line x1="12" y1="1" x2="12" y2="4"></line>
@@ -18,7 +18,7 @@
       <line x1="18" y1="6" x2="20" y2="4"></line>
     </g>
   </svg>
-  <svg class="moon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+  <svg class="moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
     <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" fill="currentColor"></path>
   </svg>
 </button>
@@ -28,14 +28,18 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 48px;
-    min-height: 48px;
+    min-width: 44px;
+    min-height: 44px;
     padding: 0.5rem;
     background: var(--surface);
     color: var(--text);
-    border: 2px solid var(--border);
-    border-radius: var(--radius-pill);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
     cursor: pointer;
+    transition: border-color 0.3s;
+  }
+  .theme-toggle:hover {
+    border-color: var(--muted);
   }
   .theme-toggle .label {
     position: absolute;

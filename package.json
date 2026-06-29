@@ -16,9 +16,8 @@
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
-    "@fontsource/atkinson-hyperlegible": "^5",
-    "@fontsource/dm-mono": "^5",
-    "@fontsource/fredoka": "^5",
+    "@fontsource-variable/archivo": "^5.2.8",
+    "@fontsource-variable/public-sans": "^5.2.7",
     "@tailwindcss/postcss": "^4.2.4",
     "astro": "~6.1.8",
     "tailwindcss": "^4.2.4"

@@ -3,10 +3,10 @@
 A durable, multi-generational family recipe website — to cook from, print, and pass down.
 Part of the [axpr](https://axpr.net) cinematic universe.
 
-> **Status:** Phase 1 (scaffold). A thin vertical slice — the content→page pipeline and
-> the "Enamelware" design language, with one example recipe. Not yet deployed (pages are
-> `noindex`). See [`PLAN.md`](./PLAN.md) for the Phase 1 plan and [`docs/`](./docs) for the
-> architecture, design system, and decisions.
+> **Status:** Phase 1 (scaffold). A thin vertical slice — the content→page pipeline in the
+> **"Counter"** design system (modular tokens, light + dark), with one example recipe. Not
+> yet deployed (pages are `noindex`). See [`PLAN.md`](./PLAN.md) for the Phase 1 plan and
+> [`docs/`](./docs) for the architecture, design system, and decisions.
 
 ## Project docs
 

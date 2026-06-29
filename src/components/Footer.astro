@@ -1,5 +1,4 @@
 ---
-import Petal from './Petal.astro';
 const year = 2026;
 ---
 
@@ -7,7 +6,6 @@ const year = 2026;
   <div class="wrap row">
     <p class="copy">© {year} Ogilvie Family</p>
     <p class="universe">
-      <Petal class="mark" />
       Part of the <a href="https://axpr.net">axpr</a> cinematic universe
     </p>
   </div>
@@ -15,8 +13,8 @@ const year = 2026;
 
 <style>
   .site-footer {
-    margin-top: 3rem;
-    border-top: 3px solid var(--border);
+    margin-top: 4rem;
+    border-top: 1px solid var(--line);
     background: var(--sunken);
   }
   .row {
@@ -25,29 +23,16 @@ const year = 2026;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding-block: 1.25rem;
+    padding-block: 1.5rem;
   }
-  .copy {
-    margin: 0;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-  }
+  .copy,
   .universe {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
     margin: 0;
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    letter-spacing: 0.02em;
-    color: var(--text-muted);
-  }
-  .universe .mark {
-    color: var(--action);
+    color: var(--muted);
+    font-size: 0.85rem;
   }
   .universe a {
-    color: var(--action-ink);
-    font-weight: 500;
+    color: var(--accent-ink);
+    font-weight: 700;
   }
 </style>
