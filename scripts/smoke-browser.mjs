@@ -37,13 +37,13 @@ try {
     if (m.type() === 'error') errors.push(`console.error: ${m.text()}`);
   });
 
-  for (const p of ['/', '/recipes/', '/recipes/grandmas-apple-pie/']) {
+  for (const p of ['/', '/recipes/', '/recipes/snickerdoodles/']) {
     await page.goto(`${BASE}${p}`, { waitUntil: 'load' });
     await sleep(150); // let the deferred module run
   }
 
   // Recipe page: controls revealed + scaler actually changes an amount.
-  await page.goto(`${BASE}/recipes/grandmas-apple-pie/`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/recipes/snickerdoodles/`, { waitUntil: 'load' });
   await sleep(200);
   if ((await page.locator('#controls').getAttribute('hidden')) !== null) {
     errors.push('controls still [hidden] — init() did not run');
