@@ -22,6 +22,21 @@ const { Content } = await render(recipe);
 const hasStory = (recipe.body ?? '').trim().length > 0;
 const groups = groupIngredients(data.ingredients);
 const steps = normalizeSteps(data.instructions);
+// Group steps by their optional `section` (e.g. "Make the filling" vs "Bake the pie"),
+// preserving order, so multi-stage methods render with headings instead of one flat list.
+const stepGroups = (() => {
+  const groups: { section: string; items: typeof steps }[] = [];
+  for (const s of steps) {
+    const sec = (s as { section?: string }).section ?? '';
+    // Group by *consecutive* runs, not by section name: coalescing same-named groups
+    // would pull later unsectioned steps up next to earlier ones, reordering the method.
+    const last = groups[groups.length - 1];
+    if (last && last.section === sec) last.items.push(s);
+    else groups.push({ section: sec, items: [s] });
+  }
+  return groups;
+})();
+const stepsSectioned = stepGroups.length > 1 || Boolean(stepGroups[0]?.section);
 const times = (
   [
     ['Prep', data.prepTime],
@@ -39,8 +54,10 @@ const weightEligible = measurable.length > 0 && withGrams.length / measurable.le
 
 const baseAmount = (i: (typeof data.ingredients)[number]) => {
   const q = formatQty(i.qty);
-  if (!q) return '';
-  return i.unit ? `${q} ${i.unit}` : q;
+  if (q) return i.unit ? `${q} ${i.unit}` : q;
+  // Grams-only ingredient (weight, no qty/unit): show the weight so it isn't invisible.
+  if (i.grams != null) return `${i.grams} g`;
+  return '';
 };
 
 let imageUrl: string | undefined;
@@ -56,8 +73,6 @@ const jsonLd = [
     { name: data.title, path: `/recipes/${recipe.id}/` },
   ]),
 ];
-
-let stepN = 0;
 ---
 
 <Base title={data.title} description={data.description} jsonLd={jsonLd}>
@@ -74,7 +89,7 @@ let stepN = 0;
       <p class="eyebrow">{courseLabel(data.course)}</p>
       <h1>{data.title}</h1>
       <div class="meta">
-        <span class="by">{data.contributor}</span>
+        {data.contributor && <span class="by">{data.contributor}</span>}
         {
           times.map(([k, v]) => (
             <span>
@@ -82,12 +97,20 @@ let stepN = 0;
             </span>
           ))
         }
-        <span
-          ><b>Serves</b>
-          <span id="serves-count">{data.servings}</span>{
-            data.yield && <span id="yield-note"> · {data.yield}</span>
-          }</span
-        >
+        {
+          data.servings ? (
+            <span>
+              <b>Serves</b> <span id="serves-count">{data.servings}</span>
+              {data.yield && <span id="yield-note"> · {data.yield}</span>}
+            </span>
+          ) : (
+            data.yield && (
+              <span>
+                <b>Yield</b> {data.yield}
+              </span>
+            )
+          )
+        }
       </div>
       <p class="lede">{data.description}</p>
     </header>
@@ -101,29 +124,53 @@ let stepN = 0;
       data-weight-eligible={weightEligible ? '1' : ''}
       hidden
     >
-      <div class="ctl scaler" role="group" aria-label="Scale recipe">
-        <label class="ctl-k" for="servings-input">Makes</label>
-        <input
-          id="servings-input"
-          class="servings-input"
-          type="number"
-          min="1"
-          step="1"
-          value={data.servings}
-        />
-        <span class="ctl-k">servings</span>
-        <div class="presets" role="radiogroup" aria-label="Quick scale">
-          <button type="button" class="seg" data-scale="1" role="radio" aria-checked="true"
-            >1×</button
-          >
-          <button type="button" class="seg" data-scale="2" role="radio" aria-checked="false"
-            >2×</button
-          >
-          <button type="button" class="seg" data-scale="3" role="radio" aria-checked="false"
-            >3×</button
-          >
-        </div>
-      </div>
+      {
+        data.servings && (
+          <div class="ctl scaler" role="group" aria-label="Scale recipe">
+            <label class="ctl-k" for="servings-input">
+              Makes
+            </label>
+            <input
+              id="servings-input"
+              class="servings-input"
+              type="number"
+              min="1"
+              step="1"
+              value={data.servings}
+            />
+            <span class="ctl-k">servings</span>
+            <div class="presets" role="radiogroup" aria-label="Quick scale">
+              <button
+                type="button"
+                class="seg"
+                data-scale="1"
+                role="radio"
+                aria-checked="true"
+              >
+                1×
+              </button>
+              <button
+                type="button"
+                class="seg"
+                data-scale="2"
+                role="radio"
+                aria-checked="false"
+              >
+                2×
+              </button>
+              <button
+                type="button"
+                class="seg"
+                data-scale="3"
+                role="radio"
+                aria-checked="false"
+              >
+                3×
+              </button>
+            </div>
+          </div>
+        )
+      }
       <div class="ctl units">
         <button
           id="u-system"
@@ -220,24 +267,26 @@ let stepN = 0;
 
       <section class="method">
         <h2>Method</h2>
-        <ol class="steps">
-          {
-            steps.map((s) => {
-              stepN += 1;
-              return (
-                <li style={`--n: '${stepN}'`}>
-                  <label>
-                    <input type="checkbox" class="check" />
-                    <span class="step-body">
-                      <p>{s.text}</p>
-                      {s.timer && <span class="timer">{formatDuration(s.timer)}</span>}
-                    </span>
-                  </label>
-                </li>
-              );
-            })
-          }
-        </ol>
+        {
+          stepGroups.map((g) => (
+            <Fragment>
+              {stepsSectioned && g.section && <h3 class="method-section">{g.section}</h3>}
+              <ol class="steps">
+                {g.items.map((s) => (
+                  <li>
+                    <label>
+                      <input type="checkbox" class="check" />
+                      <span class="step-body">
+                        <p>{s.text}</p>
+                        {s.timer && <span class="timer">{formatDuration(s.timer)}</span>}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ol>
+            </Fragment>
+          ))
+        }
 
         {
           data.notes && data.notes.length > 0 && (
@@ -512,19 +561,31 @@ let stepN = 0;
     color: var(--muted);
   }
 
+  .method-section {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent-ink);
+    margin: 1.75rem 0 0.75rem;
+  }
+  .method-section:first-of-type {
+    margin-top: 0;
+  }
   .steps {
     list-style: none;
     margin: 0;
     padding: 0;
+    counter-reset: step;
   }
   .steps li {
+    counter-increment: step;
     display: grid;
     grid-template-columns: 2.4rem 1fr;
     gap: 1.1rem;
     margin-bottom: 1.5rem;
   }
   .steps li::before {
-    content: var(--n);
+    content: counter(step);
     width: 2.4rem;
     height: 2.4rem;
     display: grid;

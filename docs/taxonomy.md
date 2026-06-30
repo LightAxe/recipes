@@ -6,7 +6,7 @@ pages (`information-architecture.md`), and the schema.org mapping. Referenced by
 `recipe-schema.md`; enforced where noted by the Zod content schema.*
 
 There are four classification axes: **course** (required, one), **cuisine** (optional,
-one), **tags** (optional, many), and **contributor** (required, one).
+one), **tags** (optional, many), and **contributor** (optional, one).
 
 ## 1. Course — required, exactly one (controlled enum)
 
@@ -94,10 +94,14 @@ A recognized subset of tags. When present, the build also emits schema.org
 - **Accuracy matters:** only apply a dietary tag if the recipe truly qualifies as written
   (intake should not guess — when unsure, omit and ask).
 
-## 5. Contributor — required, one (slugified)
+## 5. Contributor — optional, one (slugified)
 
 Who the recipe is from (`contributor` field). Drives the byline and the optional
-`/from/<slug>/` page.
+`/from/<slug>/` page. **Optional:** many cards in the family book carry no name — when
+the source has no attribution and the maintainer hasn't supplied one, **omit the field
+entirely**. Never invent a name or a generic placeholder (no "Ogilvie Family", "Unknown",
+etc.) — an absent byline is correct and a missing-attribution recipe simply doesn't appear
+on any `/from/` page until someone is credited.
 
 - **Slug** = lowercase, kebab, accents stripped: "Grandma Ruth" → `grandma-ruth`;
   "Aunt Lucia" → `aunt-lucia`.

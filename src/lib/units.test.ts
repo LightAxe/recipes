@@ -7,6 +7,7 @@ import {
   formatMetricWeight,
   formatUSWeight,
   formatCount,
+  pluralizeUnit,
   amountFor,
 } from './units';
 
@@ -116,5 +117,44 @@ describe('amountFor — the §6 display matrix', () => {
     expect(
       amountFor({ unit: 'pinch' }, { system: 'us', measure: 'volume', factor: 1 }).text,
     ).toBe('');
+  });
+  it('opaque unit pluralizes when scaled past 1', () => {
+    const stick = { qty: 1, unit: 'stick' };
+    expect(amountFor(stick, { system: 'us', measure: 'volume', factor: 1 }).text).toBe(
+      '1 stick',
+    );
+    expect(amountFor(stick, { system: 'us', measure: 'volume', factor: 2 }).text).toBe(
+      '2 sticks',
+    );
+  });
+  it('grams-only ingredient shows its weight (not an invisible/0 amount)', () => {
+    const ginger = { grams: 3, gramsApprox: false }; // no qty/unit
+    expect(amountFor(ginger, { system: 'metric', measure: 'volume', factor: 1 }).text).toBe(
+      '3 g',
+    );
+    expect(amountFor(ginger, { system: 'metric', measure: 'weight', factor: 2 }).text).toBe(
+      '6 g',
+    );
+  });
+});
+
+describe('pluralizeUnit', () => {
+  it('singular for ≤1, plural for >1', () => {
+    expect(pluralizeUnit('can', 1)).toBe('can');
+    expect(pluralizeUnit('can', 0.5)).toBe('can');
+    expect(pluralizeUnit('can', 5)).toBe('cans');
+  });
+  it('handles -es and -ies and leaves already-plural alone', () => {
+    expect(pluralizeUnit('pinch', 2)).toBe('pinches');
+    expect(pluralizeUnit('box', 2)).toBe('boxes');
+    expect(pluralizeUnit('cans', 3)).toBe('cans'); // no double-plural
+  });
+});
+
+describe('cup pluralization at the snap boundary', () => {
+  it('a value that snaps to "1" reads "1 cup", not "1 cups"', () => {
+    expect(formatUSVolume(250)).toBe('1 cup'); // 250 ml ≈ 1.057 cups → snaps to 1
+    expect(formatUSVolume(1 * 236.588)).toBe('1 cup');
+    expect(formatUSVolume(1.5 * 236.588)).toBe('1½ cups');
   });
 });

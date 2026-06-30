@@ -30,7 +30,10 @@ function savePrefs(p: Prefs) {
 const numOr = (s?: string) => (s ? Number(s) : undefined);
 
 function init(controls: HTMLElement) {
-  const base = Number(controls.dataset.baseServings) || 1;
+  // Recipes without a `servings` number (e.g. yield-only canning recipes) get no scaler
+  // and must NOT be scaled by a stray ?servings= in the URL — guard on a real base.
+  const hasBase = Number(controls.dataset.baseServings) > 0;
+  const base = hasBase ? Number(controls.dataset.baseServings) : 1;
   const slug = controls.dataset.slug || 'recipe';
   const weightEligible = controls.dataset.weightEligible === '1';
 
@@ -44,12 +47,16 @@ function init(controls: HTMLElement) {
 
   const prefs = loadPrefs();
   let system: System = prefs.system;
-  // "prefer weight" = the saved measure pref, but only when this recipe supports it.
-  let measure: Measure = weightEligible ? prefs.measure : 'volume';
+  // Keep the *global* weight preference separate from what this recipe can display.
+  // `storedMeasure` is what we persist; `measure` is the gated view (forced to volume
+  // when this recipe lacks enough gram data). This prevents a US/metric toggle on a
+  // weight-ineligible recipe from silently clobbering the saved "prefer weight" pref.
+  let storedMeasure: Measure = prefs.measure;
+  let measure: Measure = weightEligible ? storedMeasure : 'volume';
 
-  // Scale precedence: URL ?servings= → base.
+  // Scale precedence: URL ?servings= → base (only honored when the recipe has a base).
   const urlServings = Number(new URLSearchParams(location.search).get('servings'));
-  let factor = clampFactor((urlServings && urlServings > 0 ? urlServings : base) / base);
+  let factor = clampFactor((hasBase && urlServings > 0 ? urlServings : base) / base);
   let servings = Math.round(factor * base * 100) / 100;
 
   function render() {
@@ -104,12 +111,14 @@ function init(controls: HTMLElement) {
     p.addEventListener('click', () => setServings(base * Number(p.dataset.scale)));
   sysBtn?.addEventListener('click', () => {
     system = system === 'us' ? 'metric' : 'us';
-    savePrefs({ system, measure });
+    // Persist the global weight pref untouched (don't write the gated view).
+    savePrefs({ system, measure: storedMeasure });
     render();
   });
   measBtn?.addEventListener('click', () => {
     measure = measure === 'weight' ? 'volume' : 'weight';
-    savePrefs({ system, measure });
+    storedMeasure = measure;
+    savePrefs({ system, measure: storedMeasure });
     render();
   });
 

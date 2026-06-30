@@ -1,7 +1,7 @@
 ---
 title: ""                      # Display name, e.g. "Grandma's Apple Pie"
 description: ""                 # Short headnote, 1–3 sentences
-contributor: ""                # Whose recipe this is / who gave it to us
+contributor: ""                # Optional — whose recipe this is / who gave it to us; omit if the card has no name (don't invent one)
 course: ""                     # course SLUG from taxonomy.md: breakfast|appetizer|soup|salad|main|side|bread|dessert|cookies|drink|sauce|canning|other
 cuisine: ""                    # Optional cuisine from taxonomy.md, e.g. American
 tags: []                       # Optional lowercase-kebab keywords, e.g. [apple, pie, fall]
