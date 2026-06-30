@@ -25,7 +25,7 @@ ingredients:
     grams: 355
     gramsSource: "water density ≈ 1 g/ml (1 cup = 237 ml)"
   - qty: 6
-    unit: oz
+    unit: floz
     item: Certo liquid pectin
     note: "Two 3 fl-oz pouches."
 instructions:

@@ -22,6 +22,22 @@ const { Content } = await render(recipe);
 const hasStory = (recipe.body ?? '').trim().length > 0;
 const groups = groupIngredients(data.ingredients);
 const steps = normalizeSteps(data.instructions);
+// Group steps by their optional `section` (e.g. "Make the filling" vs "Bake the pie"),
+// preserving order, so multi-stage methods render with headings instead of one flat list.
+const stepGroups = (() => {
+  const groups: { section: string; items: typeof steps }[] = [];
+  for (const s of steps) {
+    const sec = (s as { section?: string }).section ?? '';
+    let g = groups.find((x) => x.section === sec);
+    if (!g) {
+      g = { section: sec, items: [] };
+      groups.push(g);
+    }
+    g.items.push(s);
+  }
+  return groups;
+})();
+const stepsSectioned = stepGroups.length > 1 || Boolean(stepGroups[0]?.section);
 const times = (
   [
     ['Prep', data.prepTime],
@@ -56,8 +72,6 @@ const jsonLd = [
     { name: data.title, path: `/recipes/${recipe.id}/` },
   ]),
 ];
-
-let stepN = 0;
 ---
 
 <Base title={data.title} description={data.description} jsonLd={jsonLd}>
@@ -252,24 +266,26 @@ let stepN = 0;
 
       <section class="method">
         <h2>Method</h2>
-        <ol class="steps">
-          {
-            steps.map((s) => {
-              stepN += 1;
-              return (
-                <li style={`--n: '${stepN}'`}>
-                  <label>
-                    <input type="checkbox" class="check" />
-                    <span class="step-body">
-                      <p>{s.text}</p>
-                      {s.timer && <span class="timer">{formatDuration(s.timer)}</span>}
-                    </span>
-                  </label>
-                </li>
-              );
-            })
-          }
-        </ol>
+        {
+          stepGroups.map((g) => (
+            <Fragment>
+              {stepsSectioned && g.section && <h3 class="method-section">{g.section}</h3>}
+              <ol class="steps">
+                {g.items.map((s) => (
+                  <li>
+                    <label>
+                      <input type="checkbox" class="check" />
+                      <span class="step-body">
+                        <p>{s.text}</p>
+                        {s.timer && <span class="timer">{formatDuration(s.timer)}</span>}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ol>
+            </Fragment>
+          ))
+        }
 
         {
           data.notes && data.notes.length > 0 && (
@@ -544,19 +560,31 @@ let stepN = 0;
     color: var(--muted);
   }
 
+  .method-section {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent-ink);
+    margin: 1.75rem 0 0.75rem;
+  }
+  .method-section:first-of-type {
+    margin-top: 0;
+  }
   .steps {
     list-style: none;
     margin: 0;
     padding: 0;
+    counter-reset: step;
   }
   .steps li {
+    counter-increment: step;
     display: grid;
     grid-template-columns: 2.4rem 1fr;
     gap: 1.1rem;
     margin-bottom: 1.5rem;
   }
   .steps li::before {
-    content: var(--n);
+    content: counter(step);
     width: 2.4rem;
     height: 2.4rem;
     display: grid;
