@@ -167,13 +167,15 @@ export function formatMetricWeight(g: number): string {
   return `${roundStep(g, 1, 5)} g`;
 }
 
-/** g → US weight (oz, promote to lb ≥ 16 oz). */
+/** g → US weight (oz, promote to lb ≥ 16 oz). Tiny amounts (< ¼ oz) show grams
+    instead of rounding to a useless "0 oz". */
 export function formatUSWeight(g: number): string {
   const oz = g / G.oz;
   if (oz >= 16) {
     const lb = Math.round((oz / 16) * 4) / 4;
     return `${toFraction(lb)} lb`;
   }
+  if (oz < 0.25) return formatMetricWeight(g); // e.g. 3 g cinnamon, not "0 oz"
   return `${toFraction(Math.round(oz * 4) / 4)} oz`;
 }
 

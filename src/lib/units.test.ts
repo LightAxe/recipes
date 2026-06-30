@@ -53,9 +53,10 @@ describe('display formatting', () => {
     expect(formatMetricWeight(150)).toBe('150 g');
     expect(formatMetricWeight(1080)).toBe('1.08 kg');
   });
-  it('US weight promotes oz→lb', () => {
+  it('US weight promotes oz→lb, and shows grams for tiny amounts', () => {
     expect(formatUSWeight(900)).toBe('2 lb');
     expect(formatUSWeight(150)).toBe('5¼ oz');
+    expect(formatUSWeight(3)).toBe('3 g'); // < ¼ oz → grams, not "0 oz"
   });
   it('counts snap to halves', () => {
     expect(formatCount(6)).toBe('6');

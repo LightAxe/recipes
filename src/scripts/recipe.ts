@@ -172,14 +172,26 @@ function wireCookMode() {
   const status = document.getElementById('cookmode-status');
   if (!btn) return;
   let sentinel: any = null;
+  let want = false; // cook mode on → we want the lock held
 
   async function acquire() {
     const wl = (navigator as any).wakeLock;
-    if (!wl) return;
+    if (!wl || sentinel) return;
     try {
-      sentinel = await wl.request('screen');
-      if (status) status.hidden = false; // only after a live sentinel (Codex)
-      sentinel.addEventListener?.('release', () => {
+      const s = await wl.request('screen');
+      if (!want) {
+        // toggled off while the request was in flight — drop it (Codex: stale acquire)
+        try {
+          await s.release();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+      sentinel = s;
+      if (status) status.hidden = false; // status only after a live sentinel
+      s.addEventListener?.('release', () => {
+        sentinel = null; // reset so visibilitychange can reacquire (Codex)
         if (status) status.hidden = true;
       });
     } catch {
@@ -187,29 +199,24 @@ function wireCookMode() {
     }
   }
   async function releaseLock() {
+    const s = sentinel;
+    sentinel = null;
+    if (status) status.hidden = true;
     try {
-      await sentinel?.release?.();
+      await s?.release?.();
     } catch {
       /* ignore */
     }
-    sentinel = null;
-    if (status) status.hidden = true;
   }
 
   btn.addEventListener('click', () => {
-    const on = document.body.classList.toggle('cook-mode');
-    btn.setAttribute('aria-pressed', String(on));
-    if (on) acquire();
+    want = document.body.classList.toggle('cook-mode');
+    btn.setAttribute('aria-pressed', String(want));
+    if (want) acquire();
     else releaseLock();
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (
-      document.visibilityState === 'visible' &&
-      document.body.classList.contains('cook-mode') &&
-      !sentinel
-    ) {
-      acquire();
-    }
+    if (document.visibilityState === 'visible' && want && !sentinel) acquire();
   });
 }

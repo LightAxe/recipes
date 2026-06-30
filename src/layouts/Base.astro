@@ -44,7 +44,14 @@ const canonical = abs(Astro.url.pathname);
       title={SITE_NAME}
       href={abs('/rss.xml')}
     />
-    {jsonLd.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+    {
+      jsonLd.map((obj) => (
+        <script
+          type="application/ld+json"
+          set:html={JSON.stringify(obj).replace(/</g, '\\u003c')}
+        />
+      ))
+    }
     <slot name="head" />
     {/* 4×6 card page size — enabled (media→print) by the Print menu only for card mode. */}
     <style is:inline id="print-page-card" media="not all">
