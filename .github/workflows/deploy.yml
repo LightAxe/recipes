@@ -1,0 +1,58 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # SITE_LIVE stays false (noindex, sitemap not advertised) until go-live.
+      # Flip the repo/environment variable SITE_LIVE=true to launch — no code
+      # or workflow change needed. See ADR-0011 and src/lib/site.ts.
+      - run: npm run build
+        env:
+          SITE_LIVE: ${{ vars.SITE_LIVE }}
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      # Two-pass sync: long-cache immutable hashed assets, short-cache the
+      # documents that change in place (HTML/XML/TXT). Matches the personal-site
+      # pattern (ADR-0006).
+      - name: Sync to S3
+        run: |
+          aws s3 sync ./dist "s3://${{ vars.SITE_BUCKET_NAME }}" --delete \
+            --exclude "*.html" --exclude "*.xml" --exclude "*.txt" \
+            --cache-control "public, max-age=31536000, immutable"
+          aws s3 sync ./dist "s3://${{ vars.SITE_BUCKET_NAME }}" --delete \
+            --exclude "*" --include "*.html" --include "*.xml" --include "*.txt" \
+            --cache-control "public, max-age=60, must-revalidate"
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"
