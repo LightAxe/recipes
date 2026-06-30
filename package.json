@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:content": "node scripts/validate-content.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "test:e2e": "node scripts/smoke-browser.mjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.18",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9",
+    "playwright": "^1.61.1",
     "prettier": "^3",
     "prettier-plugin-astro": "^0.14",
     "typescript": "^5",

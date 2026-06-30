@@ -20,5 +20,7 @@ jobs:
       - run: npm run validate:content
       - name: Build + smoke (staged)
         run: npm run build && npm run smoke
+      - name: Headless browser smoke (no console errors; interactivity works)
+        run: npx playwright install --with-deps chromium && npm run test:e2e
       - name: Build + smoke (SITE_LIVE)
         run: SITE_LIVE=true npm run build && npm run smoke
