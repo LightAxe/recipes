@@ -43,6 +43,7 @@ ingredients:
   - qty: 3
     item: eggs
     grams: 150
+    gramsApprox: true
     gramsSource: "large egg ≈ 50 g"
     section: Filling
   - qty: 1
@@ -50,7 +51,7 @@ ingredients:
     item: vanilla
     grams: 4
     gramsApprox: true
-    gramsSource: "King Arthur chart (1 tbsp = 14 g)"
+    gramsSource: "USDA — vanilla extract ≈ 4 g/tsp"
     section: Filling
   - qty: 1
     unit: tbsp
@@ -73,7 +74,7 @@ ingredients:
     item: vanilla
     grams: 4
     gramsApprox: true
-    gramsSource: "King Arthur chart (1 tbsp = 14 g)"
+    gramsSource: "USDA — vanilla extract ≈ 4 g/tsp"
     section: Topping (choose one)
   - qty: 0.25
     unit: cup

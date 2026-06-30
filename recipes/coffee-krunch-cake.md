@@ -25,6 +25,7 @@ ingredients:
   - qty: 4
     item: eggs
     grams: 200
+    gramsApprox: true
     gramsSource: "large egg ~ 50 g"
     section: Cake
   - qty: 1

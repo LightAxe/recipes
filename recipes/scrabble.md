@@ -28,7 +28,7 @@ ingredients:
     item: soy sauce
     grams: 11
     gramsApprox: true
-    gramsSource: "USDA FDC (1 tbsp ≈ 16 g)"
+    gramsSource: "USDA FDC (soy sauce ≈ 5.3 g/tsp)"
   - qty: 1
     unit: tbsp
     item: Tabasco sauce

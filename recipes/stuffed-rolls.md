@@ -40,7 +40,7 @@ ingredients:
     unit: tsp
     item: vegetable oil
     grams: 5
-    gramsSource: "King Arthur (1 tbsp oil = 14 g)"
+    gramsSource: "King Arthur (vegetable oil ≈ 5 g/tsp)"
   - item: salt and pepper
     prep: to taste
   - item: French rolls

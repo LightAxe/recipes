@@ -32,6 +32,7 @@ ingredients:
   - qty: 1
     item: large egg
     grams: 50
+    gramsApprox: true
     gramsSource: "standard (1 large egg ≈ 50 g)"
   - qty: 1
     unit: tsp

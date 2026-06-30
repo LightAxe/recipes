@@ -40,6 +40,7 @@ ingredients:
   - qty: 2
     item: eggs
     grams: 100
+    gramsApprox: true
     gramsSource: "standard large egg ≈ 50 g"
   - qty: 4
     unit: cup

@@ -37,6 +37,7 @@ ingredients:
   - qty: 2
     item: eggs
     grams: 100
+    gramsApprox: true
     gramsSource: "USDA — large egg ≈ 50 g"
   - qty: 2
     unit: tsp

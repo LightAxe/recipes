@@ -29,6 +29,7 @@ ingredients:
   - qty: 3
     item: eggs
     grams: 150
+    gramsApprox: true
     gramsSource: "USDA — large egg ≈ 50 g"
   - qty: 1
     unit: cup

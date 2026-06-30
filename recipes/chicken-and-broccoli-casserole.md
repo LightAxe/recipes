@@ -40,10 +40,14 @@ ingredients:
     unit: cup
     item: grated cheddar cheese
     grams: 113
-    gramsSource: "King Arthur chart (1 cup shredded cheese = 113 g)"
+    gramsApprox: true
+    gramsSource: "King Arthur chart (1 cup shredded cheese ≈ 113 g)"
   - qty: 0.5
+    unit: cup
     item: buttered bread crumbs
-    note: unit missing on the card (likely ½ cup) — confirm
+    grams: 54
+    gramsApprox: true
+    gramsSource: "King Arthur — dry bread crumbs ≈ 108 g/cup (buttered; approximate)"
 instructions:
   - "Cook the broccoli until just tender, then line the bottom of a 9×13-inch casserole dish with it."
   - "Top the broccoli with the sliced cooked chicken."

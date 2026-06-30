@@ -34,7 +34,7 @@ ingredients:
     item: vanilla
     grams: 4
     gramsApprox: true
-    gramsSource: "King Arthur chart (1 tbsp vanilla = 12 g)"
+    gramsSource: "USDA — vanilla extract ≈ 4 g/tsp"
   - qty: 1.5
     unit: cup
     item: all-purpose flour

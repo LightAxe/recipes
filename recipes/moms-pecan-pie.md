@@ -27,6 +27,7 @@ ingredients:
   - qty: 3
     item: eggs
     grams: 150
+    gramsApprox: true
     gramsSource: "USDA — large egg ≈ 50 g"
   - qty: 1
     unit: cup
@@ -41,7 +42,7 @@ ingredients:
     item: vanilla extract
     grams: 5
     gramsApprox: true
-    gramsSource: "King Arthur (1 tbsp = 14 g)"
+    gramsSource: "USDA — vanilla extract ≈ 5 g/tsp"
   - qty: 1
     item: pastry shell
     prep: uncooked

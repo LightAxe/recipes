@@ -23,6 +23,7 @@ ingredients:
   - qty: 2
     item: eggs
     grams: 100
+    gramsApprox: true
     gramsSource: "standard large egg ≈ 50 g"
     section: Dough
   - qty: 2.75

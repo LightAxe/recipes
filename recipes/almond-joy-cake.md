@@ -37,7 +37,7 @@ ingredients:
     item: vanilla
     grams: 4
     gramsApprox: true
-    gramsSource: "King Arthur chart (1 tbsp = 14 g)"
+    gramsSource: "USDA — vanilla extract ≈ 4 g/tsp"
     section: Coconut layer
   - qty: 14
     unit: oz

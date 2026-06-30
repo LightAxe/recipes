@@ -84,7 +84,7 @@ ingredients:
     unit: tsp
     item: soy sauce
     grams: 21
-    gramsSource: "USDA — soy sauce ≈ 16 g/tbsp"
+    gramsSource: "USDA — soy sauce ≈ 5.3 g/tsp"
   - qty: 1
     unit: tsp
     item: sesame oil

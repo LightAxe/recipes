@@ -28,9 +28,9 @@ ingredients:
     gramsApprox: true
     gramsSource: "standard (1 tsp ≈ 2.6 g)"
   - qty: 2
-    unit: tbsp
+    unit: tsp
     item: ground nutmeg
-    grams: 13
+    grams: 4
     gramsApprox: true
     gramsSource: "standard (1 tsp ≈ 2.2 g)"
   - qty: 2

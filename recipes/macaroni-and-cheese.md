@@ -24,6 +24,12 @@ ingredients:
     grams: 110
     gramsApprox: true
     gramsSource: "USDA — 1 medium onion ≈ 110 g"
+  - qty: 1
+    unit: tbsp
+    item: butter or margarine
+    note: enough to sauté the onion
+    grams: 14
+    gramsSource: "King Arthur chart (1 tbsp butter = 14 g)"
   - item: garlic salt
   - qty: 0.5
     unit: cup

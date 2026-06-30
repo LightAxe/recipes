@@ -49,6 +49,7 @@ ingredients:
     item: large eggs
     prep: beaten
     grams: 150
+    gramsApprox: true
     gramsSource: "USDA — large egg ≈ 50 g"
     section: Filling
   - qty: 2

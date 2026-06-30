@@ -32,6 +32,7 @@ ingredients:
     unit: cup
     item: shredded cheddar cheese
     grams: 226
+    gramsApprox: true
     gramsSource: "King Arthur chart (shredded cheese 1 cup = 113 g)"
     section: Mix together
   - qty: 0.5

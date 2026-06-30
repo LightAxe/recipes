@@ -28,6 +28,7 @@ ingredients:
     item: large eggs
     prep: beaten
     grams: 150
+    gramsApprox: true
     gramsSource: "standard large egg ≈ 50 g"
   - qty: 2
     unit: cup
