@@ -69,6 +69,10 @@ const live = /Sitemap:/i.test(robots);
 const noindex = /name="robots"\s+content="noindex"/.test(recipe);
 ok(`launch gate consistent (${live ? 'live' : 'staged'})`, live ? !noindex : noindex);
 
+// Cloudflare Web Analytics beacon: present on live, absent on staged (same gate).
+const beacon = recipe.includes('static.cloudflareinsights.com/beacon.min.js');
+ok(`analytics beacon ${live ? 'present (live)' : 'absent (staged)'}`, live ? beacon : !beacon);
+
 // Print stylesheet bundled.
 let hasPrint = false;
 if (existsSync('dist/_astro')) {

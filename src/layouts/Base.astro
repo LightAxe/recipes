@@ -5,7 +5,7 @@ import '../styles/global.css';
 import '../styles/print.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { SITE_NAME, SITE_LIVE, abs } from '../lib/site';
+import { SITE_NAME, SITE_LIVE, CF_ANALYTICS_TOKEN, abs } from '../lib/site';
 
 interface Props {
   title: string;
@@ -51,6 +51,16 @@ const canonical = abs(Astro.url.pathname);
           set:html={JSON.stringify(obj).replace(/</g, '\\u003c')}
         />
       ))
+    }
+    {/* Cloudflare Web Analytics — live build only (cookieless; token is public). */}
+    {
+      SITE_LIVE && CF_ANALYTICS_TOKEN && (
+        <script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: CF_ANALYTICS_TOKEN })}
+        />
+      )
     }
     <slot name="head" />
     {/* 4×6 card page size — enabled (media→print) by the Print menu only for card mode. */}
