@@ -4,7 +4,6 @@ description: A spiced apple pie filling put up by the quart — one jar fills a 
 course: canning
 cuisine: American
 tags: [apple, pie-filling, fall, make-ahead]
-servings: 6
 yield: About 6 quart jars of filling (1 quart fills one 9-inch pie)
 ingredients:
   - qty: 1

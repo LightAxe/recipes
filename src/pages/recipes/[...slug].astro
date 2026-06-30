@@ -28,12 +28,11 @@ const stepGroups = (() => {
   const groups: { section: string; items: typeof steps }[] = [];
   for (const s of steps) {
     const sec = (s as { section?: string }).section ?? '';
-    let g = groups.find((x) => x.section === sec);
-    if (!g) {
-      g = { section: sec, items: [] };
-      groups.push(g);
-    }
-    g.items.push(s);
+    // Group by *consecutive* runs, not by section name: coalescing same-named groups
+    // would pull later unsectioned steps up next to earlier ones, reordering the method.
+    const last = groups[groups.length - 1];
+    if (last && last.section === sec) last.items.push(s);
+    else groups.push({ section: sec, items: [s] });
   }
   return groups;
 })();
