@@ -3,9 +3,6 @@
 import { amountFor, type System, type Measure } from '../lib/units';
 import { clampFactor } from '../lib/scaling';
 
-const controls = document.getElementById('controls');
-if (controls) init(controls);
-
 interface Prefs {
   system: System;
   measure: Measure;
@@ -220,3 +217,8 @@ function wireCookMode() {
     if (document.visibilityState === 'visible' && want && !sentinel) acquire();
   });
 }
+
+// Bootstrap last — after all module-level const/function declarations are initialized
+// (calling init() at the top would hit the TDZ for PREFS_KEY/numOr).
+const controlsEl = document.getElementById('controls');
+if (controlsEl) init(controlsEl);
