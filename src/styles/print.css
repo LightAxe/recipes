@@ -42,22 +42,24 @@
     color: #000 !important;
   }
 
-  /* single-column, frame-free */
+  /* single-column: ingredients first (top), then the method — not side-by-side.
+     !important overrides the recipe page's scoped grid/sticky rules. */
   .recipe {
-    max-width: none;
-    padding: 0;
+    max-width: none !important;
+    padding: 0 !important;
   }
   .cols {
-    display: block;
+    display: block !important;
   }
   .ing {
-    position: static;
+    position: static !important;
+    margin-bottom: 1.5rem !important;
   }
   .ing-inner {
-    border: 0;
-    box-shadow: none;
-    padding: 0;
-    background: transparent;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: transparent !important;
   }
   .amount {
     color: #000;

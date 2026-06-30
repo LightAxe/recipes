@@ -306,6 +306,9 @@ let stepN = 0;
   }
 
   /* Controls bar */
+  .controls[hidden] {
+    display: none;
+  }
   .controls {
     display: flex;
     flex-wrap: wrap;
@@ -380,9 +383,13 @@ let stepN = 0;
   }
   .print-menu {
     position: relative;
+    display: inline-flex;
+    align-items: center;
   }
   .print-menu > summary {
     list-style: none;
+    display: inline-flex;
+    align-items: center;
   }
   .print-menu > summary::-webkit-details-marker {
     display: none;
@@ -584,10 +591,9 @@ let stepN = 0;
   :global(body.cook-mode) .crumbs,
   :global(body.cook-mode) .head .meta,
   :global(body.cook-mode) .lede,
-  :global(body.cook-mode) .shell,
   :global(body.cook-mode) .story,
   :global(body.cook-mode) :is(.site-header, .site-footer) {
-    opacity: 0.25;
+    opacity: 0.4;
   }
   :global(body.cook-mode) .step-body p {
     font-size: 1.35rem;
