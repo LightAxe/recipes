@@ -85,7 +85,7 @@ let stepN = 0;
         <span
           ><b>Serves</b>
           <span id="serves-count">{data.servings}</span>{
-            data.yield ? ` · ${data.yield}` : ''
+            data.yield && <span id="yield-note"> · {data.yield}</span>
           }</span
         >
       </div>

@@ -40,6 +40,7 @@ function init(controls: HTMLElement) {
   const sysBtn = document.getElementById('u-system') as HTMLButtonElement | null;
   const measBtn = document.getElementById('u-measure') as HTMLButtonElement | null;
   const servesEl = document.getElementById('serves-count');
+  const yieldEl = document.getElementById('yield-note');
 
   const prefs = loadPrefs();
   let system: System = prefs.system;
@@ -65,6 +66,8 @@ function init(controls: HTMLElement) {
     }
     if (servingsInput) servingsInput.value = String(servings);
     if (servesEl) servesEl.textContent = String(servings); // keep header in sync (prints too)
+    // base yield is only valid at ×1 — hide it once scaled so prints aren't misleading
+    if (yieldEl) yieldEl.hidden = Math.abs(factor - 1) > 1e-9;
     for (const p of presets) {
       const active = Math.abs(Number(p.dataset.scale) - factor) < 1e-9;
       p.setAttribute('aria-checked', String(active));
@@ -192,6 +195,7 @@ function wireCookMode() {
       sentinel = s;
       if (status) status.hidden = false; // status only after a live sentinel
       s.addEventListener?.('release', () => {
+        if (sentinel !== s) return; // a superseded sentinel released — don't clobber the current one
         sentinel = null; // reset so visibilitychange can reacquire
         if (status) status.hidden = true;
       });
