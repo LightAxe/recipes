@@ -36,7 +36,13 @@ const time = formatDuration(data.totalTime) ?? formatDuration(data.cookTime);
     <h3 class="title">{data.title}</h3>
     <p class="meta">
       {time && <span>{time}</span>}
-      <span>Serves {data.servings}</span>
+      {
+        data.servings ? (
+          <span>Serves {data.servings}</span>
+        ) : (
+          data.yield && <span>{data.yield}</span>
+        )
+      }
     </p>
   </div>
 </a>

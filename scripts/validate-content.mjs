@@ -58,6 +58,56 @@ const KNOWN_UNITS = new Set([
   'kg',
   'kilogram',
   'kilograms',
+  // Common non-convertible cooking units — displayed verbatim (opaque) by units.ts.
+  'clove',
+  'cloves',
+  'can',
+  'cans',
+  'stick',
+  'sticks',
+  'pinch',
+  'pinches',
+  'dash',
+  'dashes',
+  'slice',
+  'slices',
+  'package',
+  'packages',
+  'pkg',
+  'bunch',
+  'bunches',
+  'sprig',
+  'sprigs',
+  'stalk',
+  'stalks',
+  'ear',
+  'ears',
+  'head',
+  'heads',
+  'piece',
+  'pieces',
+  'drop',
+  'drops',
+  'handful',
+  'scoop',
+  'scoops',
+  'jar',
+  'jars',
+  'bottle',
+  'bottles',
+  'box',
+  'boxes',
+  'bag',
+  'bags',
+  'sheet',
+  'sheets',
+  'strip',
+  'strips',
+  'fillet',
+  'fillets',
+  'rib',
+  'ribs',
+  'knob',
 ]);
 
 // Mirror of docs/taxonomy.md §2 starter cuisines (slugified for comparison).
@@ -107,8 +157,10 @@ for (const file of files) {
       ing.unit &&
       !KNOWN_UNITS.has(String(ing.unit).trim().toLowerCase().replace(/\.$/, ''))
     ) {
-      errors.push(
-        `${file}: unknown unit "${ing.unit}" on "${ing.item}" (add it to units.ts + this list, or fix it)`,
+      // Warn, not fail: unknown units are displayed verbatim (opaque). A warning surfaces
+      // likely typos without blocking legit one-off units.
+      warnings.push(
+        `${file}: unrecognized unit "${ing.unit}" on "${ing.item}" (shown verbatim; fix if it's a typo)`,
       );
     }
   }

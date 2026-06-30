@@ -74,7 +74,7 @@ let stepN = 0;
       <p class="eyebrow">{courseLabel(data.course)}</p>
       <h1>{data.title}</h1>
       <div class="meta">
-        <span class="by">{data.contributor}</span>
+        {data.contributor && <span class="by">{data.contributor}</span>}
         {
           times.map(([k, v]) => (
             <span>
@@ -82,12 +82,20 @@ let stepN = 0;
             </span>
           ))
         }
-        <span
-          ><b>Serves</b>
-          <span id="serves-count">{data.servings}</span>{
-            data.yield && <span id="yield-note"> · {data.yield}</span>
-          }</span
-        >
+        {
+          data.servings ? (
+            <span>
+              <b>Serves</b> <span id="serves-count">{data.servings}</span>
+              {data.yield && <span id="yield-note"> · {data.yield}</span>}
+            </span>
+          ) : (
+            data.yield && (
+              <span>
+                <b>Yield</b> {data.yield}
+              </span>
+            )
+          )
+        }
       </div>
       <p class="lede">{data.description}</p>
     </header>
@@ -101,29 +109,53 @@ let stepN = 0;
       data-weight-eligible={weightEligible ? '1' : ''}
       hidden
     >
-      <div class="ctl scaler" role="group" aria-label="Scale recipe">
-        <label class="ctl-k" for="servings-input">Makes</label>
-        <input
-          id="servings-input"
-          class="servings-input"
-          type="number"
-          min="1"
-          step="1"
-          value={data.servings}
-        />
-        <span class="ctl-k">servings</span>
-        <div class="presets" role="radiogroup" aria-label="Quick scale">
-          <button type="button" class="seg" data-scale="1" role="radio" aria-checked="true"
-            >1×</button
-          >
-          <button type="button" class="seg" data-scale="2" role="radio" aria-checked="false"
-            >2×</button
-          >
-          <button type="button" class="seg" data-scale="3" role="radio" aria-checked="false"
-            >3×</button
-          >
-        </div>
-      </div>
+      {
+        data.servings && (
+          <div class="ctl scaler" role="group" aria-label="Scale recipe">
+            <label class="ctl-k" for="servings-input">
+              Makes
+            </label>
+            <input
+              id="servings-input"
+              class="servings-input"
+              type="number"
+              min="1"
+              step="1"
+              value={data.servings}
+            />
+            <span class="ctl-k">servings</span>
+            <div class="presets" role="radiogroup" aria-label="Quick scale">
+              <button
+                type="button"
+                class="seg"
+                data-scale="1"
+                role="radio"
+                aria-checked="true"
+              >
+                1×
+              </button>
+              <button
+                type="button"
+                class="seg"
+                data-scale="2"
+                role="radio"
+                aria-checked="false"
+              >
+                2×
+              </button>
+              <button
+                type="button"
+                class="seg"
+                data-scale="3"
+                role="radio"
+                aria-checked="false"
+              >
+                3×
+              </button>
+            </div>
+          </div>
+        )
+      }
       <div class="ctl units">
         <button
           id="u-system"

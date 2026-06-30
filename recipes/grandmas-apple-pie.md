@@ -24,8 +24,8 @@ ingredients:
   - qty: 0.75
     unit: cup
     item: granulated sugar
-    grams: 150
-    gramsSource: "King Arthur chart (1 cup = 200 g)"
+    grams: 149
+    gramsSource: "King Arthur chart (1 cup = 198 g)"
     section: Filling
   - qty: 2
     unit: tbsp
@@ -37,11 +37,15 @@ ingredients:
     unit: tsp
     item: ground cinnamon
     grams: 3
+    gramsApprox: true
     gramsSource: "standard (1 tsp ≈ 2.6 g)"
     section: Filling
   - qty: 0.25
     unit: tsp
     item: ground nutmeg
+    grams: 1
+    gramsApprox: true
+    gramsSource: "standard (1 tsp ≈ 2.2 g)"
     section: Filling
   - qty: 2
     item: pie crusts

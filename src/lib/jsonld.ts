@@ -36,15 +36,17 @@ export function recipeJsonLd(recipe: Recipe, imageUrl?: string) {
     '@type': 'Recipe',
     name: d.title,
     description: d.description,
-    author: { '@type': 'Person', name: d.contributor },
     recipeCategory: courseLabel(d.course),
-    recipeYield: d.yield ?? `${d.servings} servings`,
     recipeIngredient: d.ingredients.map(ingredientLine),
     recipeInstructions: d.instructions.map((s) => ({
       '@type': 'HowToStep',
       text: typeof s === 'string' ? s : s.text,
     })),
   };
+  // contributor & servings are optional (many old cards carry neither).
+  if (d.contributor) json.author = { '@type': 'Person', name: d.contributor };
+  const recipeYield = d.yield ?? (d.servings ? `${d.servings} servings` : undefined);
+  if (recipeYield) json.recipeYield = recipeYield;
   if (imageUrl) json.image = [imageUrl];
   if (d.datePublished) json.datePublished = d.datePublished.toISOString().slice(0, 10);
   if (d.cuisine) json.recipeCuisine = d.cuisine;

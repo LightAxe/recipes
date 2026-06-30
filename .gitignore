@@ -22,6 +22,10 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Private recipe-import inbox — source card photos are never committed (public repo).
+/inbox/*
+!/inbox/README.md
+
 # External / vendored Claude skills stay local to each clone — NOT committed (user
 # preference: keep external skills out of the repo). Our own .claude/agents/ ARE committed.
 .claude/skills/

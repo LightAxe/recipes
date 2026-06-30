@@ -213,6 +213,8 @@ export function amountFor(ing: Ingredient, opts: AmountOpts): Amount {
   const grams = ing.grams != null ? ing.grams * factor : undefined;
   const canon = normalizeUnit(ing.unit);
   const kind = canon ? unitKind(canon) : undefined;
+  const rawUnit = ing.unit?.trim();
+  const opaque = !!rawUnit && !canon; // non-convertible unit: clove, can, stick, pinch…
 
   // "to taste" / no numeric amount
   if (qty == null && grams == null) return { text: '', approx: false };
@@ -228,6 +230,7 @@ export function amountFor(ing: Ingredient, opts: AmountOpts): Amount {
       return { text: volumeText(qty * ML[canon]), approx: true }; // ≈ fallback
     if (kind === 'weight' && qty != null && canon)
       return { text: weightText(qty * G[canon]), approx: false };
+    if (opaque && qty != null) return { text: `${toFraction(qty)} ${rawUnit}`, approx: false };
     // count, no grams → unchanged count
     return { text: formatCount(qty!), approx: false };
   }
@@ -237,5 +240,6 @@ export function amountFor(ing: Ingredient, opts: AmountOpts): Amount {
     return { text: volumeText(qty * ML[canon]), approx: false };
   if (kind === 'weight' && qty != null && canon)
     return { text: weightText(qty * G[canon]), approx: false };
+  if (opaque && qty != null) return { text: `${toFraction(qty)} ${rawUnit}`, approx: false };
   return { text: formatCount(qty!), approx: false };
 }
