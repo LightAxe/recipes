@@ -133,14 +133,13 @@ behavior in `src/scripts/`.*
 - **No-JS:** plain readable list at base amounts (checkbox simply won't persist).
 
 ### C8. StepList / StepItem
-- `<ol>` of steps. Each **StepItem**: **enamel-circle number badge** (teal-strong fill,
-  cream numeral, Fredoka), step text (lead size), independently tap-to-check (dims when
-  done). Holds an optional TimerChip.
+- `<ol>` of steps. Each **StepItem**: number badge, step text (lead size), independently
+  **tap-to-check** (native checkbox; dims/strikes when done). A step's `timer` duration
+  shows as **plain text** beside it.
 
-### C9. TimerChip
-- For a step with `timer`: a Chip button "⏱ 1h" that starts an **in-page countdown**
-  (live region announces start/finish; optional sound/`Notification`). Pause/reset.
-  `timers.ts`. **No-JS:** the duration shows as plain text.
+### C9. ~~TimerChip~~ — dropped
+- **No in-page timers** (ADR-0012): people use their own kitchen/voice timers. Step
+  durations are display-only text. (Section kept as a pointer; there is no timer component.)
 
 ### C10. NotesBlock
 - "Cook's notes / Family notes" — distinct callout (butter-tinted, petal marker), each

@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ════════════════════════════════════════════════════════════════════════
    DESIGN TOKENS — "Counter"
@@ -9,8 +9,8 @@
 
 /* Structural tokens (theme-independent): fonts + radii. */
 @theme {
-  --font-display: "Archivo Variable", system-ui, sans-serif;
-  --font-body: "Public Sans Variable", system-ui, sans-serif;
+  --font-display: 'Archivo Variable', system-ui, sans-serif;
+  --font-body: 'Public Sans Variable', system-ui, sans-serif;
 
   --radius-xs: 0.3rem;
   --radius-sm: 0.5rem;
@@ -56,11 +56,12 @@
     --accent-ink: #ff8268;
     --accent-soft: rgba(255, 106, 77, 0.12);
     --on-accent: #15110e;
-    --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 24px 48px -32px rgba(0, 0, 0, 0.6);
+    --shadow-card:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 24px 48px -32px rgba(0, 0, 0, 0.6);
     color-scheme: dark;
   }
 }
-[data-theme="dark"] {
+[data-theme='dark'] {
   --bg: #131315;
   --surface: #1b1b1e;
   --sunken: #1e1e22;

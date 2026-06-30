@@ -13,9 +13,15 @@
     "check": "astro check",
     "format": "prettier --write \"src/**/*.{astro,ts,css}\" \"scripts/**/*.mjs\" \"*.{mjs,json}\"",
     "format:check": "prettier --check \"src/**/*.{astro,ts,css}\" \"scripts/**/*.mjs\" \"*.{mjs,json}\"",
-    "smoke": "node scripts/smoke.mjs"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate:content": "node scripts/validate-content.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "test:e2e": "node scripts/smoke-browser.mjs"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.3",
     "@fontsource-variable/archivo": "^5.2.8",
     "@fontsource-variable/public-sans": "^5.2.7",
     "@tailwindcss/postcss": "^4.2.4",
@@ -24,8 +30,14 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9",
+    "playwright": "^1.61.1",
     "prettier": "^3",
     "prettier-plugin-astro": "^0.14",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.0",
+    "yaml": "^2.9.0"
+  },
+  "overrides": {
+    "vite": "^7"
   }
 }

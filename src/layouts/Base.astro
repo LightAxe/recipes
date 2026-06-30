@@ -2,16 +2,20 @@
 import '@fontsource-variable/archivo';
 import '@fontsource-variable/public-sans';
 import '../styles/global.css';
+import '../styles/print.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { SITE_NAME, SITE_LIVE, abs } from '../lib/site';
 
 interface Props {
   title: string;
   description?: string;
+  /** schema.org JSON-LD objects to embed in <head>. */
+  jsonLd?: Record<string, unknown>[];
 }
-const { title, description } = Astro.props;
-const fullTitle =
-  title === 'Ogilvie Family Recipes' ? title : `${title} · Ogilvie Family Recipes`;
+const { title, description, jsonLd = [] } = Astro.props;
+const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`;
+const canonical = abs(Astro.url.pathname);
 ---
 
 <!doctype html>
@@ -31,8 +35,31 @@ const fullTitle =
     </script>
     <title>{fullTitle}</title>
     {description && <meta name="description" content={description} />}
-    {/* Phase 1 is non-public scaffolding — not indexed until launch (ADR-0004). */}
-    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={canonical} />
+    {/* Staged until launch: noindex unless SITE_LIVE=true (see lib/site.ts). */}
+    {!SITE_LIVE && <meta name="robots" content="noindex" />}
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={SITE_NAME}
+      href={abs('/rss.xml')}
+    />
+    {
+      jsonLd.map((obj) => (
+        <script
+          type="application/ld+json"
+          set:html={JSON.stringify(obj).replace(/</g, '\\u003c')}
+        />
+      ))
+    }
+    <slot name="head" />
+    {/* 4×6 card page size — enabled (media→print) by the Print menu only for card mode. */}
+    <style is:inline id="print-page-card" media="not all">
+      @page {
+        size: 4in 6in;
+        margin: 0.3in;
+      }
+    </style>
     <meta name="generator" content={Astro.generator} />
   </head>
   <body>

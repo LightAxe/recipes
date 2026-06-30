@@ -43,7 +43,7 @@ Everything below serves this principle.
 |---|---|---|
 | Generator | **Astro 6** (static output) | axpr.net & subterrans run Astro 6; islands give interactivity with minimal JS. ADR-0003. |
 | Language | **TypeScript**, Node **≥22.12** | Matches siblings; typed content schema. |
-| Styling | **Tailwind CSS 4** via `@tailwindcss/vite`, design tokens in a `@theme` block | Matches axpr.net & subterrans; tokens keep the aesthetic consistent. |
+| Styling | **Tailwind CSS 4** via `@tailwindcss/postcss` (PostCSS — the Vite plugin is incompatible with Astro 6's rolldown Vite, ADR-0009), tokens in `global.css` | Tokens keep the aesthetic consistent. |
 | Content | **Astro Content Collections** + **Zod** schema | Validates every recipe at build (catches intake mistakes). Mirrors `content.config.ts` in siblings. |
 | Fonts | **`@fontsource-variable`** (self-hosted) | Siblings self-host fonts; no third-party request, better privacy/perf. Specific faces chosen in `docs/design.md`. |
 | Interactivity | **Vanilla TS modules** in Astro `<script>` (consider Preact islands only if state grows) | Recipe interactions are DOM-state toggles + light math; a framework would be overkill and heavier. |
@@ -102,8 +102,8 @@ Each feature, designed as enhancement over static HTML:
   large step text and dimmed chrome, and (b) requests the **Screen Wake Lock API**
   (re-acquire on `visibilitychange`, release on exit, with a battery note). No-JS: normal
   page, no wake lock — still fully usable.
-- **Tappable timers:** steps with a `timer` (ISO-8601) render a button that starts an
-  in-page countdown (with an optional sound/notification). No-JS: the duration is just text.
+- **Step durations are display-only:** a step's `timer` (ISO-8601) renders as plain text —
+  no in-page countdown (people use their own kitchen/voice timers). ADR-0012.
 - **Theme toggle (light/dark, both at v1):** a pre-paint inline `<head>` script sets
   `data-theme` from `localStorage` → `prefers-color-scheme` (no flash); a nav toggle
   flips it and persists the choice. No-JS: the page renders in the system-preferred theme
@@ -183,7 +183,7 @@ reactive state. This is a reversible call.
 │   ├── styles/                 # tokens + global + print stylesheet
 │   └── content.config.ts       # Zod schema (mirrors docs/recipe-schema.md)
 ├── astro.config.mjs
-├── tailwind config (v4 via @tailwindcss/vite)
+├── postcss.config.mjs (Tailwind v4 via @tailwindcss/postcss)
 └── .github/workflows/deploy.yml
 ```
 

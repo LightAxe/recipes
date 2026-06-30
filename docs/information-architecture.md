@@ -29,7 +29,7 @@ enhancement), `design.md` (Counter), and `recipe-schema.md`. Living document.*
 │   └── /tips/conversions/          Conversion charts (cups⇄grams, °F⇄°C, gas mark)
 ├── /search/                        Search (client-side index)
 ├── /about/                         The collection's story + how to contribute
-└── (utility) /404, /sitemap.xml, /rss.xml, /robots.txt
+└── (utility) /404, /sitemap-index.xml (+ /sitemap-0.xml), /rss.xml, /robots.txt
 ```
 
 **Later (heritage phase):** `/from/<contributor>/` becomes richer; add `/stories/` and

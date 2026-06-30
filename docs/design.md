@@ -90,10 +90,15 @@ Applied via `[data-theme="dark"]` **and** `@media (prefers-color-scheme: dark)` 
 - **Footer:** hairline top, muted, the **"Part of the [axpr] cinematic universe"** line
   with `axpr` in accent.
 
-## 7. Print & later phases
-Print stylesheet + 4×6 card, the interactive layer (scaler, unit/weight toggle,
-tap-to-check, cook mode, timers), JSON-LD, and richer browse are Phase 2–3 — all will draw
-from these same tokens.
+## 7. Interactive layer & print (Phase 2 — built)
+The interactive layer is **progressive enhancement** over the static page, all drawing
+from these tokens: a **serving scaler** (`1×/2×/3×` + editable servings), **US/metric +
+volume/weight** toggles (weight gated on gram coverage; "prefer weight" remembered), and
+**tap-to-check** ingredients/steps (native checkboxes). **Lightweight cook mode** enlarges
+steps, dims chrome, and holds a screen wake lock — no step-by-step navigator. **No in-page
+timers** — step durations are display-only text (ADR-0012). **Print** offers three modes —
+**Clean** (no photo, default), **With photo**, and a **4×6 card** — all reflecting the
+current scale/units. Richer browse/search is a later phase.
 
 ## 8. Notes
 - Theme resolution: saved choice → `prefers-color-scheme` → Day; a pre-paint inline script

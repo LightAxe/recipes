@@ -76,7 +76,22 @@ const recipes = defineCollection({
         )
         .min(1),
       notes: z.array(z.string()).optional(),
-      nutrition: z.record(z.string(), z.string()).optional(),
+      // Whitelisted to schema.org NutritionInformation fields (strict — rejects typos).
+      nutrition: z
+        .object({
+          calories: z.string().optional(),
+          servingSize: z.string().optional(),
+          fatContent: z.string().optional(),
+          saturatedFatContent: z.string().optional(),
+          carbohydrateContent: z.string().optional(),
+          sugarContent: z.string().optional(),
+          proteinContent: z.string().optional(),
+          fiberContent: z.string().optional(),
+          sodiumContent: z.string().optional(),
+          cholesterolContent: z.string().optional(),
+        })
+        .strict()
+        .optional(),
       datePublished: z.coerce.date().optional(),
       dateUpdated: z.coerce.date().optional(),
     }),

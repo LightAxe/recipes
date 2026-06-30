@@ -85,11 +85,11 @@ A recognized subset of tags. When present, the build also emits schema.org
 | `vegan` | `https://schema.org/VeganDiet` |
 | `gluten-free` | `https://schema.org/GlutenFreeDiet` |
 | `dairy-free` | `https://schema.org/LowLactoseDiet` *(closest enum)* |
-| `low-sugar` | `https://schema.org/LowCalorieDiet` *(approx)* |
 | `kosher` | `https://schema.org/KosherDiet` |
 | `halal` | `https://schema.org/HalalDiet` |
 
-- `nut-free`, `egg-free`, etc. are valid **family-facing tags** but have no schema.org
+- `low-sugar`, `nut-free`, `egg-free`, etc. are valid **family-facing tags** but have no
+  accurate schema.org
   enum — they just don't add a `suitableForDiet` entry.
 - **Accuracy matters:** only apply a dietary tag if the recipe truly qualifies as written
   (intake should not guess — when unsure, omit and ask).

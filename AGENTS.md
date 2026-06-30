@@ -55,7 +55,8 @@ that family members of every age can use.
   (`@tailwindcss/postcss`), not the Vite plugin — ADR [0009]. Matches the Astro siblings.
 - **Hosting:** **AWS S3 + CloudFront** (GitHub Actions OIDC) + Route 53 + Cloudflare
   Analytics — like the rest of the universe. ADR [0006].
-- **Visibility:** **public**, with schema.org JSON-LD for SEO. ADR [0004].
+- **Visibility:** public-by-design with schema.org JSON-LD/RSS/sitemap (ADR [0004]). Domain
+  **recipes.axpr.net**; **staged behind a `SITE_LIVE` gate** (noindex until go-live, ADR [0011]).
 - **Photo handling:** optimized at build with sharp (`astro:assets`), committed in-repo;
   **EXIF stripped**.
 - **Intake:** maintainer provides recipes to **Claude Code**, which writes the files.
@@ -80,13 +81,15 @@ that family members of every age can use.
 [0008]: ./docs/adr/0008-weight-first-research-grams-at-intake.md
 [0009]: ./docs/adr/0009-tailwind-v4-via-postcss.md
 [0010]: ./docs/adr/0010-counter-design-system.md
+[0011]: ./docs/adr/0011-staged-launch-via-site-live-gate.md
+[0012]: ./docs/adr/0012-no-in-page-timers.md
 
 ## v1 scope
 
-- **Full interactive recipe pages:** cook mode (screen-wake-lock), serving scaler,
-  metric/imperial + volume/weight toggle, tap-to-check ingredients & steps, tappable
-  timers — plus responsive layout, accessibility baseline, and a print view (incl. 4×6
-  card). See `research/03-cross-generational-ux.md` for the full requirements checklist.
+- **Interactive recipe pages:** lightweight cook mode (screen-wake-lock), serving scaler,
+  US/metric + volume/weight toggle, tap-to-check ingredients & steps — plus responsive
+  layout, accessibility baseline, and a print view (clean / with-photo / 4×6 card). **No
+  in-page timers** (ADR-0012). See `research/03-cross-generational-ux.md` for the checklist.
 - **Lean heritage for now:** basic `contributor` attribution and free-form `notes` only.
   Scanned original cards, full provenance chains, oral-history audio, and a moderated
   "Family Notes" feature are a **later phase** (also for privacy, since the site is public).

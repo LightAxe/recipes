@@ -98,11 +98,19 @@ Round **only the final displayed number**, by unit class:
   For an awkward count like 1.5 eggs, render honestly: **"1½ eggs"** with an optional hint
   *("use 1 egg + 1 yolk, or beat 2 and use half")*. Never silently round eggs to 2.
 
-**Unit normalization (readability):** before rounding, promote to the most readable unit
-within the chosen system/measure using thresholds — e.g. `3 tsp → 1 tbsp`, `4 tbsp →
-¼ cup`, `16 tbsp → 1 cup`, `1000 ml → 1 l`, `1000 g → 1 kg`, `16 oz → 1 lb`. Pick the
-largest unit that yields a value `≥ 1` (with the fraction rules), so we show "1½ cups"
-not "24 tbsp".
+**Unit promotion (readability) — explicit thresholds** (not "largest unit ≥ 1", which
+would keep `4 tbsp` instead of promoting it). Pick the unit by these cutoffs, then apply
+the fraction rules:
+
+| Measure / system | Promote to… when | else… |
+|---|---|---|
+| US volume | **cup** when ≥ ¼ cup (≈ 59 ml) | **tbsp** when ≥ 1 tbsp, else **tsp** (floor "a pinch") |
+| Metric volume | **l** when ≥ 1000 ml | **ml** |
+| Metric weight | **kg** when ≥ 1000 g | **g** |
+| US weight | **lb** when ≥ 16 oz | **oz** |
+
+So `4 tbsp → ¼ cup`, `¾ cup` stays `¾ cup`, `2 tbsp` stays `2 tbsp`, `1000 g → 1 kg`.
+(This is the table the `units.ts` `formatUS*`/`formatMetric*` functions implement + test.)
 
 **Precision:** carry full precision through the math; apply the rules above exactly once at
 render. Prefer integer/rational arithmetic (e.g. work in ml and grams internally) to avoid

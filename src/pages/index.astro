@@ -2,17 +2,19 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import CardGrid from '../components/CardGrid.astro';
+import { websiteJsonLd, itemListJsonLd } from '../lib/jsonld';
 
 const recipes = (await getCollection('recipes')).sort(
-  (a, b) =>
-    (b.data.datePublished?.getTime() ?? 0) - (a.data.datePublished?.getTime() ?? 0),
+  (a, b) => (b.data.datePublished?.getTime() ?? 0) - (a.data.datePublished?.getTime() ?? 0),
 );
 const latest = recipes.slice(0, 6);
+const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
 ---
 
 <Base
   title="Ogilvie Family Recipes"
   description="A home for our family's recipes — to cook from, print, and pass down."
+  jsonLd={jsonLd}
 >
   <section class="wrap hero">
     <p class="eyebrow">The family cookbook</p>
