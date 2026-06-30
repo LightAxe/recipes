@@ -1,10 +1,12 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
-import { Picture } from 'astro:assets';
+import { Picture, getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
-import { groupIngredients, normalizeSteps, gramLabel } from '../../lib/recipe';
+import { groupIngredients, normalizeSteps } from '../../lib/recipe';
 import { courseLabel } from '../../lib/taxonomy';
 import { formatQty, formatDuration } from '../../lib/format';
+import { recipeJsonLd, breadcrumbJsonLd } from '../../lib/jsonld';
+import { abs } from '../../lib/site';
 
 export async function getStaticPaths() {
   const recipes = await getCollection('recipes');
@@ -29,13 +31,42 @@ const times = (
 )
   .map(([k, v]) => [k, formatDuration(v)] as const)
   .filter(([, v]) => v);
+
+// Weight toggle is offered only when ≥60% of *measurable* ingredients have grams.
+const measurable = data.ingredients.filter((i) => i.qty != null || i.grams != null);
+const withGrams = measurable.filter((i) => i.grams != null);
+const weightEligible = measurable.length > 0 && withGrams.length / measurable.length >= 0.6;
+
+const baseAmount = (i: (typeof data.ingredients)[number]) => {
+  const q = formatQty(i.qty);
+  if (!q) return '';
+  return i.unit ? `${q} ${i.unit}` : q;
+};
+
+let imageUrl: string | undefined;
+if (data.image) {
+  const img = await getImage({ src: data.image.src, width: 1200 });
+  imageUrl = abs(img.src);
+}
+const jsonLd = [
+  recipeJsonLd(recipe, imageUrl),
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Recipes', path: '/recipes/' },
+    { name: data.title, path: `/recipes/${recipe.id}/` },
+  ]),
+];
+
+let stepN = 0;
 ---
 
-<Base title={data.title} description={data.description}>
+<Base title={data.title} description={data.description} jsonLd={jsonLd}>
   <article class="recipe wrap">
     <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/">Home</a> <span aria-hidden="true">›</span>
-      <a href="/recipes/">Recipes</a> <span aria-hidden="true">›</span>
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span>
+      <a href="/recipes/">Recipes</a>
+      <span aria-hidden="true">›</span>
       {data.title}
     </nav>
 
@@ -44,11 +75,88 @@ const times = (
       <h1>{data.title}</h1>
       <div class="meta">
         <span class="by">{data.contributor}</span>
-        {times.map(([k, v]) => (<span><b>{k}</b> {v}</span>))}
+        {
+          times.map(([k, v]) => (
+            <span>
+              <b>{k}</b> {v}
+            </span>
+          ))
+        }
         <span><b>Serves</b> {data.servings}{data.yield ? ` · ${data.yield}` : ''}</span>
       </div>
       <p class="lede">{data.description}</p>
     </header>
+
+    {/* Interactive controls — hidden until JS reveals them (no-JS shows base amounts). */}
+    <div
+      id="controls"
+      class="controls"
+      data-base-servings={data.servings}
+      data-slug={recipe.id}
+      data-weight-eligible={weightEligible ? '1' : ''}
+      hidden
+    >
+      <div class="ctl scaler" role="group" aria-label="Scale recipe">
+        <label class="ctl-k" for="servings-input">Makes</label>
+        <input
+          id="servings-input"
+          class="servings-input"
+          type="number"
+          min="1"
+          step="1"
+          value={data.servings}
+        />
+        <span class="ctl-k">servings</span>
+        <div class="presets" role="radiogroup" aria-label="Quick scale">
+          <button type="button" class="seg" data-scale="1" role="radio" aria-checked="true"
+            >1×</button
+          >
+          <button type="button" class="seg" data-scale="2" role="radio" aria-checked="false"
+            >2×</button
+          >
+          <button type="button" class="seg" data-scale="3" role="radio" aria-checked="false"
+            >3×</button
+          >
+        </div>
+      </div>
+      <div class="ctl units">
+        <button
+          id="u-system"
+          type="button"
+          class="toggle"
+          data-state="us"
+          aria-label="Switch to metric units">US</button
+        >
+        {
+          weightEligible && (
+            <button
+              id="u-measure"
+              type="button"
+              class="toggle"
+              data-state="volume"
+              aria-label="Switch to weight"
+            >
+              Volume
+            </button>
+          )
+        }
+      </div>
+      <div class="ctl">
+        <button id="cookmode-btn" type="button" class="toggle" aria-pressed="false"
+          >Cook mode</button
+        >
+        <span id="cookmode-status" class="cm-status" role="status" hidden>screen stays on</span
+        >
+      </div>
+      <details class="print-menu ctl">
+        <summary class="toggle">Print</summary>
+        <div class="print-opts">
+          <button type="button" data-print="clean">Clean</button>
+          <button type="button" data-print="full">With photo</button>
+          <button type="button" data-print="card">4×6 card</button>
+        </div>
+      </details>
+    </div>
 
     {
       data.image && (
@@ -75,17 +183,27 @@ const times = (
                 {g.section && <h3>{g.section}</h3>}
                 <ul>
                   {g.items.map((i) => (
-                    <li>
-                      <span class="q">
-                        {formatQty(i.qty)}
-                        {i.unit ? ` ${i.unit}` : ''}
-                      </span>
-                      <span class="n">
-                        {i.item}
-                        {i.prep && <em>, {i.prep}</em>}
-                        {i.note && <em> ({i.note})</em>}
-                        {gramLabel(i) && <span class="g">{gramLabel(i)}</span>}
-                      </span>
+                    <li class="ing-item">
+                      <label>
+                        <input type="checkbox" class="check" />
+                        <span class="ing-text">
+                          {baseAmount(i) && (
+                            <span
+                              class="amount"
+                              data-qty={i.qty != null ? String(i.qty) : ''}
+                              data-unit={i.unit ?? ''}
+                              data-grams={i.grams != null ? String(i.grams) : ''}
+                              data-grams-approx={i.gramsApprox ? '1' : ''}
+                              data-count={i.qty != null && !i.unit ? '1' : ''}
+                            >
+                              {baseAmount(i)}
+                            </span>
+                          )}{' '}
+                          {i.item}
+                          {i.prep && <em>, {i.prep}</em>}
+                          {i.note && <em> ({i.note})</em>}
+                        </span>
+                      </label>
                     </li>
                   ))}
                 </ul>
@@ -97,14 +215,22 @@ const times = (
 
       <section class="method">
         <h2>Method</h2>
-        <ol>
+        <ol class="steps">
           {
-            steps.map((s) => (
-              <li>
-                <p>{s.text}</p>
-                {s.timer && <span class="timer">⏱ {formatDuration(s.timer)}</span>}
-              </li>
-            ))
+            steps.map((s) => {
+              stepN += 1;
+              return (
+                <li style={`--n: '${stepN}'`}>
+                  <label>
+                    <input type="checkbox" class="check" />
+                    <span class="step-body">
+                      <p>{s.text}</p>
+                      {s.timer && <span class="timer">{formatDuration(s.timer)}</span>}
+                    </span>
+                  </label>
+                </li>
+              );
+            })
           }
         </ol>
 
@@ -135,6 +261,10 @@ const times = (
     </div>
   </article>
 </Base>
+
+<script>
+  import '../../scripts/recipe';
+</script>
 
 <style>
   .recipe {
@@ -172,8 +302,117 @@ const times = (
     font-size: var(--text-lede);
     line-height: 1.5;
     max-width: 46ch;
-    margin: 0 0 2.25rem;
+    margin: 0 0 1.75rem;
   }
+
+  /* Controls bar */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    padding: 0.85rem 1.1rem;
+    margin: 0 0 2rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+  }
+  .ctl {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ctl-k {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .servings-input {
+    width: 3.5rem;
+    font: inherit;
+    text-align: center;
+    padding: 0.3rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xs);
+    background: var(--bg);
+    color: var(--text);
+  }
+  .presets {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill, 999px);
+    overflow: hidden;
+  }
+  .seg {
+    min-height: 40px;
+    padding: 0 0.8rem;
+    border: 0;
+    background: var(--surface);
+    color: var(--text);
+    font: 600 0.9rem var(--font-display);
+    cursor: pointer;
+  }
+  .seg + .seg {
+    border-left: 1px solid var(--line);
+  }
+  .seg.active {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .toggle {
+    min-height: 40px;
+    padding: 0 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill, 999px);
+    background: var(--surface);
+    color: var(--text);
+    font: 600 0.9rem var(--font-display);
+    cursor: pointer;
+  }
+  .toggle[aria-pressed='true'] {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: var(--accent);
+  }
+  .cm-status {
+    font-size: 0.78rem;
+    color: var(--accent-ink);
+  }
+  .print-menu {
+    position: relative;
+  }
+  .print-menu > summary {
+    list-style: none;
+  }
+  .print-menu > summary::-webkit-details-marker {
+    display: none;
+  }
+  .print-opts {
+    position: absolute;
+    z-index: 20;
+    margin-top: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    min-width: 9rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .print-opts button {
+    text-align: left;
+    padding: 0.6rem 0.9rem;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+  }
+  .print-opts button:hover {
+    background: var(--sunken);
+  }
+
   .shell {
     margin: 0 0 3rem;
     background: var(--sunken);
@@ -191,6 +430,7 @@ const times = (
     object-fit: cover;
     border-radius: var(--radius-sm);
   }
+
   .cols {
     display: grid;
     gap: 3rem;
@@ -228,67 +468,86 @@ const times = (
     margin: 0;
     padding: 0;
   }
-  .ing li {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.75rem;
-    padding: 0.55rem 0;
+  .ing-item label {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    padding: 0.5rem 0;
     border-bottom: 1px solid var(--line);
-    font-size: 1rem;
+    cursor: pointer;
   }
-  .ing .q {
+  .check {
+    flex: none;
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--accent);
+    transform: translateY(0.15rem);
+  }
+  .amount {
     font-weight: 700;
     color: var(--accent-ink);
     white-space: nowrap;
   }
-  .ing .n em {
+  .ing-text em {
     color: var(--muted);
     font-style: normal;
   }
-  .ing .g {
-    display: block;
-    font-size: 0.78rem;
+  label:has(.check:checked) .ing-text {
+    text-decoration: line-through;
     color: var(--muted);
-    margin-top: 0.1rem;
   }
-  .method ol {
+  label:has(.check:checked) .amount {
+    color: var(--muted);
+  }
+
+  .steps {
     list-style: none;
-    counter-reset: s;
     margin: 0;
     padding: 0;
   }
-  .method li {
-    counter-increment: s;
+  .steps li {
     display: grid;
     grid-template-columns: 2.4rem 1fr;
     gap: 1.1rem;
     margin-bottom: 1.5rem;
   }
-  .method li::before {
-    content: counter(s, decimal-leading-zero);
+  .steps li::before {
+    content: var(--n);
     width: 2.4rem;
     height: 2.4rem;
     display: grid;
     place-items: center;
     background: var(--accent);
     color: var(--on-accent);
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 0.95rem;
+    font: 800 0.95rem var(--font-display);
     border-radius: var(--radius-sm);
   }
-  .method p {
+  .steps label {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    cursor: pointer;
+  }
+  .step-body {
+    display: block;
+  }
+  .step-body p {
     margin: 0.2rem 0 0;
     font-size: 1.06rem;
     max-width: 60ch;
   }
+  label:has(.check:checked) .step-body {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
   .timer {
     display: inline-block;
-    margin-top: 0.5rem;
+    margin-top: 0.4rem;
     font-size: 0.8rem;
     color: var(--accent-ink);
     font-weight: 700;
   }
+
   .notes {
     margin-top: 2rem;
     background: var(--accent-soft);
@@ -319,5 +578,22 @@ const times = (
   }
   .prose {
     max-width: 60ch;
+  }
+
+  /* Cook mode: enlarge steps, dim chrome (no step navigator). */
+  :global(body.cook-mode) .crumbs,
+  :global(body.cook-mode) .head .meta,
+  :global(body.cook-mode) .lede,
+  :global(body.cook-mode) .shell,
+  :global(body.cook-mode) .story,
+  :global(body.cook-mode) :is(.site-header, .site-footer) {
+    opacity: 0.25;
+  }
+  :global(body.cook-mode) .step-body p {
+    font-size: 1.35rem;
+    line-height: 1.5;
+  }
+  :global(body.cook-mode) .steps li {
+    margin-bottom: 2.25rem;
   }
 </style>

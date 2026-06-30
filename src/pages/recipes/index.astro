@@ -2,16 +2,23 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import CardGrid from '../../components/CardGrid.astro';
+import { itemListJsonLd } from '../../lib/jsonld';
 
 const recipes = (await getCollection('recipes')).sort((a, b) =>
   a.data.title.localeCompare(b.data.title),
 );
+const jsonLd = [itemListJsonLd(recipes)];
 ---
 
-<Base title="All Recipes" description="Every recipe in the Ogilvie family collection.">
+<Base
+  title="All Recipes"
+  description="Every recipe in the Ogilvie family collection."
+  jsonLd={jsonLd}
+>
   <section class="wrap">
     <nav aria-label="Breadcrumb" class="crumbs">
-      <a href="/">Home</a> <span aria-hidden="true">›</span> All Recipes
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span> All Recipes
     </nav>
     <p class="eyebrow">The collection</p>
     <h1>All Recipes</h1>

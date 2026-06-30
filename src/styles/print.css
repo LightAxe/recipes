@@ -1,0 +1,98 @@
+/* Print: CLEAN by default (a plain Ctrl+P needs no UI). "Full" adds the photo;
+   "4×6 card" compacts (its @page size is toggled by a separate stylesheet in <head>,
+   since @page can't be driven by a body class). Output reflects current scale/units. */
+@media print {
+  /* strip chrome + interactive bits */
+  .site-header,
+  .site-footer,
+  #controls,
+  .skip-link,
+  .crumbs,
+  .story,
+  .timer,
+  .check {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+  a {
+    color: #000;
+    text-decoration: none;
+  }
+
+  /* photo off by default; "full" mode restores it */
+  .shell {
+    display: none;
+  }
+  body.print-full .shell {
+    display: block;
+  }
+  body.print-card .shell {
+    display: none;
+  }
+
+  /* neutralize tap-to-check state so a printout reads normally */
+  label:has(.check:checked) .ing-text,
+  label:has(.check:checked) .step-body,
+  label:has(.check:checked) .amount {
+    text-decoration: none !important;
+    color: #000 !important;
+  }
+
+  /* single-column, frame-free */
+  .recipe {
+    max-width: none;
+    padding: 0;
+  }
+  .cols {
+    display: block;
+  }
+  .ing {
+    position: static;
+  }
+  .ing-inner {
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    background: transparent;
+  }
+  .amount {
+    color: #000;
+  }
+  .notes {
+    background: transparent;
+    border: 1px solid #999;
+  }
+  .steps li::before {
+    background: #000;
+    color: #fff;
+  }
+
+  /* keep logical blocks together */
+  .ing-item,
+  .steps li,
+  .notes {
+    break-inside: avoid;
+  }
+  .step-body p {
+    font-size: 12pt;
+  }
+
+  /* 4×6 card compaction */
+  body.print-card {
+    font-size: 10pt;
+  }
+  body.print-card .head h1 {
+    font-size: 16pt;
+  }
+  body.print-card .lede,
+  body.print-card .notes {
+    display: none;
+  }
+  body.print-card .step-body p {
+    font-size: 9pt;
+  }
+}

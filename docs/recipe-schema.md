@@ -68,11 +68,12 @@ instructions:
   - "Preheat the oven to 425°F (220°C)."          # simple string step
   - text: "Bake until golden."                     # object form
     section: Bake                                   # optional grouping heading
-    timer: PT1H                                     # optional ISO-8601 → tappable in-page timer
+    timer: PT1H                                     # optional ISO-8601 → shown as plain text (no in-page timer)
 ```
 
 - Each step is independently **tap-to-check**.
-- A `timer` makes the duration tappable to start a countdown without leaving the page.
+- A `timer` is **display-only** — the duration shows as plain text; there's no in-page
+  countdown (ADR-0012). The field is kept for data/SEO and possible future use.
 - Mention temperatures in both °F and °C in the text for now.
 
 ## Body (Markdown)

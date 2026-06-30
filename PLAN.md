@@ -1,167 +1,152 @@
-# Plan: Phase 1 — scaffold the Ogilvie Family Recipes site (thin vertical slice)
+# Plan: Phase 2 — complete the recipe (SEO + print) and add the interactive layer
 _Locked via grill — by Claude + Rob. Hardened via Codex (round 1)._
 
 ## Goal
-Stand up the Astro site as a **thin vertical slice** that proves the whole content→page
-pipeline end-to-end, in the Enamelware design language, without any of the recipe/cooking
-interactivity or launch machinery. When Phase 1 is done: `npm run build` + `astro check`
-pass and a **post-build smoke test** is green; the repo-root `recipes/` content is read via
-a glob loader and validated by a full Zod schema; the `grandmas-apple-pie` recipe renders
-as a clean **semantic** page (with an optimized placeholder hero image) in both light and
-dark themes; `/` and `/recipes/` list recipes; the base layout carries the wordmark, a
-**live-routes-only** nav, the theme toggle, and the "axpr cinematic universe" footer; and
-CI build-checks every push/PR. **Phase 1 output is non-public scaffolding** (not deployed,
-`noindex`) — so deferring JSON-LD does not violate ADR-0004, which governs the *public*
-site. Lands on a `phase-1-scaffold` branch via PR.
+Turn the static Counter recipe page into a complete, launch-ready, interactive one — while
+staying **staged** (not deployed, not indexable) until real recipes are imported. Add the
+build-time SEO/structured-data + print layer and the client interactive layer (serving
+scaler, US/metric + volume/weight toggle, tap-to-check, lightweight cook mode), all as
+**progressive enhancement** over the existing semantic page (no-JS unchanged). The
+correctness-critical scaling/unit math is a pure, **Vitest-tested** lib. Lands on
+`phase-2-recipe-interactivity` → PR → CI (now incl. tests) → merge.
 
 ## Approach
 
-### 1. Branch & minimal scaffold (just enough to build)
-1. Create branch `phase-1-scaffold`.
-2. Scaffold **Astro 6** (TypeScript, strict) with **npm**; pin **Node ≥22.12** via
-   `.nvmrc` (`22`) and `package.json` `engines`. Match sibling versions (Astro 6.1.x).
-   Set **`trailingSlash: 'always'`** + `build.format: 'directory'` in `astro.config.mjs`
-   (IA requires stable trailing-slash URLs).
-3. Add **Tailwind CSS 4** via the **`@tailwindcss/vite`** plugin (not legacy
-   `@astrojs/tailwind`), wired in `astro.config.mjs`. Self-host fonts via `@fontsource`:
-   **Fredoka** (display), **Atkinson Hyperlegible** (body/UI), **DM Mono** (meta).
-4. Tooling: `astro/tsconfigs/strict`, **Prettier** + `prettier-plugin-astro`, npm scripts
-   (`dev`, `build`, `preview`, `check`, `format`, `smoke`). Brief root `README.md` → `AGENTS.md`/`docs/`.
+### 1. Branch, deps, indexability gate
+1. Branch `phase-2-recipe-interactivity` off `main` (done).
+2. Add dev dep **vitest**; add **@astrojs/sitemap** + **@astrojs/rss** (versions compatible with Astro ~6.1).
+3. Set `site: 'https://recipes.axpr.net'` in `astro.config.mjs` (keep `trailingSlash:'always'`).
+4. **One launch gate** — an env flag `SITE_LIVE` (default `false`). While `false` (staged):
+   `<meta name="robots" content="noindex">` on every page and the sitemap is **not advertised**
+   (no `<link rel="sitemap">`, not referenced in robots). **No `robots.txt Disallow: /`** — a
+   Disallow would block crawlers *before* they could read the `noindex` (Codex R2 #5), and Phase 2
+   doesn't deploy anyway; if a pre-launch build is ever deployed, protect it at the **CDN/auth**,
+   not via robots. At launch we flip the one flag — avoids publishing crawl URLs while telling
+   crawlers to drop every page (Codex #4).
 
-### 2. Spike — de-risk the external-content image pipeline (against the scaffold)
-5. Before building components, a tiny **spike** on the scaffold proves the core unknown: a
-   `glob()` loader with `base` = repo-root `recipes/` + the content **`image()`** schema
-   helper + **`<Picture>`** produce optimized output for an entry whose images are colocated
-   under `recipes/images/<slug>/`. Also confirm Fredoka's `@fontsource` axes here. If
-   `image()` can't resolve images for an externally-based collection, pick the fallback
-   **now** (relative `import`, an `assets/` symlink, or a plain-string path optimized via a
-   small step) before writing the rest.
+### 2. Pure scaling/units lib + tests (foundation)
+5. `src/lib/units.ts` — conversion constants, **unit normalization** (map `tablespoon`/`T`/`tbsp.`/
+   plurals → canonical; a known-unit set), volume↔metric, grams↔oz/lb/kg, and an **explicit
+   promotion threshold table** (e.g. 4 tbsp→¼ cup, 1000 g→1 kg) replacing the vague "largest unit ≥1"
+   prose (Codex #12). `src/lib/scaling.ts` — factor, scale qty+grams. **No DOM imports.**
+6. **Vitest** suite, two kinds kept separate (Codex #13): **raw-conversion round-trips** (within
+   tolerance, e.g. cup↔ml, g↔oz) AND **display-format snapshots** (fraction snapping, promotion,
+   `900 g → 2 lb`, egg/half-count, tiny-amount flooring, factor clamping, ×1 idempotence, grams-absent
+   fallback). Add `test` script + `npm test` to `.github/workflows/ci.yml`.
+7. Tighten `src/content.config.ts`: **whitelist** `nutrition` keys to schema.org
+   `NutritionInformation` fields (Codex #10). Unknown **units** aren't a Zod concern (Zod is
+   pass/fail, not warning-capable — Codex R2 #2): add a separate **`scripts/validate-content.mjs`**
+   that logs **warnings** for unknown units (and, per `taxonomy.md` soft rules, unknown cuisine /
+   brand-new tags) and runs in CI. `units.ts` still normalizes synonyms (`tablespoon`/`T`/plurals)
+   so the scaler never silently mishandles them (Codex #14).
 
-### 2. Design tokens (Enamelware, both themes) — Tailwind v4 correctly
-7. `src/styles/global.css`: `@import "tailwindcss"`. Put **static brand scale tokens in a
-   top-level `@theme`** block (fonts, radii, the fixed palette) — `@theme` must be
-   top-level, never nested. Put **runtime-themeable values as plain CSS custom properties**
-   under `:root` (Counter/light) and override them under `[data-theme="dark"]` **and**
-   `@media (prefers-color-scheme: dark) { :root:not([data-theme]) { … } }` (Night Kitchen).
-   Fluid base size per `docs/design.md` §3: `:root { font-size: clamp(18px, 1rem + 0.25vw, 20px); }`
-   (the inline sum is valid inside `clamp()`; keep design.md's exact form).
-8. **Theme plumbing:** a tiny **pre-paint inline `<head>` script** sets `data-theme` from
-   `localStorage` → `prefers-color-scheme` (no flash). The CSS `@media` fallback in step 7
-   means **no-JS users still get their system theme**; the `ThemeToggle` button is
-   **hidden when JS is unavailable** (rendered/enabled by the script) and persists choice.
+### 3. Recipe page: progressive-enhancement markup
+8. Server-render ingredient quantities with base-value data attributes (`data-qty`, `data-unit`,
+   `data-grams`, `data-grams-approx`, `data-count`) + visible base text. Ingredients & steps use
+   **native `<input type=checkbox>` + `<label>`** for tap-to-check (≥44px, strike-through when
+   done) — **not** `aria-pressed` (Codex #15). No-JS = base amounts + a plain, still-checkable list.
+9. **Enhancement controls are hidden until JS initializes** (rendered `hidden`, revealed by script,
+   like the theme toggle) so the no-JS path shows only static base servings (Codex #16): **Scaler**
+   (`1× 2× 3×` `radiogroup` + editable servings) and **Unit toggles** (System US⇄Metric, Measure
+   Volume⇄Weight, `aria-pressed`).
+10. **Weight-toggle gating, defined precisely:** denominator = ingredients that are *measurable*
+    (have a numeric `qty` **or** `grams`); coverage = those with `grams`. Show Weight when coverage
+    ≥ 60%. Apple-pie: measurable = apples, sugar, flour, cinnamon, nutmeg, crusts (6); with grams =
+    apples, sugar, flour, cinnamon (4) → 67% ✓. Count+grams items (apples) render by weight in
+    weight view. **Fallback in weight view (Codex R2 #1):** an item with `unit`+`qty` but no grams
+    shows `≈ <its volume>` (muted); a **count** item with no grams (e.g. pie crusts) stays a **plain
+    count, unchanged** (there's no volume to show). A persisted **"prefer weight"** preference
+    defaults a well-covered recipe to weight.
+11. **Lightweight cook mode:** enlarges step text, dims chrome, engages **Screen Wake Lock**. Status
+    ("screen will stay on") shows **only after a live sentinel is acquired**; handle unsupported /
+    rejected / auto-released states gracefully and re-acquire on `visibilitychange` (Codex #19).
+    No-JS: button hidden.
+12. **Timers are display-only** — a step's `timer` renders as plain informational text, no countdown.
 
-### 3. Content pipeline
-9. `src/content.config.ts`: a `recipes` collection via a **`glob()` loader**, `base` =
-   repo-root `recipes/`, pattern matching recipe `.md` **excluding `TEMPLATE.md`** and
-   `images/` (verify the loader's negation/micromatch; relocate the template if needed).
-10. A **Zod schema that fully mirrors `docs/recipe-schema.md`** (every field): `title`,
-    `description`, `contributor` (req); `course` = **enum of the 13 taxonomy slugs**;
-    optional `cuisine`; `tags[]` validated **kebab-case** (regex); optional `image`
-    `{src: image(), alt}`; **`servings` = `z.number().int().positive()`** (no zero/negative
-    — the scaler divides by it); optional `yield`; ISO-8601 `prepTime/cookTime/totalTime`;
-    `ingredients[]` (**`qty?` single number** — see range note, `unit?`, `item` req, `prep?`,
-    **`note?`**, `grams?`, `gramsApprox?` bool, `gramsSource?`, `section?`); `instructions[]`
-    = **union `string | {text, section?, timer?}`**; optional `notes[]`, `nutrition`,
-    `datePublished/dateUpdated`. (Soft taxonomy passes — cuisine-not-in-list *warning* and
-    new-tag *note* — are deferred to a later phase; the hard enum + kebab regex ship now.)
-    **Quantity ranges** ("2–3 apples") are **deferred for v1**: `qty` is a single number;
-    express a range in `note`/`prep` text for now. Reconcile `docs/scaling-and-units.md` §8
-    (which mentions scaling ranges) to mark range-typed `qty` as a future schema change.
-11. **Fix the fixture** so it's a clean, schema-valid exemplar: remove the `dessert` tag
-    from `grandmas-apple-pie.md` (taxonomy forbids duplicating the course as a tag); update
-    the hero `alt` to honestly match the placeholder (see step 13). Confirm it validates
-    (it exercises the **instructions union/timer branch**, the course enum, sectioned
-    *ingredients*, and the grams fields — it does **not** exercise sectioned *instructions*;
-    no claim is made that it does).
+### 4. Interactivity scripts (vanilla TS) + state
+13. `src/scripts/`: `prefs.ts` (localStorage + URL), `scaler.ts`, `unitToggle.ts`, `checklist.ts`,
+    `cookmode.ts`. They read data attributes, call the pure lib, rewrite only number/unit spans +
+    control state. Hydrated per recipe page.
+14. **State model (single precedence rule, Codex #17/#18):** the URL param is **`?servings=N`**
+    (absolute target servings; the `1×/2×/3×` presets just set `servings = base × preset`; factor =
+    `servings / base`, clamped). Serving scale resolves: **`?servings=` if present → else per-recipe
+    stored scale → else base (1×)**. Unit system + measure + "prefer weight" → localStorage (global).
+    tap-to-check → localStorage keyed by recipe slug.
 
-### 4. Placeholder hero image (astro:assets via `<Picture>`)
-12. Generate an **EXIF-clean placeholder** `hero.jpg` **once and commit it as a static
-    asset** (no reliance on a transitive `sharp`; astro:assets bundles sharp to *optimize*
-    it at build). Place at `recipes/images/grandmas-apple-pie/hero.jpg`; set the recipe's
-    `image.src` to the **colocated relative path** `./images/grandmas-apple-pie/hero.jpg`
-    and update the `image.src` relative-path convention in `docs/recipe-schema.md`,
-    `recipes/TEMPLATE.md`, **and `docs/agents/intake.md`** (which currently says to
-    reference only the filename) in the same step.
-13. Render via the content **`image()`** helper + **`<Picture formats={['avif','webp']}
-    widths={…} sizes="…">`** (multi-format/responsive — `<Image>` alone is single-format).
-    Because the placeholder is a motif, its `alt` describes **what it actually is**
-    ("Placeholder — a cream enamel tile with a petal motif; photo coming soon"), not a pie;
-    a real photo + real alt arrive via intake later.
+### 5. Structured data (SEO), gated
+15. Extend `Base.astro` first: a typed **`jsonLd` prop** (rendered as `<script type="application/ld+json">`),
+    a **head `<slot name="head">`**, `<link rel="canonical">`, and RSS autodiscovery (Codex #5).
+16. `src/lib/jsonld.ts` builds **schema.org Recipe**: name, **image as an absolute optimized URL**
+    (`getImage` + `new URL(..., site)`, Codex #6), author=contributor, prep/cook/total, recipeYield,
+    **`recipeIngredient` = clean as-authored strings only** (qty/unit/item/prep — *no* grams,
+    source, or approx markup; Codex #7), **`recipeInstructions` = clean `HowToStep{text}`** with no
+    "Step N" prefixes and `url` only if `id="step-n"` anchors exist (Codex #8), recipeCategory=course
+    label, recipeCuisine, keywords=tags, **`suitableForDiet` only for accurate mappings** (drop
+    `low-sugar`→LowCalorieDiet; Codex #9), nutrition only if present (whitelisted). Add
+    **BreadcrumbList** on recipe pages, **ItemList** on `/recipes/` + home, **WebSite** site-wide.
+17. **RSS endpoint** at `src/pages/rss.xml.ts` using `@astrojs/rss` — full metadata (Codex R2 #4):
+    feed `title` + `description` + `site`, and each item `title`, `link`, `pubDate` (from
+    `datePublished`), `description` (Codex #2).
+    **Sitemap** via `@astrojs/sitemap` — its real output is **`sitemap-index.xml` + `sitemap-0.xml`**
+    (not `/sitemap.xml`); update the IA doc + smoke accordingly (Codex #1). Both gated by `SITE_LIVE`.
+18. **Validation:** validate rendered JSON-LD **locally now** (paste into the Schema Markup
+    Validator / JSON-parse in tests); the Google **URL** Rich Results Test only works post-launch
+    (needs non-`noindex`), so it's a launch-checklist item, not a Phase-2 gate (Codex #3).
 
-### 5. Layout, components, pages
-14. `src/layouts/Base.astro`: `<head>` (meta, fonts, pre-paint theme script, title,
-    **`<meta name="robots" content="noindex">`** while non-public, **no `canonical`/OG
-    until `site` is configured**), a **skip-to-content** link, `<Header>`, `<main id="main">`,
-    `<Footer>`.
-15. Components: `Wordmark` ("Ogilvie Family Recipes" + petal mark), `Header` (wordmark +
-    **nav with only live routes — `Recipes` (/recipes/) — plus `ThemeToggle`**; no
-    Categories/Tips/About/Search yet), `Footer` (© Ogilvie Family + **"Part of the
-    [axpr](https://axpr.net) cinematic universe"**), `RecipeCard` (thumb + title + mono
-    meta, whole-card link), **`CardGrid`** (the responsive grid wrapping `RecipeCard`s),
-    `Petal` SVG. **`image` is optional in the schema, so `RecipeCard` and the recipe page
-    both guard rendering** — a recipe with no `image` shows a tasteful petal/tile fallback,
-    never a broken `<picture>`.
-16. Pages (all under `trailingSlash:'always'`):
-    - `src/pages/index.astro` — title + one-line intro + a `CardGrid` linking to `/recipes/`.
-    - `src/pages/recipes/index.astro` — **All Recipes**: `CardGrid` of `RecipeCard`s from
-      `getCollection('recipes')` (this is the nav target; prevents a dead link).
-    - `src/pages/recipes/[...slug].astro` — `getStaticPaths` over recipes; the **semantic
-      backbone** styled with base tokens: `<Picture>` hero, title (Fredoka), meta byline
-      (DM Mono: contributor, times, servings), petal-bulleted ingredient list at **base
-      amounts** (grouped by `section`, showing `note`/`prep`), numbered steps (enamel-circle
-      badges; a step's `timer` as plain text), `notes` callout, Markdown **story body** in a
-      `<details>` disclosure. No JSON-LD/interactivity/print.
-    - `src/pages/404.astro` — simple themed not-found.
+### 6. Print — three modes, clean by default
+19. **`@media print` defaults to CLEAN** (no chrome, no photo): nav/footer/toggles/cook-mode/buttons
+    **and the tap-to-check checkboxes** hidden, and checked-state **strikethrough/dimming
+    neutralized** so a printed copy reads normally — while **preserving the scaled/unit text**
+    (Codex R2 #6); keep title/meta/ingredients/method/notes. A plain Ctrl+P is already clean (Codex #22).
+20. A small **Print menu** offers: **Clean** (default), **Full** (adds the hero via a `print-full`
+    body class), and **4×6 card**. For 4×6, body classes can't reliably drive `@page size`
+    (Codex #20), so the script **enables a dedicated `media="print"` stylesheet** (`@page { size: 4in
+    6in; margin: .3in }` + compact card CSS) immediately before `window.print()` and disables it
+    after. **Card mode allows multi-page flow** for long recipes (not forced onto one card); verify
+    with a long recipe (Codex #21). Printed output reflects the **current scale/units** (DOM-based).
 
-### 6. CI (build-check + smoke test)
-17. `.github/workflows/ci.yml`: on push/PR → Node 22, `npm ci`, `npx astro check`,
-    `npm run build`, then **`npm run smoke`** — a tiny post-build script asserting `dist/`
-    contains `index.html`, `recipes/index.html`, `recipes/grandmas-apple-pie/index.html`,
-    the recipe title text, and **optimized image markup** (`<picture>` + an `.avif`/`.webp`
-    source). Catches dead routes, missing image formats, and broken renders that
-    `astro check` won't. **No deploy, no analytics.**
-
-### 7. Verify & land
-18. Verify locally: spike green, `astro check` clean, `npm run build` + `npm run smoke`
-    pass, apple-pie renders with the optimized image, both themes work with **no FOUC**,
-    no-JS page is fully readable and system-themed, `/` and `/recipes/` list the recipe.
-    Open a **PR** from `phase-1-scaffold`; CI green; Rob reviews/merges.
+### 7. Quality, docs, land
+21. Extend `scripts/smoke.mjs` to **parse, not just grep** (Codex #23): `JSON.parse` the Recipe
+    JSON-LD block and assert key fields; assert the **RSS** endpoint output and the **exact sitemap
+    filenames** exist (when `SITE_LIVE`); assert the clean-print marker. **CI runs build + smoke
+    twice — default (staged) and `SITE_LIVE=true`** — so the launch-only sitemap/RSS/robots outputs
+    can't rot untested (Codex R2 #3). Keep `astro check` + build + smoke + **test** + the
+    content-validation script green in CI.
+22. **Doc fixes (do these so docs match reality):** `architecture.md` — correct the stale "Tailwind
+    via `@tailwindcss/vite`" line to PostCSS (ADR-0009 conflict, Codex #24); **scrub interactive-timer
+    references** in `recipe-schema.md`, `components.md`, `architecture.md`, `AGENTS.md` → display-only
+    (Codex #25); `taxonomy.md` — drop the `low-sugar`→`LowCalorieDiet` mapping; `scaling-and-units.md`
+    — replace the promotion prose with the threshold table; `design.md` — cook mode = lightweight,
+    print = 3 modes; `information-architecture.md` — sitemap filename. Small ADR for the `SITE_LIVE`
+    staged-launch gate.
+23. Verify locally (both themes, no-JS path, scaled + weight-view print in all 3 modes), open PR, CI
+    green, merge.
 
 ## Key decisions & tradeoffs (resolved in grill + round-1 hardening — bite here, Codex)
-- **Thin vertical slice** DoD; **spike-first** to de-risk external-content `image()` before
-  committing to it.
-- **Glob loader OUTSIDE `src/`** at repo-root `recipes/` (ADR-0002 decoupling). Tradeoff:
-  `image()` resolution + `TEMPLATE.md` exclusion must work — the spike proves or replaces it.
-- **Image pipeline + a committed placeholder** in Phase 1; rendered via **`<Picture>`**
-  (multi-format), not `<Image>`; placeholder `alt` is honest.
-- **Tailwind v4 done right:** static tokens in top-level `@theme`; **runtime theme values as
-  CSS custom properties** under `:root`/`[data-theme]`/`@media` (not nested in `@theme`).
-- **Both themes with a no-JS CSS `prefers-color-scheme` fallback**; toggle hidden without JS.
-- **Full Zod schema** incl. `ingredients[].note`, the instructions union, the 13-slug enum,
-  and **kebab-case tag regex**; soft cuisine/new-tag *warnings* deferred (documented).
-- **`trailingSlash:'always'`**, **live-routes-only nav** (+ a real `/recipes/` page),
-  **`noindex` + no canonical** while non-public.
-- **JSON-LD stays deferred** (Rob's explicit grill choice) — the ADR-0004 tension is
-  resolved by **scoping Phase 1 as non-public/`noindex` scaffolding**; JSON-LD lands in
-  Phase 2 *before* launch, which is what ADR-0004 actually governs.
-- **CI build-check + smoke test**; **npm + Node 22**; defer deploy/analytics/domain;
-  **feature branch + PR**.
+- **Big Phase 2:** SEO + print + full interactivity, **minus timers** (display-only).
+- **Domain `recipes.axpr.net`** as `site`, but **staged behind a single `SITE_LIVE` gate** that ties
+  together noindex + robots + sitemap advertisement (no half-published crawl directives).
+- **JSON-LD correctness:** clean `recipeIngredient`/`recipeInstructions`, absolute image URL,
+  accurate `suitableForDiet` only, whitelisted nutrition; validate locally (URL test post-launch).
+- **Cook mode = lightweight** wake-lock with status only after a real sentinel.
+- **State:** URL **`?servings=`** (single semantics) with precedence URL → stored → base; prefs +
+  checks in localStorage.
+- **Print:** clean by default; Full/4×6 are explicit; 4×6 via a toggled dedicated print stylesheet
+  (not body-class `@page`), multi-page allowed.
+- **Checklist = native checkboxes**; controls **hidden until JS**; pure **Vitest-tested** lib with
+  raw round-trips separated from display snapshots.
 
 ## Risks / open questions
-- **`image()` with an external glob `base`** — the **spike (step 1)** resolves this up
-  front; fallback chosen there if it fails. *(Was the top risk; now gated by the spike.)*
-- **`@fontsource` Fredoka** packaging (variable vs static axes) — confirm in the spike.
-- **`@tailwindcss/vite` + Astro 6** version compatibility — confirm at scaffold.
-- **glob `TEMPLATE.md` exclusion** — confirm the loader's negation pattern, else relocate
-  the template out of `recipes/`.
-- **Smoke-test brittleness** — keep assertions structural (file exists, `<picture>`/`.avif`
-  present, title substring), not hashed asset names.
+- **`@page size` browser support** for the 4×6 card is uneven — verify in real browsers; the
+  toggled-stylesheet approach is the most reliable but not universal.
+- **Wake Lock** availability varies (HTTPS only, can be denied/auto-released) — UI must degrade.
+- **@astrojs/sitemap / @astrojs/rss** compatibility with Astro ~6.1 — confirm at install.
+- **`SITE_LIVE` discipline** — every indexability surface (meta, robots, sitemap link) must read the
+  one flag, or staging leaks.
+- **Weight fallback** for grams-less items must render clearly: nutmeg (unit+qty) → `≈ volume`;
+  crusts (count) → count unchanged.
 
-## Out of scope (Phases 2–4)
-All **recipe/cooking interactivity** (serving scaler, US/metric + volume/**weight** toggle,
-tap-to-check, cook mode + wake lock, timers) — the JS **theme toggle is in scope** and is
-not "interactivity" in this sense; schema.org **JSON-LD** (Phase 2, before launch);
-**print**/4×6 stylesheet; taxonomy / cuisine / tag / **contributor** pages; **Pagefind**
-search; **tips**/**about** pages; full enamel-dish **card polish** beyond a basic petal;
-**deploy** (S3 + CloudFront + Route 53 + OIDC), **Cloudflare Analytics**, the **domain**,
-and a real `site`/canonical/OG; **Vitest** + the pure scaling-units lib.
+## Out of scope (later phases)
+Taxonomy/cuisine/tag/**contributor** browse pages; **Pagefind** search; **tips**/**about** pages;
+**deploy** (S3/CloudFront/Route 53/OIDC) + flipping `SITE_LIVE` at go-live; **heritage** features;
+**interactive timers**.

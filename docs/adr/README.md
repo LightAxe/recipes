@@ -51,3 +51,5 @@ Add these **only when they earn their place** (most ADRs won't need them):
 | [0008](./0008-weight-first-research-grams-at-intake.md) | Weight-first: research and store gram weights at intake; weight display/print option | accepted |
 | [0009](./0009-tailwind-v4-via-postcss.md) | Tailwind CSS v4 is wired via PostCSS, not the @tailwindcss/vite plugin | accepted |
 | [0010](./0010-counter-design-system.md) | Adopt the "Counter" design system (modular, token-driven); supersedes Enamelware | accepted |
+| [0011](./0011-staged-launch-via-site-live-gate.md) | Staged launch via a single SITE_LIVE gate | accepted |
+| [0012](./0012-no-in-page-timers.md) | No in-page timers — step durations are display-only | accepted |

@@ -16,5 +16,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      - run: npm run build
-      - run: npm run smoke
+      - run: npm test
+      - run: npm run validate:content
+      - name: Build + smoke (staged)
+        run: npm run build && npm run smoke
+      - name: Build + smoke (SITE_LIVE)
+        run: SITE_LIVE=true npm run build && npm run smoke
