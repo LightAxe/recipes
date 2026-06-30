@@ -55,8 +55,10 @@ const weightEligible = measurable.length > 0 && withGrams.length / measurable.le
 
 const baseAmount = (i: (typeof data.ingredients)[number]) => {
   const q = formatQty(i.qty);
-  if (!q) return '';
-  return i.unit ? `${q} ${i.unit}` : q;
+  if (q) return i.unit ? `${q} ${i.unit}` : q;
+  // Grams-only ingredient (weight, no qty/unit): show the weight so it isn't invisible.
+  if (i.grams != null) return `${i.grams} g`;
+  return '';
 };
 
 let imageUrl: string | undefined;

@@ -1,7 +1,6 @@
 ---
 title: Potato Salad (Schultz Family Recipe)
 description: "A creamy, tangy potato-and-egg salad sharpened with cider vinegar and Lawry's garlic salt — a Schultz family staple."
-contributor: Schultz Family
 course: salad
 cuisine: American
 tags: [potato, egg, potluck, make-ahead]

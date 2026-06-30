@@ -147,7 +147,9 @@ function roundStep(n: number, lo: number, hi: number): number {
 export function formatUSVolume(ml: number): string {
   if (ml <= 0) return '0';
   const cups = ml / ML.cup;
-  if (cups >= 0.25) return `${toFraction(cups)} ${cups <= 1 ? 'cup' : 'cups'}`;
+  // Plural decision must match what toFraction() actually displays: it snaps to the
+  // nearest whole when within 1/16, so e.g. 1.05 cups renders "1" → "1 cup", not "1 cups".
+  if (cups >= 0.25) return `${toFraction(cups)} ${cups < 1 + 1 / 16 ? 'cup' : 'cups'}`;
   const tbsp = ml / ML.tbsp;
   if (tbsp >= 1) return `${toFraction(tbsp)} tbsp`;
   const tsp = ml / ML.tsp;
@@ -182,6 +184,15 @@ export function formatUSWeight(g: number): string {
 /** Countable amount (eggs, apples): nearest ½. */
 export function formatCount(qty: number): string {
   return toFraction(Math.round(qty * 2) / 2);
+}
+
+/** Pluralize an opaque/non-convertible unit (clove, can, stick…) for a scaled qty.
+    Conservative: leaves already-plural inputs alone, so "2 cans" doesn't become "canses". */
+export function pluralizeUnit(unit: string, qty: number): string {
+  if (qty <= 1 || /s$/i.test(unit)) return unit;
+  if (/(x|z|ch|sh)$/i.test(unit)) return `${unit}es`; // box→boxes, dash→dashes, pinch→pinches
+  if (/[^aeiou]y$/i.test(unit)) return `${unit.slice(0, -1)}ies`;
+  return `${unit}s`;
 }
 
 // ── The high-level amount renderer ───────────────────────────────────────────
@@ -223,6 +234,12 @@ export function amountFor(ing: Ingredient, opts: AmountOpts): Amount {
     system === 'us' ? formatUSWeight(g) : formatMetricWeight(g);
   const volumeText = (ml: number) =>
     system === 'us' ? formatUSVolume(ml) : formatMetricVolume(ml);
+  const opaqueText = (q: number) => `${toFraction(q)} ${pluralizeUnit(rawUnit!, q)}`;
+
+  // Grams-only ingredient (a weight given without a qty/unit, e.g. "3 g ginger"):
+  // there's no count or volume to show, so render the weight in either measure mode.
+  if (qty == null && grams != null)
+    return { text: weightText(grams), approx: !!ing.gramsApprox };
 
   if (measure === 'weight') {
     if (grams != null) return { text: weightText(grams), approx: !!ing.gramsApprox };
@@ -230,7 +247,7 @@ export function amountFor(ing: Ingredient, opts: AmountOpts): Amount {
       return { text: volumeText(qty * ML[canon]), approx: true }; // ≈ fallback
     if (kind === 'weight' && qty != null && canon)
       return { text: weightText(qty * G[canon]), approx: false };
-    if (opaque && qty != null) return { text: `${toFraction(qty)} ${rawUnit}`, approx: false };
+    if (opaque && qty != null) return { text: opaqueText(qty), approx: false };
     // count, no grams → unchanged count
     return { text: formatCount(qty!), approx: false };
   }
@@ -240,6 +257,6 @@ export function amountFor(ing: Ingredient, opts: AmountOpts): Amount {
     return { text: volumeText(qty * ML[canon]), approx: false };
   if (kind === 'weight' && qty != null && canon)
     return { text: weightText(qty * G[canon]), approx: false };
-  if (opaque && qty != null) return { text: `${toFraction(qty)} ${rawUnit}`, approx: false };
+  if (opaque && qty != null) return { text: opaqueText(qty), approx: false };
   return { text: formatCount(qty!), approx: false };
 }

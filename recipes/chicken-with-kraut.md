@@ -3,7 +3,7 @@ title: Chicken with Kraut
 description: Browned chicken simmered with drained sauerkraut, potatoes, and a sweet-spiced apple-juice sauce.
 course: main
 cuisine: German
-tags: [chicken, sauerkraut, potatoes, one-pot]
+tags: [chicken, sauerkraut, potato, one-pot]
 servings: 4
 ingredients:
   - qty: 1

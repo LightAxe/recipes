@@ -3,7 +3,7 @@ title: Corn Chowder
 description: A hearty, milk-based corn chowder loaded with bacon, potatoes, and creamed corn.
 course: soup
 cuisine: American
-tags: [corn, bacon, potatoes, chowder, one-pot]
+tags: [corn, bacon, potato, chowder, one-pot]
 servings: 12
 yield: 1 large pot
 ingredients:

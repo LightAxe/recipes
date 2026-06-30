@@ -1,14 +1,17 @@
 // Content lint for recipes/ (Zod is pass/fail and can't warn).
-// HARD-FAILS on unrecognized ingredient units (would break the scaler);
-// WARNS on off-list cuisines and single-use tags (possible typos/near-dupes).
+// HARD-FAILS on a unit that's a near-miss (edit distance ≤1) of a *convertible* unit —
+//   almost certainly a typo (e.g. "cuo"→"cup") that would silently ship as opaque and
+//   never scale or convert. WARNS on genuinely unknown units (shown verbatim) and on
+//   off-list cuisines / single-use tags (possible typos/near-dupes).
 // Keep the unit list in sync with src/lib/units.ts SYNONYMS.
 import { readdirSync, readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 
 const RECIPES_DIR = 'recipes';
 
-// Mirror of src/lib/units.ts SYNONYMS keys (canonical-resolvable unit strings).
-const KNOWN_UNITS = new Set([
+// Convertible (scalable/inter-convertible) units — mirror of src/lib/units.ts SYNONYMS keys.
+// A typo of one of these is dangerous (breaks scaling), so near-misses hard-fail.
+const CONVERTIBLE_UNITS = new Set([
   'tsp',
   't',
   'teaspoon',
@@ -58,7 +61,11 @@ const KNOWN_UNITS = new Set([
   'kg',
   'kilogram',
   'kilograms',
-  // Common non-convertible cooking units — displayed verbatim (opaque) by units.ts.
+]);
+
+// Common non-convertible cooking units — displayed verbatim (opaque) by units.ts.
+// Unknown units that aren't near-misses of a convertible unit are treated like these.
+const OPAQUE_UNITS = new Set([
   'clove',
   'cloves',
   'can',
@@ -110,6 +117,29 @@ const KNOWN_UNITS = new Set([
   'knob',
 ]);
 
+const KNOWN_UNITS = new Set([...CONVERTIBLE_UNITS, ...OPAQUE_UNITS]);
+
+// Levenshtein edit distance (≤ `max` early-exit not needed at this scale).
+function editDistance(a, b) {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+// A unit is a "typo of a scalable unit" if it's edit-distance ≤1 from a convertible unit
+// (but not itself a known/opaque unit). Such typos silently break scaling → hard error.
+function nearMissConvertible(u) {
+  if (KNOWN_UNITS.has(u)) return null;
+  for (const k of CONVERTIBLE_UNITS) if (editDistance(u, k) <= 1) return k;
+  return null;
+}
+
 // Mirror of docs/taxonomy.md §2 starter cuisines (slugified for comparison).
 const KNOWN_CUISINES = new Set(
   [
@@ -153,12 +183,18 @@ for (const file of files) {
   }
 
   for (const ing of data.ingredients ?? []) {
-    if (
-      ing.unit &&
-      !KNOWN_UNITS.has(String(ing.unit).trim().toLowerCase().replace(/\.$/, ''))
-    ) {
-      // Warn, not fail: unknown units are displayed verbatim (opaque). A warning surfaces
-      // likely typos without blocking legit one-off units.
+    if (!ing.unit) continue;
+    const u = String(ing.unit).trim().toLowerCase().replace(/\.$/, '');
+    if (KNOWN_UNITS.has(u)) continue;
+    const nearMiss = nearMissConvertible(u);
+    if (nearMiss) {
+      // Almost certainly a typo of a scalable unit — would ship as opaque and never
+      // scale/convert. Hard-fail so it's caught before merge.
+      errors.push(
+        `${file}: unit "${ing.unit}" on "${ing.item}" looks like a typo of "${nearMiss}" (would break scaling) — fix it`,
+      );
+    } else {
+      // Genuinely unknown unit: displayed verbatim (opaque). Warn without blocking.
       warnings.push(
         `${file}: unrecognized unit "${ing.unit}" on "${ing.item}" (shown verbatim; fix if it's a typo)`,
       );

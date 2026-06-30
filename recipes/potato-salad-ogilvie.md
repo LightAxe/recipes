@@ -1,7 +1,6 @@
 ---
 title: Potato Salad (Ogilvie Family Recipe)
 description: The Ogilvie family potato salad — creamy with mayonnaise and mustard and loaded with dill pickle chips.
-contributor: Ogilvie Family
 course: salad
 cuisine: American
 tags: [potato, potluck, make-ahead, vegetarian]
