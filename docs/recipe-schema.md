@@ -93,4 +93,4 @@ here so it never blocks the recipe card. A "Read more" disclosure renders this o
   `Pecans: 1½ to 2 cups` parses as an object and fails validation (`notes` must be strings).
 
 See [`recipes/TEMPLATE.md`](../recipes/TEMPLATE.md) for a copy-paste skeleton and
-[`recipes/grandmas-apple-pie.md`](../recipes/grandmas-apple-pie.md) for a worked example.
+[`recipes/snickerdoodles.md`](../recipes/snickerdoodles.md) for a worked example.

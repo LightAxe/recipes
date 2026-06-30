@@ -13,7 +13,7 @@ the maintainer cooks by weight (ADR-0008).
 - `docs/agents/intake.md` — the full intake procedure (this agent automates it).
 - `docs/recipe-schema.md` — the exact frontmatter schema and field rules.
 - `docs/taxonomy.md` — controlled vocabulary (course enum, cuisine, tags, contributor).
-- `recipes/TEMPLATE.md` — the file skeleton; `recipes/grandmas-apple-pie.md` — a worked example.
+- `recipes/TEMPLATE.md` — the file skeleton; `recipes/snickerdoodles.md` — a worked example.
 - `docs/scaling-and-units.md` §4–§5 — how `grams` powers the weight view (so you store the right thing).
 
 ## Your job, in order

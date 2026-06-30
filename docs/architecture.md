@@ -61,7 +61,7 @@ Recipes are the source of truth, decoupled from the site that renders them.
 ```
 recipes/                         # source-of-truth content (already started)
 ├── TEMPLATE.md
-├── grandmas-apple-pie.md        # one Markdown file per recipe (frontmatter + body)
+├── snickerdoodles.md            # one Markdown file per recipe (frontmatter + body)
 └── images/<slug>/               # colocated photos, optimized at build, EXIF-stripped
 ```
 
