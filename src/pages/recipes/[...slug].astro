@@ -82,7 +82,12 @@ let stepN = 0;
             </span>
           ))
         }
-        <span><b>Serves</b> {data.servings}{data.yield ? ` · ${data.yield}` : ''}</span>
+        <span
+          ><b>Serves</b>
+          <span id="serves-count">{data.servings}</span>{
+            data.yield ? ` · ${data.yield}` : ''
+          }</span
+        >
       </div>
       <p class="lede">{data.description}</p>
     </header>

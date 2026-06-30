@@ -39,6 +39,7 @@ function init(controls: HTMLElement) {
   const presets = Array.from(controls.querySelectorAll<HTMLButtonElement>('[data-scale]'));
   const sysBtn = document.getElementById('u-system') as HTMLButtonElement | null;
   const measBtn = document.getElementById('u-measure') as HTMLButtonElement | null;
+  const servesEl = document.getElementById('serves-count');
 
   const prefs = loadPrefs();
   let system: System = prefs.system;
@@ -63,6 +64,7 @@ function init(controls: HTMLElement) {
       el.textContent = approx ? `≈ ${text}` : text;
     }
     if (servingsInput) servingsInput.value = String(servings);
+    if (servesEl) servesEl.textContent = String(servings); // keep header in sync (prints too)
     for (const p of presets) {
       const active = Math.abs(Number(p.dataset.scale) - factor) < 1e-9;
       p.setAttribute('aria-checked', String(active));
@@ -170,14 +172,16 @@ function wireCookMode() {
   if (!btn) return;
   let sentinel: any = null;
   let want = false; // cook mode on → we want the lock held
+  let token = 0; // serializes acquisitions; bumped on every release/disable
 
   async function acquire() {
     const wl = (navigator as any).wakeLock;
     if (!wl || sentinel) return;
+    const my = ++token;
     try {
       const s = await wl.request('screen');
-      if (!want) {
-        // toggled off while the request was in flight — drop it (Codex: stale acquire)
+      if (!want || my !== token) {
+        // toggled off, or superseded by a newer acquire (on→off→on) — drop this one.
         try {
           await s.release();
         } catch {
@@ -188,7 +192,7 @@ function wireCookMode() {
       sentinel = s;
       if (status) status.hidden = false; // status only after a live sentinel
       s.addEventListener?.('release', () => {
-        sentinel = null; // reset so visibilitychange can reacquire (Codex)
+        sentinel = null; // reset so visibilitychange can reacquire
         if (status) status.hidden = true;
       });
     } catch {
@@ -196,6 +200,7 @@ function wireCookMode() {
     }
   }
   async function releaseLock() {
+    token++; // invalidate any in-flight acquire
     const s = sentinel;
     sentinel = null;
     if (status) status.hidden = true;
