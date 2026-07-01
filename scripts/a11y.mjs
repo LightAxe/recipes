@@ -33,18 +33,13 @@ const STATES = [
   { name: 'search-page', url: '/search/' },
 ];
 
-// Chrome that cook mode intentionally dims to opacity 0.4 (a deliberate de-emphasis). That
-// dimming currently fails WCAG 1.4.3 contrast; the fix (dim AA-safe vs. hide in cook mode) is
-// a UX decision tracked as a follow-up, so we exclude these regions from the cook-mode scan
-// ONLY — and print the exclusion so it's never a silent gap.
-const COOKMODE_DIMMED = [
-  '.crumbs',
-  '.head .meta',
-  '.lede',
-  '.story',
-  '.site-header',
-  '.site-footer',
-];
+// Chrome that cook mode actually dims to opacity 0.4 (a deliberate de-emphasis). That dimming
+// currently fails WCAG 1.4.3 contrast; the fix (dim AA-safe vs. hide in cook mode) is a UX
+// decision tracked in issue #25, so we exclude these regions from the cook-mode scan ONLY —
+// and print the exclusion so it's never a silent gap. NB: the site header/footer are NOT in
+// this list — their cook-mode dim rule silently no-ops (a child-component cid mismatch, also
+// tracked in #25), so they render at full opacity and are scanned normally here.
+const COOKMODE_DIMMED = ['.crumbs', '.head .meta', '.lede', '.story'];
 
 const server = spawn('node_modules/.bin/astro', ['preview', '--port', String(PORT)], {
   stdio: 'ignore',
@@ -161,6 +156,16 @@ try {
       await scan(page, `search-dropdown/${theme}`);
       await ctx.close();
     }
+    // Desktop Categories dropdown OPEN — its <details> is display:none when closed, so its
+    // link list is invisible to axe unless we open it at desktop width.
+    {
+      const { ctx, page } = await themedPage(theme, '/');
+      await page.setViewportSize({ width: 1024, height: 800 });
+      await page.locator('#cats-menu > summary').click();
+      await sleep(150);
+      await scan(page, `cats-dropdown/${theme}`);
+      await ctx.close();
+    }
     // Mobile viewport with the hamburger sheet OPEN — the nav sheet is display:none on desktop,
     // so axe excludes its subtree unless we shrink + open it.
     {
@@ -235,8 +240,7 @@ try {
       failures.push(`mobile: search is crushed (${Math.round(boxes.search?.width ?? 0)}px)`);
     await ctx.close();
   }
-
-  await browser.close();
+  // browser is closed in finally (covers both the happy path and a mid-loop throw).
 } catch (e) {
   failures.push(`harness: ${e.message}`);
 } finally {
