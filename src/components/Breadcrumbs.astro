@@ -66,13 +66,15 @@ const lastIndex = items.length - 1;
     min-height: 44px;
     color: var(--muted);
   }
+  /* Links stay underlined so they're distinguishable from the non-link axis/current
+     segments without relying on colour alone (WCAG 1.4.1) — on taxonomy pages every
+     crumb is --muted, so the underline is the only at-a-glance link cue. */
   .crumbs a {
-    text-decoration: none;
+    text-decoration: underline;
   }
   .crumbs a:hover,
   .crumbs a:focus-visible {
     color: var(--accent-ink);
-    text-decoration: underline;
   }
   .crumbs [aria-current='page'] {
     color: var(--text);
