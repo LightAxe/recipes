@@ -1,188 +1,163 @@
-# Plan: Phase 3 — Browse & Find (search + taxonomy browse)
+# Plan: Phase 4 — Reference content (Tips hub, Conversions, About) + nav + no-photo card
 _Locked via grill — by Claude + Rob._
 
 ## Goal
-Make 77 live recipes discoverable. Phase 2 shipped the recipe page + interactivity but left
-only a single flat `/recipes/` index — no search, no category/tag/cuisine/contributor browse.
-Phase 3 builds the **recipe-discovery layer** described in `docs/information-architecture.md`:
-build-time-generated taxonomy browse pages for all four axes, site-wide client search
-(Pagefind), an in-page faceted filter on `/recipes/`, and a home page rebuilt around browse —
-all as **progressive enhancement** over static, indexable pages (no-JS browses fully). Tips
-hub, Conversions, and About are explicitly **out** (a later reference-content phase). Lands on
-`phase-3-browse-find` → PR → CI → merge; ships staged behind the existing `SITE_LIVE` gate and
-goes live the same way Phase 2 did.
+Build the reference-content layer tabled when Phase 3 was scoped to recipe discovery only
+(architecture.md §14 "Reference content"; information-architecture.md §5; epic #15): a **Tips
+hub** (`/tips/` + `/tips/<slug>/`), a data-driven **Conversions** page (`/tips/conversions/`),
+and a lean **About** page (`/about/`) — plus wire **Tips**/**About** into the header (with a
+mobile hamburger) and footer, add a home tips teaser, and replace the bare "Ogilvie" no-photo
+card placeholder (#14) with a course line-icon. All static, Counter-styled, progressive
+enhancement (works with no JS), indexable under the existing `SITE_LIVE` gate — same conventions
+as Phase 3. Lands on `phase-4-reference-content` → PR → CI → merge; deploys the same way.
 
 ## Approach
 
-### 1. Branch + dependencies
-1. Branch `phase-3-browse-find` off `main`.
-2. Add **pagefind** and **gray-matter** as dev dependencies (gray-matter only for the
-   config-time frontmatter scan, step 7). No runtime framework — the search UI is a small
-   vanilla TS island consistent with `src/scripts/recipe.ts` (no React/Vue).
+### 1. Branch + tips content collection
+1. Branch `phase-4-reference-content` off `main` (done).
+2. New **`tips` content collection** in `src/content.config.ts`: glob loader over repo-root
+   `tips/` (`['*.md','!TEMPLATE.md']`, top-level only — mirrors the recipes loader). Zod schema
+   validates **frontmatter only** (Astro schemas don't cover the Markdown body — Codex R1):
+   `title`, `description`, `datePublished`, `dateUpdated?`. The body is the Markdown, rendered via
+   `render(entry)`. **No tip tags / no `/tips/<tag>/` pages this phase** — a flat list.
+   **Reserved slug:** `conversions` is reserved for the bespoke page (step 8) — `getStaticPaths`
+   excludes it and the build fails if a `tips/conversions.md` ever appears (Codex R1).
+3. **Seed content (mostly real family content):**
+   - **Migrate `reference/useful-information.md` → `tips/`** as the anchor tip (Codex R1 found it
+     orphaned — it's recipe-*shaped* but sits in `reference/`, in no collection). Reshape its
+     recipe frontmatter (`ingredients`/`instructions`) into tip frontmatter + prose body; **keep
+     the roasting temps as transcribed family lore with its existing caveat** — do NOT elevate
+     those questionable numbers into the authoritative Conversions tables. Delete the orphaned
+     `reference/` file.
+   - Plus **1 general how-to** I draft (e.g. blind-baking a crust) so the hub has a technique
+     article too. Voiced as general guidance, not family lore; Rob edits/approves. More
+     family-voice tips added later.
 
-### 2. One taxonomy module (the single source of truth)
-3. `src/lib/taxonomy.ts` — a **pure** module that exports: the **course slugs + labels**
-   (one ordered list), a `slugify(s)` (lowercase → trim → `&`→` and ` **first** → strip
-   diacritics → non-alnum→`-` → collapse → trim, per `taxonomy.md` §6), and a `termIndex`
-   helper that, given the recipe set, returns each axis's term→recipes map + the **singleton
-   set** (terms with exactly one recipe). `content.config.ts` **imports the course slugs from
-   here** for its Zod enum (kills the duplicate `COURSES` array — Codex R1). **`termIndex`
-   fails the build (throws) on a within-axis slug collision** (two distinct labels slugging to
-   the same value — Codex R2), so a silent merge can't happen. Vitest covers slugify (incl.
-   `Cajun & Creole → cajun-and-creole`) and a colliding-label case.
+### 2. Tips hub + tip pages
+4. `/tips/` hub (`src/pages/tips/index.astro`): a **featured Conversions card** first, then a
+   card per tip (title + description). Breadcrumb `Home › Tips` (+ `breadcrumbJsonLd`). A **generic
+   `itemListJsonLd`** over the tips — add a new `(items: {url,name}[])` helper to `jsonld.ts`; the
+   existing one is recipe-specific (`/recipes/${id}/`, Codex R1). Indexable.
+5. `/tips/[slug].astro` (tip article): Counter article layout (display headings, `--font-body`,
+   generous whitespace, breadcrumb `Home › Tips › <title>` + `breadcrumbJsonLd`), rendered
+   Markdown body via `render(entry)`, `Article` JSON-LD (`headline`, `description`,
+   `datePublished`). **Not** `HowTo` (its strict Rich-Results requirements aren't worth the risk).
+   No `data-pagefind-body` (search stays recipe-only — Codex R1).
+6. **Recipe→tip deep links** work with no schema change: a recipe's Markdown body can link to
+   `/tips/<slug>/` inline. (No new field; just author links when relevant.)
 
-### 3. Taxonomy browse pages (all four axes, generated from frontmatter)
-4. New routes via `getStaticPaths` over the `recipes` collection (no hand-maintained files).
-   Term sets are derived live from frontmatter at build (counts below are indicative, not
-   hardcoded — the scan is the source of truth):
-   - `/category/<course>/` — course (enum).
-   - `/tag/<tag>/` — tags (the largest set; long singleton tail).
-   - `/cuisine/<cuisine>/` — cuisine ("American" ≈ most of the collection).
-   - `/from/<contributor>/` — contributor (a handful of attributed recipes).
-5. **One shared list-page layout/component**: H1 = the term's label, optional one-liner, a
-   `CardGrid` of matching recipes, `ItemList` JSON-LD (reuse `src/lib/jsonld.ts`), breadcrumb
-   (`Home › <axis label> › <term>` where **the axis segment is non-linking** — there are no
-   axis index pages in scope, so it is plain text and is **not** emitted as a linked
-   `BreadcrumbList` item; only Home and the term carry URLs — Codex R1).
-6. **Only non-empty terms generate pages** (`taxonomy.md` §1) — `getStaticPaths` derives the
-   term set from actual frontmatter, so empties never exist.
-7. **Thin-page policy (decided — my technical call):** every non-empty page is generated and
-   fully reachable (no dead chip ever), but a page with **exactly one** recipe gets a
-   page-level `noindex` and is **excluded from the sitemap**; it auto-promotes to indexed when
-   a 2nd recipe shares the term. **Uniform across ALL four axes incl. course** — current
-   content has singleton courses `drink` and `sauce`, so course is *not* exempt (Codex R1
-   corrected my false assumption). The singleton set comes from `termIndex` (step 3).
+### 3. Conversions (data-driven)
+7. `src/data/conversions.ts` — a **curated, cited** module: per-ingredient cup→gram weights
+   (flour, sugar, butter, etc.) each with a `source` ("King Arthur" / "USDA"); generic volume
+   equivalents (tsp/tbsp/cup ↔ ml, and ↔ g for water); an **oven** °F⇄°C⇄gas-mark table
+   (conventional baking pairs — NOT meat-doneness temps, which stay as lore in the migrated tip);
+   common tin/pan sizes. Keep the ingredient set **small and verified** — wrong numbers are a
+   trust harm. **Export the generic volume constants from `units.ts`** (`ML` is currently private,
+   Codex R1) and import them here so the generic math has one source of truth.
+8. `/tips/conversions/` (`src/pages/tips/conversions.astro`): renders that data as **accessible
+   HTML tables** (`<table>` + `<caption>` + `<th scope>`), each with a visible source note.
+   Breadcrumb `Home › Tips › Conversions` (+ `breadcrumbJsonLd`). Indexable; no `data-pagefind-body`.
+   Linked prominently from the hub. **Bespoke page, not a tips-collection entry** (its `conversions`
+   slug is reserved, step 2), surfaced as the hub's featured card.
 
-### 4. Page-level noindex + sitemap exclusion
-8. `Base.astro` currently emits `noindex` only from the global `SITE_LIVE` gate. Add a
-   **`noindex` page prop**; the meta is emitted when **`!SITE_LIVE || noindex`** (Codex R1).
-   Singleton list pages pass `noindex`.
-9. `@astrojs/sitemap` is bare and can't see per-term counts. Add a build-time helper that
-   scans the recipe files with the **same include/exclude as the content loader**
-   (`['*.md','!TEMPLATE.md']`) using gray-matter + `fs` (**not** `astro:content`, unavailable
-   in `astro.config`), producing **minimal recipe records** (course/tags/cuisine/contributor)
-   that it passes through the **same `termIndex`** from `src/lib/taxonomy.ts` — not just
-   `slugify` — so the singleton set is computed by identical logic to the pages (true single
-   source, Codex R3). From its singleton terms it builds the set of **singleton taxonomy URLs**. `@astrojs/sitemap` passes **full absolute URLs** to `filter`,
-   so build the exclusion set as **canonical absolute URLs with trailing slash**
-   (`new URL(`/category/${slug}/`, site).href`, etc.) and `filter: (url) => !singletons.has(url)`
-   (Codex R2). Because both the `noindex` decision and the sitemap filter derive from the
-   **same** slugify + scan, they can't drift (Codex R1). Existing `SITE_LIVE` robots behavior
-   unchanged.
+### 4. About
+9. `/about/` (`src/pages/about.astro`): **lean, contribute-only** — a one-line tagline + a "How
+   to contribute" section (email Rob → recipes added via Claude Code intake, `agents/recipe-intake.md`).
+   **No story section yet** (added later — we don't invent family history). `AboutPage` JSON-LD +
+   `breadcrumbJsonLd`. Breadcrumb `Home › About`. Indexable; no `data-pagefind-body`.
 
-### 5. Site-wide search (Pagefind, lazy-loaded)
-10. **Index at build:** run `pagefind --site dist` from the npm **`postbuild`** script **only**
-    (npm runs `postbuild` automatically after `build`). CI and deploy keep calling `npm run
-    build` and inherit it — no duplicate/divergent pagefind invocation anywhere (Codex R2). Mark
-    **only recipe pages** as indexable (`data-pagefind-body` on the recipe article); list/home/
-    search pages are excluded from results. Emit **explicit `data-pagefind-meta`** for every
-    field a result card displays — title, course **label**, image src + alt (if any), and
-    time/yield — because `data-pagefind-filter` is for filtering, not display (Codex R1). Add
-    `data-pagefind-filter` (course) for optional result filtering.
-11. **Deploy caching (Codex R1):** the two-pass S3 sync long-caches immutable assets; Pagefind's
-    `/pagefind/` bundle uses **stable** filenames, so it must **not** get the 1-year immutable
-    header. Exclude `pagefind/**` from the immutable pass and upload it with **short revalidation
-    caching** (like HTML) so a re-indexed search can't be served stale from cache.
-12. **Header search field on every page** (decided): a real `<form>` (GET → `/search/?q=`) so it
-    works with no JS and is keyboard-reachable. JS enhances it into an **instant** dropdown.
-    **Pagefind lazy-loads** — the WASM + index fetch on **first focus/keystroke**, never on page
-    load — so idle recipe/category/home pages keep the Phase-2 performance budget.
-13. **`/search/` page:** the no-JS submit target and a deep-linkable results URL. **Exception to
-    lazy-load (Codex R1):** when `/search/` loads with a `?q=` present, it **auto-runs** the
-    query on page load (deep links must show results without a focus event). Without JS it shows
-    the query and guides the user to Categories/browse; in dev (no index) it fails gracefully.
-14. **XSS-safe result rendering (Codex R1):** Pagefind result data is untrusted client input
-    derived from frontmatter. Define a **serializable search-card shape** and a **small vanilla
-    client renderer** that visually matches `RecipeCard` — the Astro `RecipeCard`/`CardGrid`
-    components can't be reused client-side (they need `CollectionEntry<'recipes'>`). Titles and
-    all metadata are written via **`textContent`** (never innerHTML); only Pagefind's own
-    `excerpt` (which escapes text and injects just `<mark>`) may use innerHTML; result URLs are
-    **validated to match `^/recipes/`** before becoming an `href`.
+### 5. No-photo card treatment (#14)
+10. Replace the `<span class="ph">Ogilvie</span>` in `src/components/RecipeCard.astro` with a
+    **course line-icon** centered on a uniform tinted panel. A `src/lib/course-icons.ts` maps
+    each of the 13 course slugs → a simple inline SVG (one consistent line weight; `other` is the
+    fallback). The icon is **decorative (`aria-hidden`)**; the visible course label + title remain
+    the accessible content. **One-accent discipline preserved:** the panel tint is the single
+    `--accent-soft`/`--sunken` token (no per-course palette); the *icon* carries course identity.
+    Applies wherever `RecipeCard` renders (all-recipes grid, home, taxonomy pages). Search-result
+    cards (built in `search.ts`) show no image today and are left unchanged.
 
-### 6. Faceted `/recipes/` (progressive enhancement)
-15. Server-render the **complete** static grid of all recipes in a **deterministic A–Z order**
-    (the no-JS experience — sorted, browsable) plus a row of facet **links** into the taxonomy
-    pages. The **sort control is hidden until JS initializes** (Phase-2 pattern) so no-JS never
-    sees a sort widget it can't honor (Codex R1).
-16. JS enhances into an **in-place facet filter**: **course/tag/cuisine/contributor** checkboxes
-    (contributor included for IA consistency — Codex R1) + a Newest/A–Z sort, no page reload,
-    filtering the already-rendered cards (each card carries `data-course/-tags/-cuisine/
-    -contributor/-title/-date`). **All facet `data-*` and query values are taxonomy slugs, not
-    display labels** (labels are for display only) — so `Cajun & Creole` can't desync from
-    `cajun-and-creole` between the chip, the card, and the URL (Codex R3). Semantics: **OR within
-    an axis, AND across axes.** State is
-    mirrored to the **URL query** as **repeated params** (`?course=dessert&tag=apple&tag=pecan&
-    sort=newest`), read via `URLSearchParams.getAll()`; values are **sorted** before writing the
-    URL so the same selection always yields the **same canonical, shareable** URL. Back works
-    (popstate re-applies); on load the page hydrates from the query. Empty result → a clear
-    "no recipes match" with a reset.
+### 6. Nav + home wiring
+11. **Header** (`src/components/Header.astro`): add **Tips** and **About** to the primary links
+    (desktop inline: wordmark · Recipes · Categories▾ · Tips · About · search · theme — the IA's
+    ≤5 primary items). Build the **mobile hamburger** on a **native `<details>`** ("Menu"
+    `<summary>` = ☰) so it works with **no JS** and is button-driven (never hover): on small
+    screens it reveals a full-width sheet listing the primary links, with the course links
+    **flattened inline** (so we avoid a nested `<details>` inside the sheet). Search stays
+    reachable outside the sheet. The `<summary>` has an **accessible "Menu" name** (visible label
+    or `aria-label`, Codex R1). **JS-enhance** (mirroring the Phase 3 dismissible-widget patterns):
+    Esc closes + returns focus to the toggle, close-on-navigate, outside-click/focus-out close.
+    Rely on the **native `<details>` open state**; only mirror `aria-expanded` via the `toggle`
+    event if needed — no hand-managed stale ARIA.
+12. **Footer** — implement the fuller IA §4 footer (Codex R1): quick links (Recipes · Categories ·
+    Tips · About · RSS) + an "Add a recipe — email Rob" contribution line, alongside the existing
+    © + universe line. **Home** gains a short **Tips teaser** section (one line + link to `/tips/`),
+    kept small so the page still breathes.
 
-### 7. Home page rebuilt around browse (decided)
-17. Hero: wordmark + tagline + the search field. **Browse by category:** enamel tiles, one per
-    **non-empty** course (label + count), linking to `/category/<course>/`. **Latest additions:**
-    a strip of the most recent recipe cards by `datePublished` — with a **stable fallback**
-    (recipes lacking `datePublished` sort last, tiebroken by title) so the build is deterministic.
-
-### 8. Header / nav
-18. Extend `Header.astro`: add a **Categories** control built as a **native `<details>/<summary>`**
-    listing the non-empty course links → `/category/` pages — so it **fully works with no JS**
-    (Codex R2); JS enhances it (full-screen sheet on mobile, **no hover-only**, Esc/outside-click
-    close, focus management). Add the **search field**. Keep wordmark · Recipes · Categories ·
-    search · ThemeToggle. **Tips/About are intentionally absent** (deferred — no dead links). Add
-    breadcrumbs to recipe + taxonomy pages (axis segment non-linking, per step 5). Recipe-page
-    foot: "More <course>" and (if attributed) "More from <contributor>" links to tie browse together.
-
-### 9. SEO / structured data / tests
-19. `WebSite` JSON-LD + `SearchAction` (`/search/?q={query}`) on home; `ItemList` on every list
-    page; `BreadcrumbList` (Home + term only; axis segment non-linking) where breadcrumbs render.
-    Sitemap includes all indexable taxonomy pages (minus singletons, per steps 7 & 9).
-20. Tests: extend `scripts/smoke.mjs` (a `/category/<course>/` page renders + lists cards; a known
-    singleton page — e.g. `/category/drink/` — carries `noindex` and is **absent** from
-    `dist/sitemap-0.xml`; `dist/pagefind/` exists; `/search/` exists) and `scripts/smoke-browser.mjs`
-    (facet filter changes the visible card count; Categories dropdown opens; search box loads
-    Pagefind on focus and returns a hit for a known title). Unit-test `src/lib/taxonomy.ts`
-    slugify (incl. `cajun-and-creole`) with Vitest. CI must run `pagefind` before the smoke step
-    or the index assertions fail.
+### 7. SEO / gate / tests
+13. All new pages indexable under `SITE_LIVE` (noindex when staged via the `Base` default; in the
+    sitemap; canonical URLs). JSON-LD: `Article` + `BreadcrumbList` (tips), `AboutPage` +
+    `BreadcrumbList` (about), generic `ItemList` + `BreadcrumbList` (hub), `BreadcrumbList`
+    (conversions). New generic `itemListJsonLd({url,name}[])` helper in `jsonld.ts` (the existing
+    one is recipe-only). The new pages carry **no `data-pagefind-body`**, so search stays
+    recipe-only.
+14. Tests: extend `scripts/smoke.mjs` (tips hub renders + lists tips + features Conversions; a tip
+    page renders its body; `/tips/conversions/` has data tables; `/about/` has the contribute
+    section; header includes Tips + About; `RecipeCard` no longer emits "Ogilvie" and emits a
+    course-icon `<svg aria-hidden>`; sitemap includes `/tips/`, a tip, `/tips/conversions/`,
+    `/about/`; **each new page's `BreadcrumbList` parses + every non-last item has an `item` URL**;
+    **no new page carries `data-pagefind-body`**, and the built **Pagefind index/search surfaces
+    only `/recipes/…/` URLs** — no tip/about/conversions page leaked into search). Extend `scripts/smoke-browser.mjs` (mobile
+    hamburger opens/closes via the toggle, Esc closes + refocuses, no console errors). Add Vitest
+    tests: `conversions.ts` integrity (every per-ingredient row has a positive gram weight + a
+    source; known values like flour≈120 g/cup) and every course slug maps to an icon.
 
 ## Key decisions & tradeoffs
-- **Scope = recipe discovery only.** Tips/Conversions/About deferred to a later phase (architecture
-  §14 phase 5). Risk: header has no Tips/About yet — accepted (no dead links > premature nav).
-- **All four taxonomy axes**, despite weak data on two (cuisine is dominated by one big "American"
-  bucket + singletons; only a handful of recipes are attributed to a contributor). Justified by
-  near-zero cost (`getStaticPaths`) and the family-site value of `/from/`. The singleton-noindex
-  policy contains the SEO/thin-content downside.
-- **Site-wide instant search over a dedicated-page-only design** (Rob's call): better UX, paid for
-  by **lazy-loading** Pagefind so the cost lands only when a user actually searches.
-- **In-page JS facet filter on `/recipes/`** (Rob's call) even though it overlaps search + taxonomy
-  pages — richer single-page browse; kept safe by full no-JS fallback + URL-state.
-- **Single source of truth for course slugs/labels + term counts/slugify** (`src/lib/taxonomy.ts`):
-  `content.config.ts` imports the **course slugs for its Zod enum** (no more duplicate `COURSES`
-  array), and the page-level `noindex` + sitemap-exclusion both derive from the **same** slugify +
-  frontmatter scan — so they cannot drift apart (Codex R1).
+- **All three + #14 + nav in one phase** (per epic #15), consistent with the Phase 3 conventions.
+- **Tips hub seeded with general how-tos + Conversions anchor** so it launches non-empty; family
+  tips come later. General tips are voiced as general guidance, not family lore.
+- **Conversions from a curated, cited data module** — not corpus-derived (noisy) and not
+  generic-only (less useful). Small, verified ingredient set; sources shown.
+- **About is contribute-only now** — no invented family narrative.
+- **No-photo card = course icon on a uniform tint** — respects Counter's strict one-accent rule
+  (icon carries course identity, not color).
+- **Mobile hamburger built now** (IA §4) on a native `<details>` base so the no-JS path works and
+  the focus surface is smaller than a bespoke focus-trapped sheet; JS only enhances.
+- **The orphaned `reference/useful-information.md` becomes the anchor Tips article** instead of
+  drafting a generic one — real family reference content, migrated (recipe-shape → tip-shape),
+  with its questionable roasting temps kept as *transcribed lore* (not authoritative Conversions).
+- **Search stays recipe-only**, guaranteed two ways: (1) Pagefind indexes **only** pages carrying
+  `data-pagefind-body` once that attribute exists anywhere on the site — verified in the Phase 3
+  build ("Found a data-pagefind-body element on the site. Ignoring pages without this tag" →
+  indexed exactly 77 recipe pages), so the new tips/about/conversions pages (which don't carry it)
+  are excluded by construction; (2) `search.ts`'s `safeRecipeUrl` allowlist means even a future
+  indexing change could never render a non-`/recipes/…/` result. A smoke assertion verifies no
+  non-recipe page is Pagefind-indexed (see step 14). (Codex R2 argued `data-pagefind-body` absence
+  doesn't exclude — that contradicts Pagefind's documented behavior and our own build log, so the
+  mechanism claim is rejected; its verification suggestion is adopted.) Broadening to site-wide
+  search is a deliberate later decision.
 
 ## Risks / open questions
-- **Pagefind ↔ static build ordering.** Index is generated from `dist/` *after* `astro build`, so
-  every consumer (npm `build`, CI smoke, S3 deploy) must run pagefind and ship `dist/pagefind/`.
-  A staged (`SITE_LIVE=false`) build still needs the index for search to work pre-launch. Dev
-  (`astro dev`) has no index — search box must degrade gracefully (form still submits to `/search/`).
-- **Config-time frontmatter scan.** Computing singleton URLs in `astro.config` means parsing
-  `recipes/*.md` with gray-matter (not `astro:content`). Must use the **same** slugification as the
-  pages or the sitemap filter silently misses/over-excludes. Mitigated by sharing `src/lib/taxonomy.ts`.
-- **Tag explosion in nav/UI.** The tag set is large (long singleton tail) — `/tag/` pages are
-  fine, but we must **not** dump every tag into any menu. Tags surface only as chips on recipes/
-  cards and via search; no global tag index in this phase (could be a later "tag cloud" if wanted).
-- **Slug collisions** — cross-axis is safe (separate path namespaces, `/category` vs `/cuisine`);
-  within-axis collisions are now a **hard build failure** in `termIndex` (step 3), not just a risk.
-- **Filter + Back-button/URL state** correctness (popstate, initial query hydration) is the most
-  bug-prone client piece — covered by a browser smoke assertion.
+- **Mobile hamburger a11y** is the bug-prone piece (Phase 3's a11y bugs clustered on dismissible
+  widgets): focus return on Esc, close-on-navigate, `aria-expanded`, no-JS behavior, and avoiding
+  a nested `<details>` (mitigated by flattening categories inline in the sheet). Mirror the
+  Categories/print-menu patterns exactly.
+- **Conversions accuracy** — wrong numbers erode trust; keep the set small, cite every row, and
+  unit-test known values.
+- **Tip provenance** — general how-tos must not read as family lore; mark them as general guidance.
+- **Course icons** — 13 SVGs must share one line weight/size to fit Counter; `other` needs a
+  sensible fallback; icons must scale cleanly at card thumbnail size.
+- **Home restructure** is minor but touches the just-shipped Phase 3 home — keep the teaser small.
+- **Reserved-slug guard** (`conversions`) must be enforced in both the collection filter and
+  `getStaticPaths` (and fail the build if violated), or `/tips/conversions/` silently double-routes.
+- **Migrating the reference file** must not leave a dangling recipe entry or break its transcription
+  fidelity; confirm nothing references `reference/useful-information.md` before deleting it.
 
 ## Out of scope
-- Tips hub, tip pages, Conversions tables, About page (later reference-content phase).
-- Heritage layer (scanned cards, provenance, audio).
-- Server-side search, any backend, analytics on search queries.
-- A global all-tags index / tag cloud.
-- Redesigning the recipe page itself (Phase 2 owns it) beyond adding foot "More …" links + breadcrumb.
-- **Richer search-result cards + the Pagefind _filter_ plane.** Result cards show title · course ·
-  excerpt only; `data-pagefind-filter` and image/time/yield result `meta` are intentionally **not**
-  emitted this phase — they'd be dead index weight with no renderer consuming them. Add them together
-  with the UI that displays/filters on them (revised down from the original plan's step 10 wording).
+- Family **story** on About; **family-voice** tips (both later).
+- Tip **tags** / `/tips/<tag>/` pages (flat list this phase).
+- `HowTo` rich-result JSON-LD (use `Article` to avoid strict-requirement risk).
+- **Per-course color palette** (keep Counter's single accent).
+- Heritage layer (scanned cards, provenance, Family Notes, audio), a global all-tags index/tag
+  cloud, and any server-side search or search-query analytics (epic #15 "not Phase 4").
+- Redesigning the recipe page or the Phase 3 browse/search surfaces beyond the no-photo card +
+  the nav additions.

@@ -85,4 +85,18 @@ const recipes = defineCollection({
     }),
 });
 
-export const collections = { recipes };
+// Reference / how-to articles (docs/information-architecture.md §5). Frontmatter-only schema —
+// Astro validates frontmatter; the Markdown body is read via render(entry). The `conversions`
+// slug is reserved for the bespoke data-driven page (src/pages/tips/conversions.astro), so it
+// must never be a collection entry — the loader excludes it and a build check enforces it.
+const tips = defineCollection({
+  loader: glob({ pattern: ['*.md', '!TEMPLATE.md', '!conversions.md'], base: './tips' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    datePublished: z.coerce.date(),
+    dateUpdated: z.coerce.date().optional(),
+  }),
+});
+
+export const collections = { recipes, tips };

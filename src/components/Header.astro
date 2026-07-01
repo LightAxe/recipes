@@ -6,6 +6,11 @@ import { COURSE_SLUGS, courseLabel } from '../lib/taxonomy';
 
 const path = Astro.url.pathname;
 const onRecipes = path.startsWith('/recipes');
+const recipesCurrent = path === '/recipes/' ? 'page' : onRecipes ? 'true' : undefined;
+// 'page' only on the exact route; 'true' on descendants (section indicator) — mirrors Recipes.
+const tipsCurrent =
+  path === '/tips/' ? 'page' : path.startsWith('/tips/') ? 'true' : undefined;
+const isCurrent = (p: string) => (path === p ? 'page' : undefined);
 
 // Only courses that actually have recipes appear (docs/taxonomy.md §1), in nav order.
 const index = await taxonomyIndex();
@@ -19,13 +24,10 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
 <header class="site-header">
   <div class="wrap bar">
     <Wordmark />
-    <nav aria-label="Primary" class="nav">
-      <a
-        href="/recipes/"
-        aria-current={path === '/recipes/' ? 'page' : onRecipes ? 'true' : undefined}
-        >Recipes</a
-      >
 
+    {/* Desktop inline nav (hidden on mobile — the hamburger takes over there). */}
+    <nav aria-label="Primary" class="primary">
+      <a href="/recipes/" aria-current={recipesCurrent}>Recipes</a>
       <details class="cats" id="cats-menu">
         <summary>Categories <span class="caret" aria-hidden="true">▾</span></summary>
         <ul class="cats-list" role="list">
@@ -40,23 +42,50 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
           }
         </ul>
       </details>
-
-      <form class="search" role="search" action="/search/" method="get">
-        <label class="vh" for="site-search">Search recipes</label>
-        <input
-          type="search"
-          id="site-search"
-          name="q"
-          placeholder="Search recipes…"
-          autocomplete="off"
-          aria-controls="site-search-results"
-        />
-        <div class="search-results" id="site-search-results" hidden></div>
-        <p id="site-search-status" class="vh" role="status"></p>
-      </form>
-
-      <ThemeToggle />
+      <a href="/tips/" aria-current={tipsCurrent}>Tips</a>
+      <a href="/about/" aria-current={isCurrent('/about/')}>About</a>
     </nav>
+
+    <form class="search" role="search" action="/search/" method="get">
+      <label class="vh" for="site-search">Search recipes</label>
+      <input
+        type="search"
+        id="site-search"
+        name="q"
+        placeholder="Search recipes…"
+        autocomplete="off"
+        aria-controls="site-search-results"
+      />
+      <div class="search-results" id="site-search-results" hidden></div>
+      <p id="site-search-status" class="vh" role="status"></p>
+    </form>
+
+    <ThemeToggle />
+
+    {
+      /* Mobile hamburger (hidden on desktop). Native <details> → works with no JS; categories
+        are flattened inline here to avoid a nested <details>. */
+    }
+    <details class="menu" id="mobile-menu">
+      <summary class="ham"><span aria-hidden="true">☰</span> Menu</summary>
+      <nav class="sheet" aria-label="Primary">
+        <a href="/recipes/" aria-current={recipesCurrent}>Recipes</a>
+        <a href="/tips/" aria-current={tipsCurrent}>Tips</a>
+        <a href="/about/" aria-current={isCurrent('/about/')}>About</a>
+        <p class="sheet-h" id="sheet-cats-h">Categories</p>
+        <ul role="list" aria-labelledby="sheet-cats-h">
+          {
+            courses.map((c) => (
+              <li>
+                <a href={`/category/${c.slug}/`}>
+                  {c.label} <span class="n">{c.count}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </details>
   </div>
 </header>
 
@@ -75,18 +104,21 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
   .bar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 1rem;
     padding-block: 0.8rem;
   }
-  .nav {
+  /* Wordmark takes the left; everything else sits to the right. */
+  .bar > :global(.wordmark) {
+    margin-right: auto;
+  }
+
+  .primary {
     display: flex;
     align-items: center;
     gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: flex-end;
   }
-  .nav > a {
+  .primary > a {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
@@ -96,7 +128,7 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
     font-family: var(--font-display);
     font-weight: 600;
   }
-  .nav > a[aria-current='page'] {
+  .primary > a[aria-current] {
     color: var(--accent-ink);
   }
 
@@ -200,6 +232,101 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
     padding: 0.4rem;
     z-index: 60;
   }
+
+  /* Mobile hamburger (hidden on desktop) */
+  .menu {
+    display: none;
+    position: relative;
+  }
+  .menu > summary.ham {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    padding-inline: 0.75rem;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .menu > summary.ham span {
+    font-size: 1.25em;
+  }
+  .menu > summary.ham::-webkit-details-marker {
+    display: none;
+  }
+  .sheet {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.4rem);
+    width: min(20rem, 92vw);
+    max-height: min(80vh, 34rem);
+    overflow-y: auto;
+    padding: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    display: grid;
+    gap: 0.1rem;
+    z-index: 60;
+  }
+  .sheet > a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.3rem 0.6rem;
+    border-radius: calc(var(--radius) - 4px);
+    color: var(--text);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  .sheet > a[aria-current],
+  .sheet ul a:hover,
+  .sheet ul a:focus-visible,
+  .sheet > a:hover,
+  .sheet > a:focus-visible {
+    background: var(--sunken);
+    color: var(--accent-ink);
+  }
+  .sheet-h {
+    margin: 0.6rem 0.6rem 0.2rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: var(--text-eyebrow);
+    color: var(--muted);
+  }
+  .sheet ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.1rem;
+  }
+  .sheet ul a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 44px;
+    padding: 0.3rem 0.6rem;
+    border-radius: calc(var(--radius) - 4px);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .sheet .n {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+
   .vh {
     position: absolute;
     width: 1px;
@@ -208,21 +335,26 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
     clip: rect(0 0 0 0);
     white-space: nowrap;
   }
-  @media (max-width: 38rem) {
+
+  /* Mobile: swap the inline nav for the hamburger; search goes full-width in DOM order. */
+  @media (max-width: 46rem) {
+    .primary {
+      display: none;
+    }
+    .menu {
+      display: block;
+    }
     .search input {
       width: 100%;
       max-width: none;
     }
     .search {
-      /* Full-width row, but keep it in DOM order (between Categories and the theme
-         toggle) so tab order matches visual order — no CSS `order` reflow (WCAG 2.4.3). */
-      flex-basis: 100%;
+      /* Full-width row on phones (the .bar wraps). Kept after the wordmark in DOM order so
+         tab order matches the visual top-to-bottom order — no CSS `order` reflow (WCAG 2.4.3). */
+      flex: 1 1 100%;
     }
-    .cats-list,
     .search-results {
-      width: 100%;
-      left: 0;
-      right: 0;
+      width: min(90vw, 26rem);
     }
   }
 </style>

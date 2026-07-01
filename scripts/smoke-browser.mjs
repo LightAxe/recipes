@@ -122,6 +122,36 @@ try {
   const hits = await page.locator('#site-search-results .sr-card').count();
   if (hits < 1) errors.push('search returned no results for "chicken"');
 
+  // ── Phase 4: mobile hamburger (native <details>, JS-enhanced) ──
+  await page.setViewportSize({ width: 390, height: 820 });
+  await page.goto(`${BASE}/`, { waitUntil: 'load' });
+  await sleep(150);
+  const ham = page.locator('#mobile-menu > summary');
+  if (!(await ham.isVisible())) errors.push('hamburger not visible at mobile width');
+  await ham.click();
+  await sleep(80);
+  if (!(await page.locator('#mobile-menu').evaluate((d) => d.open))) {
+    errors.push('hamburger did not open');
+  }
+  if (!(await page.locator('#mobile-menu .sheet a[href="/tips/"]').isVisible())) {
+    errors.push('hamburger sheet is missing the Tips link');
+  }
+  await page.keyboard.press('Escape');
+  await sleep(80);
+  if (await page.locator('#mobile-menu').evaluate((d) => d.open)) {
+    errors.push('hamburger did not close on Escape');
+  }
+  // Header must wrap (not overflow) at phone width, and the search must stay usable (its own
+  // full-width row) rather than being crushed by the wordmark + theme + hamburger.
+  const overflows = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth + 1,
+  );
+  if (overflows) errors.push('page overflows horizontally at 390px (header not wrapping)');
+  const searchW = await page
+    .locator('#site-search')
+    .evaluate((el) => el.getBoundingClientRect().width);
+  if (searchW < 200) errors.push(`mobile search is crushed (${Math.round(searchW)}px wide)`);
+
   await browser.close();
 } catch (e) {
   errors.push(`harness: ${e.message}`);

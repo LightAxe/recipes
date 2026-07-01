@@ -3,11 +3,22 @@ const year = 2026;
 ---
 
 <footer class="site-footer">
-  <div class="wrap row">
-    <p class="copy">© {year} Ogilvie Family</p>
-    <p class="universe">
-      Part of the <a href="https://axpr.net">axpr</a> cinematic universe
+  <div class="wrap inner">
+    <nav class="links" aria-label="Footer">
+      <a href="/recipes/">Recipes</a>
+      <a href="/tips/">Tips</a>
+      <a href="/about/">About</a>
+      <a href="/rss.xml">RSS</a>
+    </nav>
+    <p class="contribute">
+      Add a recipe — <a href="mailto:rob@axpr.net">email Rob</a>.
     </p>
+    <div class="row">
+      <p class="copy">© {year} Ogilvie Family</p>
+      <p class="universe">
+        Part of the <a href="https://axpr.net">axpr</a> cinematic universe
+      </p>
+    </div>
   </div>
 </footer>
 
@@ -17,13 +28,46 @@ const year = 2026;
     border-top: 1px solid var(--line);
     background: var(--sunken);
   }
+  .inner {
+    padding-block: 1.75rem;
+    display: grid;
+    gap: 0.9rem;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+  }
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--text);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  .links a:hover,
+  .links a:focus-visible {
+    color: var(--accent-ink);
+  }
+  .contribute {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .contribute a {
+    color: var(--accent-ink);
+    font-weight: 700;
+  }
   .row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-    padding-block: 1.5rem;
+    gap: 0.5rem 0.75rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--line);
   }
   .copy,
   .universe {

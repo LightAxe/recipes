@@ -78,15 +78,52 @@ export function breadcrumbJsonLd(items: { name: string; path?: string }[]) {
 }
 
 export function itemListJsonLd(recipes: Recipe[]) {
+  return itemListJsonLdFrom(
+    recipes.map((r) => ({ path: `/recipes/${r.id}/`, name: r.data.title })),
+  );
+}
+
+/** Generic ItemList from {path,name} pairs — for non-recipe lists (e.g. the Tips hub). */
+export function itemListJsonLdFrom(items: { path: string; name: string }[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    itemListElement: recipes.map((r, i) => ({
+    itemListElement: items.map((it, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      url: abs(`/recipes/${r.id}/`),
-      name: r.data.title,
+      url: abs(it.path),
+      name: it.name,
     })),
+  };
+}
+
+export function articleJsonLd(a: {
+  headline: string;
+  description: string;
+  path: string;
+  datePublished?: Date;
+  dateModified?: Date;
+}) {
+  const json: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: a.headline,
+    description: a.description,
+    url: abs(a.path),
+    mainEntityOfPage: abs(a.path),
+  };
+  if (a.datePublished) json.datePublished = a.datePublished.toISOString().slice(0, 10);
+  if (a.dateModified) json.dateModified = a.dateModified.toISOString().slice(0, 10);
+  return json;
+}
+
+export function aboutPageJsonLd(a: { name: string; description: string; path: string }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: a.name,
+    description: a.description,
+    url: abs(a.path),
   };
 }
 

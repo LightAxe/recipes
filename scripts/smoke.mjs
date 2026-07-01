@@ -183,6 +183,70 @@ ok('search page excluded from sitemap', !sitemap.includes('/search/'));
 ok('search page exists', existsSync('dist/search/index.html'));
 ok('pagefind index generated', existsSync('dist/pagefind/pagefind.js'));
 
+// ── Phase 4: reference content (tips, conversions, about) + nav + no-photo card ──
+const tipsHub = await read('dist/tips/index.html');
+ok(
+  'tips hub lists tips + features Conversions',
+  tipsHub.includes('/tips/conversions/') && tipsHub.includes('/tips/useful-information/'),
+);
+const tipPage = await read('dist/tips/how-to-blind-bake-a-crust/index.html');
+ok('tip page renders its body', tipPage.includes('pie shell'));
+const conv = await read('dist/tips/conversions/index.html');
+ok('conversions page has data tables', conv.includes('<caption') && conv.includes('120 g'));
+const about = await read('dist/about/index.html');
+ok('about page has contribute section', about.includes('mailto:rob@axpr.net'));
+
+ok(
+  'header has Tips + About',
+  home.includes('href="/tips/"') && home.includes('href="/about/"'),
+);
+ok('mobile hamburger present', home.includes('id="mobile-menu"'));
+
+const recipesIndex = await read('dist/recipes/index.html');
+ok(
+  'no-photo cards use a course icon, not "Ogilvie"',
+  !recipesIndex.includes('>Ogilvie<') && /class="ph-icon"[^>]*viewBox/.test(recipesIndex),
+);
+
+const parseCrumb = (html) => {
+  for (const block of html.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g) ||
+    []) {
+    const b = block.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, '');
+    try {
+      const o = JSON.parse(b);
+      if (o['@type'] === 'BreadcrumbList') return o;
+    } catch {
+      /* not this block */
+    }
+  }
+  return null;
+};
+const newPages = [
+  ['tips hub', tipsHub],
+  ['tip', tipPage],
+  ['conversions', conv],
+  ['about', about],
+];
+for (const [name, html] of newPages) {
+  const c = parseCrumb(html);
+  ok(
+    `${name} BreadcrumbList valid`,
+    c &&
+      Array.isArray(c.itemListElement) &&
+      c.itemListElement.length >= 2 &&
+      c.itemListElement.slice(0, -1).every((li) => typeof li.item === 'string'),
+  );
+  ok(
+    `${name} not Pagefind-indexed (no data-pagefind-body)`,
+    !html.includes('data-pagefind-body'),
+  );
+}
+
+ok('sitemap includes tips hub', sitemap.includes('/tips/'));
+ok('sitemap includes a tip', sitemap.includes('/tips/useful-information/'));
+ok('sitemap includes conversions', sitemap.includes('/tips/conversions/'));
+ok('sitemap includes about', sitemap.includes('/about/'));
+
 let failed = 0;
 for (const c of checks) {
   if (!c.pass) failed++;

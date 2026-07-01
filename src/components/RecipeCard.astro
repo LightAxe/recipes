@@ -2,6 +2,7 @@
 import type { CollectionEntry } from 'astro:content';
 import { Picture } from 'astro:assets';
 import { courseLabel } from '../lib/taxonomy';
+import { courseIcon } from '../lib/course-icons';
 import { formatDuration } from '../lib/format';
 
 interface Props {
@@ -25,9 +26,17 @@ const time = formatDuration(data.totalTime) ?? formatDuration(data.cookTime);
           loading="lazy"
         />
       ) : (
-        <span class="ph" aria-hidden="true">
-          Ogilvie
-        </span>
+        <svg
+          class="ph-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          set:html={courseIcon(data.course)}
+        />
       )
     }
   </div>
@@ -77,13 +86,13 @@ const time = formatDuration(data.totalTime) ?? formatDuration(data.cookTime);
     object-fit: cover;
     display: block;
   }
-  .ph {
-    font-family: var(--font-display);
-    font-weight: 800;
-    color: var(--muted);
-    opacity: 0.4;
-    font-size: 1.5rem;
-    letter-spacing: 0.05em;
+  .ph-icon {
+    width: 38%;
+    max-width: 4rem;
+    height: auto;
+    aspect-ratio: 1;
+    color: var(--accent-ink);
+    opacity: 0.5;
   }
   .body {
     padding: 1rem 1.15rem 1.2rem;

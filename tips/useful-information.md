@@ -1,21 +1,8 @@
 ---
 title: Useful Information
-description: "A reference page from the family cookbook: which recipes adapt to a crockpot, how to use one, easy and difficult desserts, easy dinners and side dishes, and roasting temperatures."
-course: other
-tags: [reference, slow-cooker]
-ingredients: []
-instructions:
-  - text: "These recipes can be used in a crockpot: Chicken a la Hindu (reduce water amount by half), Hungarian Goulash (reduce water amount by half), Pot Roast with Gravy, and Stew with Wine."
-    section: Crockpot cooking
-  - text: "Put all ingredients into the crockpot, set on low, and cook all day."
-    section: Crockpot cooking
-  - text: "Potatoes and fresh vegetables do not cook well in a crockpot, so precook them if you want to use them in a crockpot recipe."
-    section: Crockpot cooking
-notes:
-  - "Roasting temperatures — Turkey: 175 degrees; Chicken: 175 degrees; Pork: 165 degrees."
-  - "Beef roasting temperatures — Rare: 130 degrees; Medium: 150 degrees; Well: 170 degrees."
-  - "Temperatures are transcribed exactly as written on the card (\"degrees\", no unit given); they read as internal-doneness temperatures in °F."
+description: "Kitchen know-how from the family cookbook: which recipes adapt to a crockpot, easy and difficult desserts, easy dinners and sides, and roasting temperatures."
 datePublished: 2026-06-29
+dateUpdated: 2026-07-01
 ---
 
 A reference page from the family cookbook — no fixed yield, just kitchen know-how and a menu index.
@@ -73,6 +60,10 @@ crockpot recipe.
 - Rice
 
 ## Roasting temperatures
+
+Transcribed from the family card exactly as written ("degrees", no unit given) — they read
+as internal-doneness temperatures in °F. Check a current food-safety chart before relying on
+them.
 
 - Turkey – 175 degrees
 - Chicken – 175 degrees
