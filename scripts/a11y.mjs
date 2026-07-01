@@ -68,14 +68,9 @@ function recordAxe(where, aa, bp) {
   }
 }
 
-async function scan(page, where, exclude = []) {
-  const build = () => {
-    let b = new AxeBuilder({ page });
-    for (const sel of exclude) b = b.exclude(sel);
-    return b;
-  };
-  const aa = await build().withTags(AA_TAGS).analyze();
-  const bp = await build().withTags(['best-practice']).analyze();
+async function scan(page, where) {
+  const aa = await new AxeBuilder({ page }).withTags(AA_TAGS).analyze();
+  const bp = await new AxeBuilder({ page }).withTags(['best-practice']).analyze();
   recordAxe(where, aa, bp);
 }
 
@@ -183,7 +178,7 @@ try {
     }
     // Recipe page with cook mode ON — puts .toggle into its aria-pressed="true" state
     // (white-on-accent), which a load-time scan never sees. Cook mode HIDES the surrounding
-    // chrome (breadcrumb/meta/lede/story/header/footer are display:none — issue #25), so there's
+    // chrome (breadcrumb/meta/lede/story/more/header/footer are display:none — issue #25), so there's
     // nothing to exclude: axe skips hidden subtrees, and the pressed control + enlarged steps
     // are scanned normally.
     {
