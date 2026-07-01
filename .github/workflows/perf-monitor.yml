@@ -25,6 +25,10 @@ jobs:
     # per ADR-0011), the site is intentionally noindex/staged and the live-check would false-alarm
     # every week — so the whole monitor stands down until go-live. (Also skips a manual dispatch
     # while staged; run scripts/live-perf-check.mjs with STAGED=1 locally instead.)
+    #
+    # NB: SITE_LIVE is a REPO-level Actions variable (verified — it is not environment-scoped), so
+    # `vars.SITE_LIVE` resolves here without declaring an environment. If it's ever moved to the
+    # `production` environment, add `environment: production` to this job so the gate still reads it.
     if: ${{ vars.SITE_LIVE == 'true' }}
     runs-on: ubuntu-latest
     steps:
