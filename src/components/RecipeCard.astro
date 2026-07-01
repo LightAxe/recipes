@@ -7,9 +7,14 @@ import { formatDuration } from '../lib/format';
 
 interface Props {
   recipe: CollectionEntry<'recipes'>;
+  // Heading level for the card title, so the page keeps a gap-free heading outline. Default
+  // h3 (home: cards sit under an h2 section). Pass 2 where cards sit directly under the page
+  // h1 (the recipes index + taxonomy pages) so it's h1 → h2, not a skipped h1 → h3.
+  headingLevel?: 2 | 3;
 }
-const { recipe } = Astro.props;
+const { recipe, headingLevel = 3 } = Astro.props;
 const { data, id } = recipe;
+const Title = `h${headingLevel}` as const;
 const time = formatDuration(data.totalTime) ?? formatDuration(data.cookTime);
 ---
 
@@ -42,7 +47,7 @@ const time = formatDuration(data.totalTime) ?? formatDuration(data.cookTime);
   </div>
   <div class="body">
     <p class="cat">{courseLabel(data.course)}</p>
-    <h3 class="title">{data.title}</h3>
+    <Title class="title">{data.title}</Title>
     <p class="meta">
       {time && <span>{time}</span>}
       {

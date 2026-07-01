@@ -46,20 +46,6 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
       <a href="/about/" aria-current={isCurrent('/about/')}>About</a>
     </nav>
 
-    <form class="search" role="search" action="/search/" method="get">
-      <label class="vh" for="site-search">Search recipes</label>
-      <input
-        type="search"
-        id="site-search"
-        name="q"
-        placeholder="Search recipes…"
-        autocomplete="off"
-        aria-controls="site-search-results"
-      />
-      <div class="search-results" id="site-search-results" hidden></div>
-      <p id="site-search-status" class="vh" role="status"></p>
-    </form>
-
     <ThemeToggle />
 
     {
@@ -86,6 +72,26 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
         </ul>
       </nav>
     </details>
+
+    {
+      /* Search is LAST in the DOM so that, with the wrapping flex .bar and no CSS `order`,
+        mobile lays out as row 1 [wordmark … theme ☰] + row 2 [full-width search] while tab
+        order still matches the visual order (WCAG 2.4.3). The tradeoff: on desktop, search
+        becomes the last control (after the theme toggle) — asserted in the a11y guard. */
+    }
+    <form class="search" role="search" aria-label="Site search" action="/search/" method="get">
+      <label class="vh" for="site-search">Search recipes</label>
+      <input
+        type="search"
+        id="site-search"
+        name="q"
+        placeholder="Search recipes…"
+        autocomplete="off"
+        aria-controls="site-search-results"
+      />
+      <div class="search-results" id="site-search-results" hidden></div>
+      <p id="site-search-status" class="vh" role="status"></p>
+    </form>
   </div>
 </header>
 
@@ -336,7 +342,10 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
     white-space: nowrap;
   }
 
-  /* Mobile: swap the inline nav for the hamburger; search goes full-width in DOM order. */
+  /* Mobile: swap the inline nav for the hamburger. Search is last in the DOM, so with the
+     wrapping .bar it drops to its own full-width second row while the wordmark's margin-right
+     pushes the theme toggle + hamburger onto row 1 — no CSS `order`, so tab order = visual
+     order (WCAG 2.4.3). */
   @media (max-width: 46rem) {
     .primary {
       display: none;
@@ -349,9 +358,7 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
       max-width: none;
     }
     .search {
-      /* Full-width row on phones (the .bar wraps). Kept after the wordmark in DOM order so
-         tab order matches the visual top-to-bottom order — no CSS `order` reflow (WCAG 2.4.3). */
-      flex: 1 1 100%;
+      flex: 1 1 100%; /* own full-width row 2 */
     }
     .search-results {
       width: min(90vw, 26rem);

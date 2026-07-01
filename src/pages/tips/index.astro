@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import { itemListJsonLdFrom, breadcrumbJsonLd } from '../../lib/jsonld';
 
 // Newest tips first; datePublished is required by the tips schema so no fallback needed.
@@ -26,11 +27,7 @@ const jsonLd = [
   jsonLd={jsonLd}
 >
   <section class="wrap">
-    <nav aria-label="Breadcrumb" class="crumbs">
-      <a href="/">Home</a>
-      <span aria-hidden="true">›</span>
-      <span aria-current="page">Tips</span>
-    </nav>
+    <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Tips' }]} />
     <p class="eyebrow">Kitchen reference</p>
     <h1>Tips &amp; Reference</h1>
     <p class="lede">Techniques, know-how, and handy charts to cook from.</p>
@@ -63,17 +60,6 @@ const jsonLd = [
 <style>
   section {
     padding-block: 1.75rem 1rem;
-  }
-  .crumbs {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 1.25rem;
-  }
-  .crumbs a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--muted);
   }
   h1 {
     font-size: clamp(2rem, 5vw, 2.8rem);

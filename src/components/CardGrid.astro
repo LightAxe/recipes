@@ -4,15 +4,17 @@ import RecipeCard from './RecipeCard.astro';
 
 interface Props {
   recipes: CollectionEntry<'recipes'>[];
+  // Forwarded to each card's title; see RecipeCard. Default 3 (home, under an h2 section).
+  headingLevel?: 2 | 3;
 }
-const { recipes } = Astro.props;
+const { recipes, headingLevel = 3 } = Astro.props;
 ---
 
 <ul class="grid" role="list">
   {
     recipes.map((recipe) => (
       <li>
-        <RecipeCard recipe={recipe} />
+        <RecipeCard recipe={recipe} headingLevel={headingLevel} />
       </li>
     ))
   }

@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import { breadcrumbJsonLd } from '../../lib/jsonld';
 import {
   INGREDIENT_WEIGHTS,
@@ -23,13 +24,13 @@ const jsonLd = [
   jsonLd={jsonLd}
 >
   <section class="wrap">
-    <nav aria-label="Breadcrumb" class="crumbs">
-      <a href="/">Home</a>
-      <span aria-hidden="true">›</span>
-      <a href="/tips/">Tips</a>
-      <span aria-hidden="true">›</span>
-      <span aria-current="page">Conversions</span>
-    </nav>
+    <Breadcrumbs
+      items={[
+        { name: 'Home', href: '/' },
+        { name: 'Tips', href: '/tips/' },
+        { name: 'Conversions' },
+      ]}
+    />
     <p class="eyebrow">Kitchen reference</p>
     <h1>Conversions</h1>
     <p class="lede">Handy charts for cooking by weight and across ovens.</p>
@@ -133,17 +134,6 @@ const jsonLd = [
 <style>
   section {
     padding-block: 1.75rem 1rem;
-  }
-  .crumbs {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 1.25rem;
-  }
-  .crumbs a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--muted);
   }
   h1 {
     font-size: clamp(2rem, 5vw, 2.8rem);

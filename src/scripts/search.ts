@@ -137,11 +137,22 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
       // changes: fetch a bounded window, drop any non-recipe URL, and cap AFTER filtering
       // so a stray indexed page could never push real recipe hits out of the shown set.
       const stubs = search.results.slice(0, MAX_RESULTS * FETCH_MULTIPLIER);
-      const fetched = await Promise.all(stubs.map((r) => r.data()));
-      if (query !== lastQuery) return;
+      // Fail-soft: one fragment's data() rejecting must not sink the whole query — keep the
+      // fulfilled results and drop the failures. (Promise.all would reject the lot.)
+      const settled = await Promise.allSettled(stubs.map((r) => r.data()));
+      // Re-check the guards *after* the awaited settle, before touching the DOM:
+      if (query !== lastQuery) return; // a newer keystroke superseded this one
       // Dropdown only: if the user has since closed it or moved focus away, drop this
       // result entirely (don't re-render, re-show, or announce over the page).
       if (dropdown && (dismissed || !focusInside())) return;
+      const fetched = settled
+        .filter(
+          (s): s is PromiseFulfilledResult<PagefindResultData> => s.status === 'fulfilled',
+        )
+        .map((s) => s.value);
+      // Every fragment failed (not merely some) → treat as an outage, not "no results",
+      // so the user gets the unavailable notice + browse fallback (via the catch below).
+      if (stubs.length && !fetched.length) throw new Error('all result fragments failed');
       const items = fetched.filter((it) => safeRecipeUrl(it.url)).slice(0, MAX_RESULTS);
       renderResults(results, items);
       setVisible(true);

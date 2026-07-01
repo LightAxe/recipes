@@ -86,8 +86,12 @@ behavior in `src/scripts/`.*
   Matches every sibling's words, dressed as enamelware (`design.md` §7).
 
 ### B7. Breadcrumbs
-- `<nav aria-label="Breadcrumb"><ol>` with petal separators; last item `aria-current`.
-  Emits `BreadcrumbList` JSON-LD. On recipe/taxonomy/tip pages.
+- Shared `Breadcrumbs.astro`: `<nav aria-label="Breadcrumb"><ol>` with `›` separators; links
+  underlined (distinct from non-link segments); last item `aria-current`. Intermediate items
+  without an `href` render as a non-linking segment (the taxonomy axis label, which has no index
+  page) — these are dropped from the `BreadcrumbList` JSON-LD, so the visible trail can be one
+  item longer than the structured data. On recipe, recipes-index, taxonomy, tips-index, tip,
+  conversions, and about pages.
 
 ---
 

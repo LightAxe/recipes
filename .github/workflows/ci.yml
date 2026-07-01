@@ -22,5 +22,7 @@ jobs:
         run: npm run build && npm run smoke
       - name: Headless browser smoke (no console errors; interactivity works)
         run: npx playwright install --with-deps chromium && npm run test:e2e
+      - name: Accessibility guard (axe WCAG 2.1 AA + keyboard/layout, staged build)
+        run: npm run test:a11y
       - name: Build + smoke (SITE_LIVE)
         run: SITE_LIVE=true npm run build && npm run smoke

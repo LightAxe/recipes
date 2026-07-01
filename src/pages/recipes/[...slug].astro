@@ -2,6 +2,7 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import { Picture, getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import { groupIngredients, normalizeSteps } from '../../lib/recipe';
 import { courseLabel, slugify } from '../../lib/taxonomy';
 import { formatQty, formatDuration } from '../../lib/format';
@@ -77,13 +78,13 @@ const jsonLd = [
 
 <Base title={data.title} description={data.description} jsonLd={jsonLd}>
   <article class="recipe wrap" data-pagefind-body>
-    <nav class="crumbs" aria-label="Breadcrumb" data-pagefind-ignore>
-      <a href="/">Home</a>
-      <span aria-hidden="true">›</span>
-      <a href="/recipes/">Recipes</a>
-      <span aria-hidden="true">›</span>
-      <span aria-current="page">{data.title}</span>
-    </nav>
+    <Breadcrumbs
+      items={[
+        { name: 'Home', href: '/' },
+        { name: 'Recipes', href: '/recipes/' },
+        { name: data.title },
+      ]}
+    />
 
     <header class="head">
       <p class="eyebrow" data-pagefind-meta="course">{courseLabel(data.course)}</p>
@@ -339,14 +340,6 @@ const jsonLd = [
   .recipe {
     padding-block: 1.75rem 1rem;
   }
-  .crumbs {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 1.25rem;
-  }
-  .crumbs a {
-    color: var(--muted);
-  }
   .head h1 {
     font-size: var(--text-h1);
     margin: 0.9rem 0 1rem;
@@ -428,7 +421,10 @@ const jsonLd = [
     border-left: 1px solid var(--line);
   }
   .seg.active {
-    background: var(--accent);
+    /* --accent-ink (the darker accent, as used by the unit toggles alongside) instead of
+       --accent: white-on-#c33a25 is 5.31:1 vs --accent's 4.09:1, so the small ~16px pill
+       label clears WCAG AA (4.5:1). No palette change — same token used elsewhere. */
+    background: var(--accent-ink);
     color: var(--on-accent);
   }
   .toggle {
@@ -442,9 +438,11 @@ const jsonLd = [
     cursor: pointer;
   }
   .toggle[aria-pressed='true'] {
-    background: var(--accent);
+    /* --accent-ink, not --accent: white-on-#c33a25 is 5.31:1 vs 4.10:1, so the pressed
+       cook-mode toggle clears WCAG AA at this ~16px/600 label. Matches the .seg.active pill. */
+    background: var(--accent-ink);
     color: var(--on-accent);
-    border-color: var(--accent);
+    border-color: var(--accent-ink);
   }
   .cm-status {
     font-size: 0.78rem;
@@ -605,7 +603,10 @@ const jsonLd = [
     height: 2.4rem;
     display: grid;
     place-items: center;
-    background: var(--accent);
+    /* --accent-ink (5.31:1), not --accent (4.09:1): the step number is ~15px/800, below the
+       large-text threshold, so it needs the 4.5:1 AA ratio. axe can't see ::before content,
+       so the guard checks this badge's contrast explicitly. */
+    background: var(--accent-ink);
     color: var(--on-accent);
     font: 800 0.95rem var(--font-display);
     border-radius: var(--radius-sm);
@@ -691,8 +692,10 @@ const jsonLd = [
     text-decoration: underline;
   }
 
-  /* Cook mode: enlarge steps, dim chrome (no step navigator). */
-  :global(body.cook-mode) .crumbs,
+  /* Cook mode: enlarge steps, dim chrome (no step navigator). .crumbs is global — the
+     breadcrumb is now a separate component (its own cid), so a page-scoped .crumbs would
+     no longer match the rendered <nav>. */
+  :global(body.cook-mode) :global(.crumbs),
   :global(body.cook-mode) .head .meta,
   :global(body.cook-mode) .lede,
   :global(body.cook-mode) .story,

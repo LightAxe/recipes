@@ -11,7 +11,13 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug));
 <Base title="Search" description="Search the Ogilvie family recipe collection." noindex={true}>
   <section class="wrap">
     <h1>Search</h1>
-    <form class="page-search" role="search" action="/search/" method="get">
+    <form
+      class="page-search"
+      role="search"
+      aria-label="Recipe search"
+      action="/search/"
+      method="get"
+    >
       <label class="vh" for="search-page-input">Search recipes</label>
       <input
         type="search"

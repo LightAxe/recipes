@@ -28,7 +28,13 @@ const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
     <p class="lede">
       Our family's recipes, gathered in one place — to cook from, print, and pass down.
     </p>
-    <form class="hero-search" role="search" action="/search/" method="get">
+    <form
+      class="hero-search"
+      role="search"
+      aria-label="Recipe search"
+      action="/search/"
+      method="get"
+    >
       <label class="vh" for="hero-search-input">Search recipes</label>
       <input
         type="search"
