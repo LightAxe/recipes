@@ -104,6 +104,7 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
   .bar {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 1rem;
     padding-block: 0.8rem;
   }
@@ -348,7 +349,9 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
       max-width: none;
     }
     .search {
-      flex: 1 1 8rem;
+      /* Full-width row on phones (the .bar wraps). Kept after the wordmark in DOM order so
+         tab order matches the visual top-to-bottom order — no CSS `order` reflow (WCAG 2.4.3). */
+      flex: 1 1 100%;
     }
     .search-results {
       width: min(90vw, 26rem);

@@ -141,6 +141,16 @@ try {
   if (await page.locator('#mobile-menu').evaluate((d) => d.open)) {
     errors.push('hamburger did not close on Escape');
   }
+  // Header must wrap (not overflow) at phone width, and the search must stay usable (its own
+  // full-width row) rather than being crushed by the wordmark + theme + hamburger.
+  const overflows = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth + 1,
+  );
+  if (overflows) errors.push('page overflows horizontally at 390px (header not wrapping)');
+  const searchW = await page
+    .locator('#site-search')
+    .evaluate((el) => el.getBoundingClientRect().width);
+  if (searchW < 200) errors.push(`mobile search is crushed (${Math.round(searchW)}px wide)`);
 
   await browser.close();
 } catch (e) {
