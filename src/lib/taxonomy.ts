@@ -106,9 +106,14 @@ export function termIndex<T>(
   for (const r of recipes) {
     const values = axisValues(facets(r));
     for (const axis of AXES) {
+      // A recipe contributes to each term at most once, so a repeated value on one recipe
+      // (e.g. `tags: [apple, apple]`) can't double-count it — which would duplicate its card
+      // and wrongly inflate a 1-recipe term past the singleton (noindex) threshold.
+      const seen = new Set<string>();
       for (const { raw, label } of values[axis]) {
         const slug = slugify(raw);
-        if (!slug) continue;
+        if (!slug || seen.has(slug)) continue;
+        seen.add(slug);
         const existing = out[axis].get(slug);
         if (existing) {
           if (existing.rawValue !== raw) {

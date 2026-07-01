@@ -65,6 +65,22 @@ describe('termIndex', () => {
     expect(singles).not.toContain('/tag/apple/'); // 2 recipes
   });
 
+  it('deduplicates a repeated value within one recipe (no double-count)', () => {
+    // A single recipe listing the same tag twice must count once, so its card isn't
+    // duplicated and a one-recipe tag stays a singleton (keeps its noindex/sitemap exclusion).
+    const idx = termIndex([r({ course: 'dessert', tags: ['apple', 'apple'] })], (x) => x);
+    expect(idx.tag.get('apple')?.items.length).toBe(1);
+    expect(singletonPaths(idx)).toContain('/tag/apple/');
+  });
+
+  it('dedups distinct raws that slug identically within one recipe (no throw)', () => {
+    // Two different labels on ONE recipe that slug the same map to a single page — dedup
+    // (first raw wins), don't throw. The collision guard is only for DISTINCT recipes.
+    const idx = termIndex([r({ course: 'dessert', tags: ['Apple', 'apple'] })], (x) => x);
+    expect(idx.tag.get('apple')?.items.length).toBe(1);
+    expect(singletonPaths(idx)).toContain('/tag/apple/');
+  });
+
   it('throws on a within-axis slug collision', () => {
     expect(() =>
       termIndex(
