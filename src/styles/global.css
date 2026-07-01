@@ -131,7 +131,9 @@ img {
   position: absolute;
   left: -9999px;
   top: 0;
-  background: var(--accent);
+  /* --accent-ink (5.31:1), not --accent (4.09:1): the 600-weight label needs AA 4.5:1. The
+     link is off-screen until :focus, so neither axe nor the guard's page scans see it. */
+  background: var(--accent-ink);
   color: var(--on-accent);
   padding: 0.6rem 1rem;
   border-radius: 0 0 var(--radius) 0;

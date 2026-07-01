@@ -603,7 +603,10 @@ const jsonLd = [
     height: 2.4rem;
     display: grid;
     place-items: center;
-    background: var(--accent);
+    /* --accent-ink (5.31:1), not --accent (4.09:1): the step number is ~15px/800, below the
+       large-text threshold, so it needs the 4.5:1 AA ratio. axe can't see ::before content,
+       so the guard checks this badge's contrast explicitly. */
+    background: var(--accent-ink);
     color: var(--on-accent);
     font: 800 0.95rem var(--font-display);
     border-radius: var(--radius-sm);

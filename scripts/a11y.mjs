@@ -87,6 +87,48 @@ async function scan(page, where, exclude = []) {
   recordAxe(where, aa, bp);
 }
 
+// Compute the WCAG contrast ratio between an element's (or pseudo-element's) text colour and
+// its background, straight from getComputedStyle — for cases axe can't reach (::before/::after
+// generated content, off-screen-until-focus elements). Returns { ok, ratio, fg, bg } or
+// { ok: null, reason }.
+async function badgeContrast(page, selector, pseudo) {
+  return page.evaluate(
+    ({ selector, pseudo }) => {
+      const el = document.querySelector(selector);
+      if (!el) return { ok: null, reason: 'element not found' };
+      const cs = getComputedStyle(el, pseudo || undefined);
+      const parse = (s) => {
+        const m = s && s.match(/rgba?\(([^)]+)\)/);
+        if (!m) return null;
+        const [r, g, b] = m[1].split(',').map((x) => parseFloat(x));
+        return [r, g, b];
+      };
+      const fg = parse(cs.color);
+      const bg = parse(cs.backgroundColor);
+      if (!fg || !bg)
+        return {
+          ok: null,
+          reason: `unreadable colours (${cs.color} / ${cs.backgroundColor})`,
+        };
+      const lin = (c) => {
+        c /= 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      };
+      const L = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+      const l1 = L(fg);
+      const l2 = L(bg);
+      const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+      return {
+        ok: ratio >= 4.5,
+        ratio: Math.round(ratio * 100) / 100,
+        fg: cs.color,
+        bg: cs.backgroundColor,
+      };
+    },
+    { selector, pseudo },
+  );
+}
+
 // Tab from the top of the document and collect the focus order as short labels, so we can
 // assert the header's keyboard order matches its visual order.
 async function tabOrder(page, steps) {
@@ -136,7 +178,7 @@ try {
     }
     // Recipe page with cook mode ON — puts .toggle into its aria-pressed="true" state
     // (white-on-accent), which a load-time scan never sees. Cook mode also *intentionally*
-    // dims the surrounding chrome (breadcrumb, meta, lede, header/footer) to opacity 0.4 —
+    // dims the surrounding chrome (breadcrumb, meta, lede, story) to opacity 0.4 —
     // a deliberate de-emphasis that currently drops that text below AA. Whether to keep
     // dimming (AA-safe), or hide that chrome in cook mode, is a UX decision tracked
     // separately; we EXCLUDE those dimmed regions here (logged below) so this scan still
@@ -156,8 +198,8 @@ try {
       await scan(page, `search-dropdown/${theme}`);
       await ctx.close();
     }
-    // Desktop Categories dropdown OPEN — its <details> is display:none when closed, so its
-    // link list is invisible to axe unless we open it at desktop width.
+    // Desktop Categories dropdown OPEN — a native <details>, so its link list is hidden from
+    // the a11y tree (and axe) when closed; open it at desktop width to scan the panel.
     {
       const { ctx, page } = await themedPage(theme, '/');
       await page.setViewportSize({ width: 1024, height: 800 });
@@ -174,6 +216,27 @@ try {
       await page.locator('#mobile-menu > summary').click();
       await sleep(150);
       await scan(page, `mobile-nav-open/${theme}`);
+      await ctx.close();
+    }
+    // Computed-contrast of accent "badges" that axe structurally CANNOT evaluate: CSS
+    // ::before/::after generated content (the step-number badges) and elements positioned
+    // off-screen until focus (the skip link). Two AA fails reached review through this exact
+    // blind spot, so we compute the ratio from getComputedStyle directly here.
+    {
+      const { ctx, page } = await themedPage(theme, '/recipes/snickerdoodles/');
+      await sleep(100);
+      for (const [label, selector, pseudo] of [
+        ['step-number badge', '.steps li', '::before'],
+        ['skip link', '.skip-link', null],
+      ]) {
+        const res = await badgeContrast(page, selector, pseudo);
+        if (res.ok === null)
+          failures.push(`contrast: could not measure ${label} (${theme}) — ${res.reason}`);
+        else if (!res.ok)
+          failures.push(
+            `contrast: ${label} ${res.ratio}:1 (< 4.5) in ${theme} — ${res.fg} on ${res.bg}`,
+          );
+      }
       await ctx.close();
     }
   }
