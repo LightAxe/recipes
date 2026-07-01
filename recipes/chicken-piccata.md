@@ -25,6 +25,14 @@ ingredients:
     item: chicken stock
     grams: 240
     gramsSource: "USDA FDC (chicken broth ≈ 240 g/cup)"
+  - qty: 2
+    unit: tsp
+    item: cornstarch
+    prep: for the sauce
+    grams: 5
+    gramsApprox: true
+    gramsSource: "King Arthur (cornstarch 1 tbsp = 8 g)"
+    note: "stirred into the cold stock to thicken (from the card's steps)"
   - qty: 0.5
     unit: cup
     item: capers
@@ -41,14 +49,14 @@ instructions:
   - "Dredge in a mixture of flour, garlic salt, and pepper."
   - text: "Brown in the oil until mostly done, about three minutes on each side. Remove from the skillet and set aside."
     timer: PT6M
-  - "Stir 2 teaspoons of cornstarch into the cold chicken stock."
+  - "Stir the cornstarch into the cold chicken stock until smooth."
   - "Add the lemon juice, chicken-stock mixture, and capers to the pan and bring to a boil."
   - text: "Return the chicken to the skillet and simmer for about 5 minutes."
     timer: PT5M
   - "Garnish with fresh parsley."
   - "Serve with rice or pasta."
 notes:
-  - "The sauce uses 2 teaspoons of cornstarch (stirred into the cold stock); the ingredient list only says \"flour and/or cornstarch\" for the dredge."
+  - "The card lists \"flour and/or cornstarch\" only for the dredge; the 2 tsp cornstarch that thickens the sauce is called out in the steps — listed here as its own ingredient so it scales with the batch."
 datePublished: 2026-07-01
 ---
 
