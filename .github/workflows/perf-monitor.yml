@@ -1,0 +1,58 @@
+name: Perf monitor (weekly)
+
+# Decade-scale drift watch against the LIVE site, decoupled from PR cadence. Two signals:
+#   1. live-perf-check.mjs (deterministic) — reachable, indexable, and served compressed. This
+#      is the ALERTING signal: if it fails, we open/update a tracking issue.
+#   2. Lighthouse mobile CWV, median of 3 (informational) — captured as an uploaded report, run
+#      with `continue-on-error` and warn-level assertions so the noisy composite score can never
+#      false-alarm the monitor (matching the plan: deterministic gates block, noisy metrics don't).
+on:
+  schedule:
+    - cron: '17 6 * * 1' # Mondays 06:17 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: perf-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Live preflight + content-encoding (deterministic alert signal)
+        run: node scripts/live-perf-check.mjs
+      - name: Lighthouse mobile CWV — median of 3 (informational)
+        continue-on-error: true
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            https://recipes.axpr.net/
+            https://recipes.axpr.net/recipes/snickerdoodles/
+            https://recipes.axpr.net/recipes/
+          runs: 3
+          configPath: ./.github/lighthouserc.json
+          temporaryPublicStorage: true
+      - name: Open/update tracking issue on drift
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE="perf-monitor: live site regression"
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          body=$(printf 'The weekly perf monitor failed the live preflight/content-encoding check — the site is unreachable, de-indexed, or serving uncompressed responses.\n\nRun: %s' "$run_url")
+          num=$(gh issue list --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$num" ]; then
+            gh issue comment "$num" --body "$body"
+          else
+            gh issue create --title "$TITLE" --body "$body"
+          fi
