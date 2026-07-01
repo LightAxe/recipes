@@ -97,11 +97,17 @@ async function badgeContrast(page, selector, pseudo) {
       const el = document.querySelector(selector);
       if (!el) return { ok: null, reason: 'element not found' };
       const cs = getComputedStyle(el, pseudo || undefined);
+      // Handle both comma and modern space/slash rgb() serialisations, and capture alpha.
       const parse = (s) => {
-        const m = s && s.match(/rgba?\(([^)]+)\)/);
+        const m = s && s.match(/rgba?\(([^)]+)\)/i);
         if (!m) return null;
-        const [r, g, b] = m[1].split(',').map((x) => parseFloat(x));
-        return [r, g, b];
+        const parts = m[1]
+          .split(/[\s,/]+/)
+          .filter(Boolean)
+          .map(Number);
+        const [r, g, b, a] = parts;
+        if ([r, g, b].some((n) => Number.isNaN(n))) return null;
+        return { rgb: [r, g, b], a: a === undefined ? 1 : a };
       };
       const fg = parse(cs.color);
       const bg = parse(cs.backgroundColor);
@@ -110,13 +116,20 @@ async function badgeContrast(page, selector, pseudo) {
           ok: null,
           reason: `unreadable colours (${cs.color} / ${cs.backgroundColor})`,
         };
+      // A translucent background can't be scored without compositing it over the real backdrop;
+      // refuse to guess (returns a measurable failure, never a false pass).
+      if (bg.a < 1)
+        return {
+          ok: null,
+          reason: `translucent background (${cs.backgroundColor}) — cannot score`,
+        };
       const lin = (c) => {
         c /= 255;
         return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
       };
       const L = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-      const l1 = L(fg);
-      const l2 = L(bg);
+      const l1 = L(fg.rgb);
+      const l2 = L(bg.rgb);
       const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
       return {
         ok: ratio >= 4.5,
@@ -209,9 +222,10 @@ try {
       await ctx.close();
     }
     // Mobile viewport with the hamburger sheet OPEN — the nav sheet is display:none on desktop,
-    // so axe excludes its subtree unless we shrink + open it.
+    // so axe excludes its subtree unless we shrink + open it. Loaded on /tips/ so a sheet link
+    // carries aria-current="page" (its --sunken/--accent-ink active style gets scanned too).
     {
-      const { ctx, page } = await themedPage(theme, '/');
+      const { ctx, page } = await themedPage(theme, '/tips/');
       await page.setViewportSize({ width: 390, height: 820 });
       await page.locator('#mobile-menu > summary').click();
       await sleep(150);
