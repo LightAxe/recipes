@@ -50,9 +50,9 @@ tag, and contributor browse pages — no empty taxonomy pages are generated.)
 The culinary tradition. Free string but **prefer an existing value** for coherent
 `/cuisine/<slug>/` pages. Proper-case label; slug is lowercased/kebab. Starter set:
 
-`American`, `Southern`, `Cajun & Creole`, `Tex-Mex`, `Mexican`, `Italian`, `French`,
-`German`, `Scandinavian`, `Jewish`, `Greek & Mediterranean`, `Chinese`, `Japanese`,
-`Indian`, `Middle Eastern`, `Caribbean`.
+`American`, `Southern`, `Cajun & Creole`, `Tex-Mex`, `Mexican`, `Brazilian`, `Italian`,
+`French`, `Swiss`, `German`, `Scandinavian`, `Jewish`, `Greek & Mediterranean`, `Chinese`,
+`Japanese`, `Indian`, `Middle Eastern`, `Caribbean`.
 
 - Omit if a recipe has no meaningful cuisine (many family staples are just "American" or
   none — that's fine; don't force it).
