@@ -4,7 +4,7 @@ description: A baked, buttery homemade snack mix — Chex, Cheerios, and pretzel
 course: appetizer
 cuisine: American
 tags: [snack-mix, potluck, make-ahead, crowd-size]
-servings: 32
+servings: 48
 ingredients:
   - qty: 1
     unit: lb
