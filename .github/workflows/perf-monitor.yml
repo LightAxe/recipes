@@ -32,8 +32,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      # No `npm ci`: live-perf-check.mjs is dependency-free (plain fetch) and the LHCI action
+      # vendors its own tooling — installing deps here would only add a false-alarm vector.
       - name: Live preflight + content-encoding (deterministic alert signal)
         id: livecheck
         run: node scripts/live-perf-check.mjs
@@ -62,7 +62,7 @@ jobs:
           else
             cause="a step in the weekly perf monitor failed (see the run log — likely tooling/setup, not the site itself)."
           fi
-          body=$(printf '<!-- perf-monitor-auto -->\nWeekly perf monitor: %s\n\nRun: %s' "$cause" "$run_url")
+          body=$(printf 'Weekly perf monitor: %s\n\nRun: %s' "$cause" "$run_url")
           num=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number --jq '.[0].number // empty')
           if [ -n "$num" ]; then
             gh issue comment "$num" --body "$body"

@@ -30,7 +30,8 @@ async function main() {
   const allows = /^Allow:\s*\/\s*$/im.test(robotsTxt);
   const advertisesSitemap = /^Sitemap:\s*\S/im.test(robotsTxt);
 
-  // 2. Indexable (only enforced when we expect to be live)?
+  // 2. Indexable (only enforced when we expect to be live)? snickerdoodles is a deliberate
+  // canary route — if it's ever renamed/removed, alerting on its disappearance is the point.
   let recipeNoindex = false;
   try {
     const rec = await fetch(`${SITE}/recipes/snickerdoodles/`);

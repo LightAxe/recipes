@@ -47,6 +47,13 @@ const FIXED = {
   // CSS is render-blocking; budget it too, or an unpurged-Tailwind / global.css regression would
   // add blocking bytes while HTML/DOM/JS stay flat and the gate passes.
   'shared CSS (_astro/*.css)': { measure: astroBytes('.css'), budget: 55_000, unit: 'bytes' },
+  // Fonts are the other heavy shared asset class — a new family/subset would otherwise ship
+  // unguarded. (Images get their own bucket once recipes carry photos.)
+  'shared fonts (_astro/*.woff2)': {
+    measure: astroBytes('.woff2'),
+    budget: 190_000,
+    unit: 'bytes',
+  },
   'home page html': { measure: bytes('dist/index.html'), budget: 40_000, unit: 'bytes' },
   'home page DOM (tags)': { measure: tagCount('dist/index.html'), budget: 420, unit: 'tags' },
 };
