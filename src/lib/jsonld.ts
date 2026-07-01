@@ -4,7 +4,7 @@
 import type { CollectionEntry } from 'astro:content';
 import { courseLabel } from './taxonomy';
 import { toFraction } from './units';
-import { SITE, SITE_NAME, abs } from './site';
+import { SITE_NAME, abs } from './site';
 
 type Recipe = CollectionEntry<'recipes'>;
 type Ingredient = Recipe['data']['ingredients'][number];
@@ -59,15 +59,20 @@ export function recipeJsonLd(recipe: Recipe, imageUrl?: string) {
   return json;
 }
 
-export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
+// Google requires `item` (a URL) on every non-last BreadcrumbList entry, so a URL-less
+// segment (e.g. the non-linking axis label "Categories", which has no index page) is
+// dropped from the structured data — the visible breadcrumb still shows it. Taxonomy
+// pages thus emit a valid [Home, Term] list; recipe pages (all items linked) are unchanged.
+export function breadcrumbJsonLd(items: { name: string; path?: string }[]) {
+  const linked = items.filter((it) => it.path);
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map((it, i) => ({
+    itemListElement: linked.map((it, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       name: it.name,
-      item: abs(it.path),
+      item: abs(it.path!),
     })),
   };
 }
@@ -90,6 +95,15 @@ export function websiteJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE_NAME,
-    url: SITE,
+    // Trailing slash to match the home page's canonical (abs('/')).
+    url: abs('/'),
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: abs('/search/?q={search_term_string}'),
+      },
+      'query-input': 'required name=search_term_string',
+    },
   };
 }

@@ -1,31 +1,157 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import CardGrid from '../../components/CardGrid.astro';
-import { itemListJsonLd } from '../../lib/jsonld';
+import RecipeCard from '../../components/RecipeCard.astro';
+import { itemListJsonLd, breadcrumbJsonLd } from '../../lib/jsonld';
+import { allRecipes, taxonomyIndex, byTitle } from '../../lib/browse';
+import { COURSE_SLUGS, courseLabel, slugify, AXIS_META } from '../../lib/taxonomy';
 
-const recipes = (await getCollection('recipes')).sort((a, b) =>
-  a.data.title.localeCompare(b.data.title),
-);
-const jsonLd = [itemListJsonLd(recipes)];
+// Complete, deterministic A–Z grid — the no-JS experience. JS enhances into live
+// faceted filtering (src/scripts/recipes-filter.ts); the filter panel is hidden until
+// JS initializes so no-JS never sees a control it can't honor.
+const recipes = (await allRecipes()).sort(byTitle);
+const index = await taxonomyIndex();
+
+const courseFacets = COURSE_SLUGS.filter((s) => index.category.has(s)).map((s) => ({
+  slug: s,
+  label: courseLabel(s),
+  count: index.category.get(s)!.items.length,
+}));
+const byCountThenLabel = (
+  a: { count: number; label: string },
+  b: { count: number; label: string },
+) => b.count - a.count || a.label.localeCompare(b.label);
+const cuisineFacets = [...index.cuisine.values()]
+  .map((t) => ({ slug: t.slug, label: t.label, count: t.items.length }))
+  .sort(byCountThenLabel);
+const fromFacets = [...index.from.values()]
+  .map((t) => ({ slug: t.slug, label: t.label, count: t.items.length }))
+  .sort(byCountThenLabel);
+// Tags are a long tail (singletons are reachable via search + recipe chips); the filter
+// panel offers the shared ones (≥2 recipes) to stay usable.
+const tagFacets = [...index.tag.values()]
+  .filter((t) => t.items.length >= 2)
+  .map((t) => ({ slug: t.slug, label: t.label, count: t.items.length }))
+  .sort(byCountThenLabel);
+
+const jsonLd = [
+  itemListJsonLd(recipes),
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Recipes', path: '/recipes/' },
+  ]),
+];
+
+const cardData = (r: (typeof recipes)[number]) => ({
+  course: r.data.course,
+  cuisine: r.data.cuisine ? slugify(r.data.cuisine) : '',
+  from: r.data.contributor ? slugify(r.data.contributor) : '',
+  tags: (r.data.tags ?? []).map(slugify).join(' '),
+  title: r.data.title.toLowerCase(),
+  date: r.data.datePublished?.getTime() ?? 0,
+});
+
+const facetGroups = [
+  { axis: 'course', label: 'Course', items: courseFacets },
+  { axis: 'cuisine', label: 'Cuisine', items: cuisineFacets },
+  { axis: 'from', label: 'From', items: fromFacets },
+  { axis: 'tag', label: 'Tag', items: tagFacets },
+] as const;
 ---
 
 <Base
   title="All Recipes"
-  description="Every recipe in the Ogilvie family collection."
+  description="Every recipe in the Ogilvie family collection — filter by course, cuisine, tag, or contributor."
   jsonLd={jsonLd}
 >
   <section class="wrap">
     <nav aria-label="Breadcrumb" class="crumbs">
       <a href="/">Home</a>
-      <span aria-hidden="true">›</span> All Recipes
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">All Recipes</span>
     </nav>
     <p class="eyebrow">The collection</p>
     <h1>All Recipes</h1>
-    <p class="count">{recipes.length} recipe{recipes.length === 1 ? '' : 's'}</p>
-    <CardGrid recipes={recipes} />
+    <p class="count" id="recipe-count" data-total={recipes.length} role="status">
+      {recipes.length} recipe{recipes.length === 1 ? '' : 's'}
+    </p>
+
+    {/* No-JS browse: real links into the taxonomy pages. */}
+    <nav class="browse" aria-label="Browse by category">
+      <span class="browse-k">Browse:</span>
+      {
+        courseFacets.map((c) => (
+          <a href={`${AXIS_META.category.base}/${c.slug}/`}>{c.label}</a>
+        ))
+      }
+    </nav>
+
+    {/* Interactive filter — revealed by JS only (no-JS shows the full A–Z grid). */}
+    <form id="facets" class="facets" hidden>
+      <div class="facets-head">
+        <strong>Filter</strong>
+        <label class="sort">
+          Sort
+          <select id="sort" name="sort">
+            <option value="az">A–Z</option>
+            <option value="newest">Newest</option>
+          </select>
+        </label>
+        <button type="button" id="facet-reset" class="reset" aria-label="Reset filters">
+          Reset
+        </button>
+      </div>
+      <div class="facets-groups">
+        {
+          facetGroups
+            .filter((g) => g.items.length > 0)
+            .map((g) => (
+              <fieldset
+                class={g.axis === 'tag' ? 'fgroup scroll' : 'fgroup'}
+                data-axis={g.axis}
+              >
+                <legend>{g.label}</legend>
+                <div class="opts">
+                  {g.items.map((it) => (
+                    <label class="opt">
+                      <input type="checkbox" value={it.slug} data-axis={g.axis} />
+                      <span>{it.label}</span>
+                      <span class="n">{it.count}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ))
+        }
+      </div>
+    </form>
+
+    <ul class="grid" id="recipe-grid" role="list">
+      {
+        recipes.map((r) => {
+          const d = cardData(r);
+          return (
+            <li
+              data-course={d.course}
+              data-cuisine={d.cuisine}
+              data-from={d.from}
+              data-tags={d.tags}
+              data-title={d.title}
+              data-date={d.date}
+            >
+              <RecipeCard recipe={r} />
+            </li>
+          );
+        })
+      }
+    </ul>
+    <p id="no-match" class="no-match" hidden>
+      No recipes match those filters.
+      <button type="button" id="no-match-reset" aria-label="Reset filters">Reset</button>
+    </p>
   </section>
 </Base>
+
+<script src="../../scripts/recipes-filter.ts"></script>
 
 <style>
   section {
@@ -44,8 +170,171 @@ const jsonLd = [itemListJsonLd(recipes)];
     margin: 0.9rem 0 0.25rem;
   }
   .count {
-    margin: 0 0 1.75rem;
+    margin: 0 0 1.25rem;
     color: var(--muted);
     font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .browse {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+  }
+  .browse-k {
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .browse a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    padding: 0 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .browse a:hover,
+  .browse a:focus-visible {
+    border-color: var(--accent-ink);
+    color: var(--accent-ink);
+  }
+
+  .facets {
+    margin: 0 0 1.75rem;
+    padding: 1rem 1.1rem 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+  }
+  .facets[hidden] {
+    display: none;
+  }
+  .facets-head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.9rem;
+  }
+  .facets-head strong {
+    font-family: var(--font-display);
+  }
+  .sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .sort select {
+    font: inherit;
+    min-height: 44px;
+    padding: 0.3rem 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xs, 6px);
+    background: var(--bg);
+    color: var(--text);
+  }
+  .reset {
+    margin-left: auto;
+    min-height: 44px;
+    padding: 0 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font: 600 0.85rem var(--font-display);
+    cursor: pointer;
+  }
+  .facets-groups {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 44rem) {
+    .facets-groups {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .fgroup {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+  }
+  .fgroup legend {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: var(--text-eyebrow);
+    color: var(--accent-ink);
+    margin-bottom: 0.4rem;
+  }
+  .fgroup.scroll .opts {
+    max-height: 11rem;
+    overflow-y: auto;
+  }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 44px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .opt input {
+    accent-color: var(--accent);
+  }
+  .opt .n {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
+  }
+  .grid li[hidden] {
+    display: none;
+  }
+  @media (min-width: 38rem) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 60rem) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .no-match {
+    margin: 2rem 0;
+    color: var(--muted);
+  }
+  .no-match[hidden] {
+    display: none;
+  }
+  .no-match button {
+    margin-left: 0.4rem;
+    min-height: 44px;
+    padding: 0 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font: 600 0.85rem var(--font-display);
+    cursor: pointer;
   }
 </style>

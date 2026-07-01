@@ -1,0 +1,80 @@
+---
+// Shared layout for every taxonomy browse page (/category, /tag, /cuisine, /from).
+// Single-recipe pages are noindex (thin content) — and the same singleton rule keeps
+// them out of the sitemap (astro.config.ts). The breadcrumb's axis segment is plain
+// text: there are no axis index pages, so it never links.
+import type { CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import CardGrid from './CardGrid.astro';
+import { itemListJsonLd, breadcrumbJsonLd } from '../lib/jsonld';
+import { AXIS_META, type Axis } from '../lib/taxonomy';
+
+interface Props {
+  axis: Axis;
+  label: string;
+  recipes: CollectionEntry<'recipes'>[];
+}
+const { axis, label, recipes } = Astro.props;
+
+const meta = AXIS_META[axis];
+const here = `${meta.base}/${Astro.params.slug}/`;
+const noindex = recipes.length === 1;
+const count = recipes.length;
+
+const heading =
+  axis === 'from' ? `From ${label}` : axis === 'cuisine' ? `${label} recipes` : label;
+
+const jsonLd = [
+  itemListJsonLd(recipes),
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: meta.label }, // non-linking axis segment (no index page)
+    { name: heading, path: here },
+  ]),
+];
+---
+
+<Base
+  title={heading}
+  description={`${count} recipe${count === 1 ? '' : 's'} · ${heading}.`}
+  jsonLd={jsonLd}
+  noindex={noindex}
+>
+  <section class="wrap">
+    <nav aria-label="Breadcrumb" class="crumbs">
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span>
+      <span class="axis">{meta.label}</span>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">{heading}</span>
+    </nav>
+    <p class="eyebrow">{meta.label}</p>
+    <h1>{heading}</h1>
+    <p class="count">{count} recipe{count === 1 ? '' : 's'}</p>
+    <CardGrid recipes={recipes} />
+  </section>
+</Base>
+
+<style>
+  section {
+    padding-block: 1.75rem 1rem;
+  }
+  .crumbs {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+  .crumbs a,
+  .crumbs .axis {
+    color: var(--muted);
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    margin: 0.9rem 0 0.25rem;
+  }
+  .count {
+    margin: 0 0 1.75rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>

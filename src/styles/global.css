@@ -175,3 +175,58 @@ main {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ── Search results (rendered dynamically by src/scripts/search.ts, so global, not
+   scoped). Shared by the header dropdown and the /search/ page. ── */
+.sr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.sr-card {
+  display: block;
+  min-height: 44px;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--radius-xs, 6px);
+  color: var(--text);
+  text-decoration: none;
+}
+.sr-card:hover,
+.sr-card:focus-visible {
+  background: var(--sunken);
+}
+.sr-title {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.sr-course {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: var(--text-eyebrow);
+  color: var(--accent-ink);
+  margin-top: 0.15rem;
+}
+.sr-excerpt {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.sr-excerpt mark {
+  background: var(--accent-soft, #ffe8a3);
+  color: inherit;
+  padding: 0 0.1em;
+  border-radius: 2px;
+}
+.sr-empty {
+  margin: 0;
+  padding: 0.6rem 0.7rem;
+  color: var(--muted);
+}

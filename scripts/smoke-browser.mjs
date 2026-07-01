@@ -54,6 +54,74 @@ try {
   const after = await page.locator('.amount').first().textContent();
   if (before === after) errors.push(`scaler did not rescale amount (still "${before}")`);
 
+  // ── Phase 3: /recipes/ facet filter (progressive enhancement) ──
+  await page.goto(`${BASE}/recipes/`, { waitUntil: 'load' });
+  await sleep(200);
+  if ((await page.locator('#facets').getAttribute('hidden')) !== null) {
+    errors.push('facet panel still [hidden] — filter JS did not init');
+  }
+  const totalCards = await page.locator('#recipe-grid > li:not([hidden])').count();
+  await page.locator('#facets input[data-axis="course"]').first().check();
+  await sleep(150);
+  const filtered = await page.locator('#recipe-grid > li:not([hidden])').count();
+  if (!(filtered > 0 && filtered < totalCards)) {
+    errors.push(`facet filter did not narrow the grid (${totalCards} → ${filtered})`);
+  }
+  if (!/[?&]course=/.test(page.url())) {
+    errors.push(`facet filter did not write URL state (${page.url()})`);
+  }
+
+  // Back button restores the unfiltered grid (popstate re-applies state).
+  await page.goBack();
+  await page
+    .waitForFunction(
+      (n) => document.querySelectorAll('#recipe-grid > li:not([hidden])').length === n,
+      totalCards,
+      { timeout: 3000 },
+    )
+    .catch(() => {});
+  const afterBack = await page.locator('#recipe-grid > li:not([hidden])').count();
+  if (afterBack !== totalCards) {
+    errors.push(`Back did not restore the full grid (${afterBack} vs ${totalCards})`);
+  }
+
+  // Deep-link hydration: a shared filtered URL pre-filters the grid on load.
+  await page.goto(`${BASE}/recipes/?course=dessert`, { waitUntil: 'load' });
+  await page
+    .waitForFunction(
+      () => {
+        const g = document.getElementById('recipe-grid');
+        if (!g) return false;
+        const vis = g.querySelectorAll('li:not([hidden])').length;
+        return vis > 0 && vis < g.querySelectorAll('li').length;
+      },
+      undefined,
+      { timeout: 3000 },
+    )
+    .catch(() => {});
+  const deepVisible = await page.locator('#recipe-grid > li:not([hidden])').count();
+  if (!(deepVisible > 0 && deepVisible < totalCards)) {
+    errors.push(`deep-link did not pre-filter the grid (${deepVisible}/${totalCards})`);
+  }
+  if (
+    !(await page.locator('#facets input[value="dessert"][data-axis="course"]').isChecked())
+  ) {
+    errors.push('deep-link did not check the matching facet on load');
+  }
+
+  // ── Categories dropdown opens (native <details>, JS-enhanced) ──
+  await page.locator('#cats-menu > summary').click();
+  await sleep(80);
+  if (!(await page.locator('#cats-menu').evaluate((d) => d.open))) {
+    errors.push('Categories dropdown did not open');
+  }
+
+  // ── Site-wide search returns a hit (Pagefind lazy-loads on focus/typing) ──
+  await page.locator('#site-search').fill('chicken');
+  await sleep(700);
+  const hits = await page.locator('#site-search-results .sr-card').count();
+  if (hits < 1) errors.push('search returned no results for "chicken"');
+
   await browser.close();
 } catch (e) {
   errors.push(`harness: ${e.message}`);
@@ -66,4 +134,6 @@ if (errors.length) {
   for (const e of errors) console.error('  ✗ ' + e);
   process.exit(1);
 }
-console.log('BROWSER SMOKE PASSED: no console errors; controls revealed; scaler rescales.');
+console.log(
+  'BROWSER SMOKE PASSED: no console errors; scaler rescales; facet filter narrows + writes URL; Back + deep-link hydrate; Categories dropdown opens; search returns a hit.',
+);

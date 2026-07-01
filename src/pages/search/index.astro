@@ -1,0 +1,117 @@
+---
+import Base from '../../layouts/Base.astro';
+import { taxonomyIndex } from '../../lib/browse';
+import { COURSE_SLUGS, courseLabel } from '../../lib/taxonomy';
+
+// Browse fallback for the no-JS path (and for an empty query): the non-empty courses.
+const index = await taxonomyIndex();
+const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug));
+---
+
+<Base title="Search" description="Search the Ogilvie family recipe collection." noindex={true}>
+  <section class="wrap">
+    <h1>Search</h1>
+    <form class="page-search" role="search" action="/search/" method="get">
+      <label class="vh" for="search-page-input">Search recipes</label>
+      <input
+        type="search"
+        id="search-page-input"
+        name="q"
+        placeholder="Search recipes…"
+        autocomplete="off"
+        aria-controls="search-page-results"
+      />
+      <button type="submit">Search</button>
+    </form>
+
+    <div id="search-page-results"></div>
+    <p id="search-page-status" class="vh" role="status"></p>
+
+    <div class="fallback" id="search-fallback">
+      <p>Looking for something specific? Search above, or browse by category:</p>
+      <ul class="cat-links" role="list">
+        {
+          courses.map((slug) => (
+            <li>
+              <a href={`/category/${slug}/`}>{courseLabel(slug)}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  section {
+    padding-block: 1.75rem 1rem;
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    margin: 0 0 1.25rem;
+  }
+  .page-search {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+    max-width: 36rem;
+  }
+  .page-search input {
+    flex: 1;
+    min-height: 48px;
+    padding: 0 0.85rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+  }
+  .page-search button {
+    min-height: 48px;
+    padding-inline: 1.1rem;
+    border: 1px solid var(--accent-ink);
+    border-radius: var(--radius);
+    background: var(--accent-ink);
+    color: var(--bg);
+    font-family: var(--font-display);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .fallback {
+    margin-top: 2rem;
+    color: var(--muted);
+  }
+  .cat-links {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .cat-links a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    padding: 0 0.85rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  .cat-links a:hover,
+  .cat-links a:focus-visible {
+    border-color: var(--accent-ink);
+    color: var(--accent-ink);
+  }
+  .vh {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+</style>

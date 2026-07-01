@@ -1,21 +1,67 @@
 ---
 import Wordmark from './Wordmark.astro';
 import ThemeToggle from './ThemeToggle.astro';
+import { taxonomyIndex } from '../lib/browse';
+import { COURSE_SLUGS, courseLabel } from '../lib/taxonomy';
 
-// Phase 1: only live routes in the nav (no dead links).
 const path = Astro.url.pathname;
 const onRecipes = path.startsWith('/recipes');
+
+// Only courses that actually have recipes appear (docs/taxonomy.md §1), in nav order.
+const index = await taxonomyIndex();
+const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slug) => ({
+  slug,
+  label: courseLabel(slug),
+  count: index.category.get(slug)!.items.length,
+}));
 ---
 
 <header class="site-header">
   <div class="wrap bar">
     <Wordmark />
     <nav aria-label="Primary" class="nav">
-      <a href="/recipes/" aria-current={onRecipes ? 'page' : undefined}>Recipes</a>
+      <a
+        href="/recipes/"
+        aria-current={path === '/recipes/' ? 'page' : onRecipes ? 'true' : undefined}
+        >Recipes</a
+      >
+
+      <details class="cats" id="cats-menu">
+        <summary>Categories <span class="caret" aria-hidden="true">▾</span></summary>
+        <ul class="cats-list" role="list">
+          {
+            courses.map((c) => (
+              <li>
+                <a href={`/category/${c.slug}/`}>
+                  {c.label} <span class="n">{c.count}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </details>
+
+      <form class="search" role="search" action="/search/" method="get">
+        <label class="vh" for="site-search">Search recipes</label>
+        <input
+          type="search"
+          id="site-search"
+          name="q"
+          placeholder="Search recipes…"
+          autocomplete="off"
+          aria-controls="site-search-results"
+        />
+        <div class="search-results" id="site-search-results" hidden></div>
+        <p id="site-search-status" class="vh" role="status"></p>
+      </form>
+
       <ThemeToggle />
     </nav>
   </div>
 </header>
+
+<script src="../scripts/nav.ts"></script>
+<script src="../scripts/search.ts"></script>
 
 <style>
   .site-header {
@@ -36,9 +82,11 @@ const onRecipes = path.startsWith('/recipes');
   .nav {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
-  .nav a {
+  .nav > a {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
@@ -48,7 +96,133 @@ const onRecipes = path.startsWith('/recipes');
     font-family: var(--font-display);
     font-weight: 600;
   }
-  .nav a[aria-current='page'] {
+  .nav > a[aria-current='page'] {
     color: var(--accent-ink);
+  }
+
+  /* Categories dropdown (native <details> — works with no JS) */
+  .cats {
+    position: relative;
+  }
+  .cats > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 44px;
+    padding-inline: 0.25rem;
+    cursor: pointer;
+    list-style: none;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  .cats > summary::-webkit-details-marker {
+    display: none;
+  }
+  .cats > summary .caret {
+    display: inline-block;
+    font-size: 0.8em;
+    color: var(--muted);
+  }
+  .cats[open] > summary .caret {
+    transform: rotate(180deg);
+  }
+  .cats-list {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin: 0.4rem 0 0;
+    padding: 0.4rem;
+    min-width: 16rem;
+    max-height: min(70vh, 28rem);
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    list-style: none;
+    display: grid;
+    gap: 0.1rem;
+  }
+  .cats-list a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 44px;
+    padding: 0.3rem 0.6rem;
+    border-radius: calc(var(--radius) - 4px);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .cats-list a:hover,
+  .cats-list a:focus-visible {
+    background: var(--sunken);
+    color: var(--accent-ink);
+  }
+  .cats-list .n {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Search */
+  .search {
+    position: relative;
+  }
+  .search input {
+    min-height: 44px;
+    width: 13rem;
+    max-width: 42vw;
+    padding: 0 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+  }
+  .search input:focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 1px;
+  }
+  .search-results {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 0.4rem;
+    width: min(26rem, 90vw);
+    max-height: min(70vh, 30rem);
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    padding: 0.4rem;
+    z-index: 60;
+  }
+  .vh {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  @media (max-width: 38rem) {
+    .search input {
+      width: 100%;
+      max-width: none;
+    }
+    .search {
+      /* Full-width row, but keep it in DOM order (between Categories and the theme
+         toggle) so tab order matches visual order — no CSS `order` reflow (WCAG 2.4.3). */
+      flex-basis: 100%;
+    }
+    .cats-list,
+    .search-results {
+      width: 100%;
+      left: 0;
+      right: 0;
+    }
   }
 </style>

@@ -1,23 +1,11 @@
 import { defineCollection } from 'astro:content';
 import { z } from 'astro:schema';
 import { glob } from 'astro/loaders';
+// The 13 course slugs live in one place (docs/taxonomy.md §1) so the Zod enum and the
+// browse UI can never drift apart.
+import { COURSE_SLUGS } from './lib/taxonomy';
 
-// The 13 course slugs — single source mirrored from docs/taxonomy.md §1.
-const COURSES = [
-  'breakfast',
-  'appetizer',
-  'soup',
-  'salad',
-  'main',
-  'side',
-  'bread',
-  'dessert',
-  'cookies',
-  'drink',
-  'sauce',
-  'canning',
-  'other',
-] as const;
+const COURSES = COURSE_SLUGS;
 
 // ISO-8601 *time* duration, e.g. PT30M, PT1H30M (docs/recipe-schema.md).
 const duration = z

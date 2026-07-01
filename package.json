@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "postbuild": "pagefind --site dist",
     "preview": "astro preview",
     "check": "astro check",
     "format": "prettier --write \"src/**/*.{astro,ts,css}\" \"scripts/**/*.mjs\" \"*.{mjs,json}\"",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9",
+    "pagefind": "^1.5.2",
     "playwright": "^1.61.1",
     "prettier": "^3",
     "prettier-plugin-astro": "^0.14",
