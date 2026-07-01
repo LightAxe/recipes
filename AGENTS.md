@@ -30,7 +30,7 @@ that family members of every age can use.
 
 - Mobile-friendly **and** desktop-friendly (responsive).
 - A clean **printable** version of each recipe.
-- Support for **photos** (finished dish, and ideally step/heritage photos).
+- Support for **photos** (finished dish, and ideally step photos).
 - Easy for a **non-technical maintainer** to add recipes from emailed submissions.
 - Accessible across generations: large readable type, high contrast, big tap
   targets, simple navigation, no hover-only interactions.
@@ -90,9 +90,10 @@ that family members of every age can use.
   US/metric + volume/weight toggle, tap-to-check ingredients & steps — plus responsive
   layout, accessibility baseline, and a print view (clean / with-photo / 4×6 card). **No
   in-page timers** (ADR-0012). See `research/03-cross-generational-ux.md` for the checklist.
-- **Lean heritage for now:** basic `contributor` attribution and free-form `notes` only.
-  Scanned original cards, full provenance chains, oral-history audio, and a moderated
-  "Family Notes" feature are a **later phase** (also for privacy, since the site is public).
+- **Attribution & notes:** basic `contributor` attribution plus free-form `notes` — family
+  lore and commentary live in a recipe's `notes`. Scanned original cards, oral-history audio,
+  and a separate stories/"Family Notes" feature are **out of scope** (not planned — the
+  originals generally don't exist, and it keeps the public site lean and low-risk on privacy).
 - **Reference content** (technique how-tos, glossary, conversion charts) is desired;
   schedule after the core recipe experience.
 
