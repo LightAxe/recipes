@@ -33,14 +33,6 @@ const STATES = [
   { name: 'search-page', url: '/search/' },
 ];
 
-// Chrome that cook mode actually dims to opacity 0.4 (a deliberate de-emphasis). That dimming
-// currently fails WCAG 1.4.3 contrast; the fix (dim AA-safe vs. hide in cook mode) is a UX
-// decision tracked in issue #25, so we exclude these regions from the cook-mode scan ONLY —
-// and print the exclusion so it's never a silent gap. NB: the site header/footer are NOT in
-// this list — their cook-mode dim rule silently no-ops (a child-component cid mismatch, also
-// tracked in #25), so they render at full opacity and are scanned normally here.
-const COOKMODE_DIMMED = ['.crumbs', '.head .meta', '.lede', '.story'];
-
 const server = spawn('node_modules/.bin/astro', ['preview', '--port', String(PORT)], {
   stdio: 'ignore',
 });
@@ -190,17 +182,15 @@ try {
       await ctx.close();
     }
     // Recipe page with cook mode ON — puts .toggle into its aria-pressed="true" state
-    // (white-on-accent), which a load-time scan never sees. Cook mode also *intentionally*
-    // dims the surrounding chrome (breadcrumb, meta, lede, story) to opacity 0.4 —
-    // a deliberate de-emphasis that currently drops that text below AA. Whether to keep
-    // dimming (AA-safe), or hide that chrome in cook mode, is a UX decision tracked
-    // separately; we EXCLUDE those dimmed regions here (logged below) so this scan still
-    // guards the thing it's here for: the pressed control + the enlarged step content.
+    // (white-on-accent), which a load-time scan never sees. Cook mode HIDES the surrounding
+    // chrome (breadcrumb/meta/lede/story/header/footer are display:none — issue #25), so there's
+    // nothing to exclude: axe skips hidden subtrees, and the pressed control + enlarged steps
+    // are scanned normally.
     {
       const { ctx, page } = await themedPage(theme, '/recipes/snickerdoodles/');
       await page.locator('#cookmode-btn').click();
       await sleep(150);
-      await scan(page, `recipe-cookmode/${theme}`, COOKMODE_DIMMED);
+      await scan(page, `recipe-cookmode/${theme}`);
       await ctx.close();
     }
     // Live header search dropdown (results rendered) — a11y of the active panel state.
@@ -327,10 +317,6 @@ try {
   server.kill('SIGTERM');
 }
 
-console.log(
-  `note: cook-mode scan excludes intentionally-dimmed chrome (${COOKMODE_DIMMED.join(', ')}) — ` +
-    'those regions fail 1.4.3 at opacity 0.4; the dim-vs-hide fix is a tracked UX follow-up.',
-);
 if (warnings.size) {
   console.log('a11y best-practice warnings (report-only):');
   for (const [id, where] of warnings) console.log(`  · ${id} @ ${[...where].join(', ')}`);
