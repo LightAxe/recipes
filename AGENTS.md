@@ -141,3 +141,9 @@ editing history. See `docs/adr/README.md` for the format and how to add one.
 - Optimize every reader-facing choice for the **least technical, oldest family member**
   first, then make sure it still delights younger users.
 - Don't add social/engagement features without an ADR justifying them.
+- **Guard the guards.** CI enforces an accessibility guard (`npm run test:a11y`, axe + keyboard),
+  a structured-data audit (`npm run test:jsonld`), and a performance budget (`npm run test:perf`,
+  raw bytes + DOM, growth-aware). If a change touches **JS/CSS/images or bulk-adds recipes**, run
+  `npm run build && npm run test:perf` locally before opening the PR and sanity-check the numbers;
+  if a budget legitimately needs to rise, bump it deliberately in `scripts/perf-budget.mjs` and
+  say why. Real-world CWV drift is watched weekly by `.github/workflows/perf-monitor.yml`.
