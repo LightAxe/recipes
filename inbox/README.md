@@ -6,8 +6,10 @@ photos (handwriting, notes, possible EXIF/GPS) and the repo is public.
 
 The `recipe-intake` agent reads each photo and **transcribes it into structured recipe
 data** in `recipes/*.md` (researching gram weights along the way). The source photos stay
-here, private. Hero images for the public site stay placeholder for now; publishing
-scanned cards is a later, privacy-reviewed heritage phase (ADR-0004).
+here, private. Hero images for the public site stay placeholder for now. Publishing
+scanned cards is **out of scope** — not a deferred phase (ADR-0013): the originals
+generally don't exist and family commentary lives in each recipe's `notes`. If the family
+ever wants private scans online, that's a fresh, auth-gated decision (a new ADR, per ADR-0004).
 
 Suggested workflow:
 1. Put photos in `inbox/` (e.g. `inbox/001.jpg` …).
