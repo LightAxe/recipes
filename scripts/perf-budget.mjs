@@ -43,7 +43,10 @@ if (!existsSync('dist/pagefind')) {
 // regression, loose enough that normal edits/growth don't. Update deliberately when a change
 // legitimately raises a floor (and say why in the commit).
 const FIXED = {
-  'shared JS (_astro/*.js)': { measure: sharedJsBytes(), budget: 16_000, unit: 'bytes' },
+  'shared JS (_astro/*.js)': { measure: astroBytes('.js'), budget: 16_000, unit: 'bytes' },
+  // CSS is render-blocking; budget it too, or an unpurged-Tailwind / global.css regression would
+  // add blocking bytes while HTML/DOM/JS stay flat and the gate passes.
+  'shared CSS (_astro/*.css)': { measure: astroBytes('.css'), budget: 55_000, unit: 'bytes' },
   'home page html': { measure: bytes('dist/index.html'), budget: 40_000, unit: 'bytes' },
   'home page DOM (tags)': { measure: tagCount('dist/index.html'), budget: 420, unit: 'tags' },
 };
@@ -98,8 +101,8 @@ console.log(`perf-budget: ${N} recipes. measured / budget:`);
 console.log(rows.join('\n'));
 // Compressed sizes for context (not gated — CDN encoding isn't guaranteed).
 console.log(
-  `  (gzip context: shared JS ≈ ${kb(sharedJsGz())}, a recipe page ≈ ` +
-    `${kb(gz(`dist/recipes/${recipeSlugs[0]}/index.html`))}, home ≈ ${kb(gz('dist/index.html'))})`,
+  `  (gzip context: shared JS ≈ ${kb(astroGz('.js'))}, shared CSS ≈ ${kb(astroGz('.css'))}, ` +
+    `a recipe page ≈ ${kb(gz(`dist/recipes/${recipeSlugs[0]}/index.html`))}, home ≈ ${kb(gz('dist/index.html'))})`,
 );
 // Images bucket: none yet (recipes ship no photos). When photos land, add a per-image budget
 // here so an un-optimised upload is caught — tracked with the weight-first work (ADR-0008).
@@ -115,14 +118,15 @@ if (failures.length) {
 }
 console.log('\nPERF BUDGET PASSED: every route within its raw-byte / DOM budget.');
 
-function sharedJsFiles() {
+// Sum of all hashed dist/_astro assets with the given extension (the site-wide JS / CSS bundles).
+function astroFiles(ext) {
   return existsSync('dist/_astro')
-    ? readdirSync('dist/_astro').filter((f) => f.endsWith('.js'))
+    ? readdirSync('dist/_astro').filter((f) => f.endsWith(ext))
     : [];
 }
-function sharedJsBytes() {
-  return sharedJsFiles().reduce((s, f) => s + bytes(`dist/_astro/${f}`), 0);
+function astroBytes(ext) {
+  return astroFiles(ext).reduce((s, f) => s + bytes(`dist/_astro/${f}`), 0);
 }
-function sharedJsGz() {
-  return sharedJsFiles().reduce((s, f) => s + gz(`dist/_astro/${f}`), 0);
+function astroGz(ext) {
+  return astroFiles(ext).reduce((s, f) => s + gz(`dist/_astro/${f}`), 0);
 }

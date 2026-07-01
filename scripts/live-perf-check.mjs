@@ -34,6 +34,7 @@ async function main() {
   let recipeNoindex = false;
   try {
     const rec = await fetch(`${SITE}/recipes/snickerdoodles/`);
+    if (!rec.ok) problems.push(`a recipe page returned HTTP ${rec.status} — route missing?`);
     // Order-independent: a <meta> that has BOTH name="robots" and a noindex content value.
     recipeNoindex = /<meta(?=[^>]*name=["']robots["'])(?=[^>]*noindex)[^>]*>/i.test(
       await rec.text(),
@@ -59,6 +60,12 @@ async function main() {
   for (const path of ['/', '/recipes/snickerdoodles/', '/pagefind/pagefind.js']) {
     try {
       const r = await fetch(`${SITE}${path}`, { headers: { 'Accept-Encoding': 'br, gzip' } });
+      // A route can 404/500 and still be served compressed — check status first, or a
+      // disappeared page/search asset would look "healthy" just because it's gzipped.
+      if (!r.ok) {
+        problems.push(`${path} returned HTTP ${r.status} — route/asset missing?`);
+        continue;
+      }
       const enc = (r.headers.get('content-encoding') || '').toLowerCase();
       if (enc === 'br' || enc === 'gzip') notes.push(`${path} → ${enc}`);
       else problems.push(`${path} not compressed (content-encoding: ${enc || 'identity'})`);
