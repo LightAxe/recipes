@@ -70,8 +70,8 @@ recipes/                         # source-of-truth content (already started)
   Zod schema must stay in sync; the Zod schema is the enforcement.
 - **Ingredients are structured** (`qty`/`unit`/`item`/`grams`) precisely so the scaler and
   unit toggle can operate on them — see §5.
-- Tips/reference content and (later) heritage material are **separate collections**
-  (`tips/`, later `stories/`), so the recipe schema stays clean.
+- Tips/reference content is a **separate collection** (`tips/`), so the recipe schema
+  stays clean.
 
 ### Derived outputs from one recipe file
 
@@ -228,7 +228,6 @@ reactive state. This is a reversible call.
 4. **Browse & find:** index, category pages, (optional) search.
 5. **Reference content:** tips/technique hub, conversions, glossary.
 6. **Polish & launch:** a11y/perf pass, Rich-Results validation, domain + registry entry.
-7. **Later phases:** heritage layer (scanned cards, provenance, Family Notes, audio).
 
 ## 15. Decision map
 

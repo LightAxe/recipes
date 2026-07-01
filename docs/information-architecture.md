@@ -32,9 +32,6 @@ enhancement), `design.md` (Counter), and `recipe-schema.md`. Living document.*
 └── (utility) /404, /sitemap-index.xml (+ /sitemap-0.xml), /rss.xml, /robots.txt
 ```
 
-**Later (heritage phase):** `/from/<contributor>/` becomes richer; add `/stories/` and
-per-recipe scanned-card/audio. Not v1.
-
 ## 3. URL conventions
 
 | Pattern | Example | Notes |

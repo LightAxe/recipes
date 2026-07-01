@@ -18,7 +18,7 @@ tap-to-check, timers). See ADR [0002](./adr/0002-recipes-as-markdown-with-yaml-f
 |-------|----------|------|-------|
 | `title` | ✅ | string | Display name, e.g. "Grandma's Apple Pie". |
 | `description` | ✅ | string | Short headnote, 1–3 sentences. Used in cards + SEO. |
-| `contributor` |  | string | Who gave us this recipe / whose recipe it is, e.g. "Grandma Ruth". **Optional** — many old cards carry no name; omit the field rather than inventing an attribution. Basic attribution; full provenance is a later heritage phase. |
+| `contributor` |  | string | Who gave us this recipe / whose recipe it is, e.g. "Grandma Ruth". **Optional** — many old cards carry no name; omit the field rather than inventing an attribution. Name-only attribution — no provenance chain. |
 | `course` | ✅ | enum | **Course slug** from [`taxonomy.md`](./taxonomy.md) §1 (e.g. `dessert`, `main`, `side`, `breakfast`). Zod enum — build fails on unknown. Rendered with its label; → schema.org `recipeCategory`. |
 | `cuisine` |  | string | Cuisine from [`taxonomy.md`](./taxonomy.md) §2 (e.g. `American`); reuse existing values. → `recipeCuisine`. |
 | `tags` |  | string[] | lowercase-kebab keywords per [`taxonomy.md`](./taxonomy.md) §3; dietary tags (§4) also emit `suitableForDiet`. → schema.org `keywords`. |
@@ -30,7 +30,7 @@ tap-to-check, timers). See ADR [0002](./adr/0002-recipes-as-markdown-with-yaml-f
 | `totalTime` |  | ISO-8601 duration | e.g. `PT1H30M`. Compute if not given. |
 | `ingredients` | ✅ | Ingredient[] | See below. Structured so we can scale + convert. |
 | `instructions` | ✅ | Step[] | See below. |
-| `notes` |  | string[] | Cook's notes / tips ("don't overmix"). Family lore ("Grandma added a pinch more") also fine here in lean v1; a dedicated Family Notes feature comes later. |
+| `notes` |  | string[] | Cook's notes / tips ("don't overmix"). Family lore ("Grandma added a pinch more") goes here too — `notes` is where family commentary lives. |
 | `nutrition` |  | object | Optional, e.g. `{ calories: "320 kcal" }` → schema.org `NutritionInformation`. |
 | `datePublished` |  | date | `YYYY-MM-DD`. Default to date added. |
 | `dateUpdated` |  | date | `YYYY-MM-DD`. |

@@ -44,7 +44,7 @@ Add these **only when they earn their place** (most ADRs won't need them):
 | [0001](./0001-adopt-mattpocock-repo-conventions.md) | Adopt mattpocock-style repo conventions, with AGENTS.md as the canonical entry file | accepted |
 | [0002](./0002-recipes-as-markdown-with-yaml-frontmatter.md) | Recipes are stored as Markdown files with structured YAML frontmatter | accepted |
 | [0003](./0003-astro-static-site-on-cloudflare-pages.md) | Build with Astro as a static site, hosted on Cloudflare Pages | accepted (hosting superseded by 0006) |
-| [0004](./0004-public-site-with-schema-org-json-ld.md) | The site is public and emits schema.org/Recipe JSON-LD for SEO | accepted |
+| [0004](./0004-public-site-with-schema-org-json-ld.md) | The site is public and emits schema.org/Recipe JSON-LD for SEO | accepted (heritage-layer deferral dropped by 0013) |
 | [0005](./0005-recipe-intake-via-claude-code.md) | Recipes are added/edited by an AI agent (Claude Code), not a CMS or email pipeline | accepted |
 | [0006](./0006-deploy-to-s3-cloudfront-to-match-the-universe.md) | Deploy to AWS S3 + CloudFront to match the axpr cinematic universe | accepted |
 | [0007](./0007-join-the-axpr-cinematic-universe.md) | Join the axpr cinematic universe (footer, hub registry, stack alignment, distinct aesthetic) | accepted |
@@ -53,3 +53,4 @@ Add these **only when they earn their place** (most ADRs won't need them):
 | [0010](./0010-counter-design-system.md) | Adopt the "Counter" design system (modular, token-driven); supersedes Enamelware | accepted |
 | [0011](./0011-staged-launch-via-site-live-gate.md) | Staged launch via a single SITE_LIVE gate | accepted |
 | [0012](./0012-no-in-page-timers.md) | No in-page timers — step durations are display-only | accepted |
+| [0013](./0013-no-heritage-layer.md) | No heritage layer — attribution + notes only (drops scans/audio/stories/"Family Notes" from scope) | accepted |
