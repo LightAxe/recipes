@@ -76,4 +76,8 @@ if (problems.length) {
   for (const p of problems) console.error('  ✗ ' + p);
   process.exit(1);
 }
-console.log('\nLIVE CHECK PASSED: reachable, indexable, and served compressed (br/gzip).');
+console.log(
+  STAGED
+    ? '\nLIVE CHECK PASSED: reachable (indexable + content-encoding skipped for a staged origin).'
+    : '\nLIVE CHECK PASSED: reachable, indexable, and served compressed (br/gzip).',
+);

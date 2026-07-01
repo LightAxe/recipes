@@ -58,7 +58,7 @@ jobs:
             cause="a step in the weekly perf monitor failed (see the run log — likely tooling/setup, not the site itself)."
           fi
           body=$(printf '<!-- perf-monitor-auto -->\nWeekly perf monitor: %s\n\nRun: %s' "$cause" "$run_url")
-          num=$(gh issue list --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')
+          num=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number --jq '.[0].number // empty')
           if [ -n "$num" ]; then
             gh issue comment "$num" --body "$body"
           else
