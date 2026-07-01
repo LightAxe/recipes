@@ -8,15 +8,21 @@ section — as deferred to a later phase (ADR-0004 consequences, AGENTS.md scope
 architecture §14 phase 7).
 
 We are dropping it from scope. In practice the original cards generally don't exist, family
-commentary already lives in each recipe's free-form `notes`, and audio/stories don't fit a
-recipe site.
+commentary already lives in each recipe's free-form `notes` and Markdown body, and a
+*separate*, cross-recipe stories/heritage section doesn't fit a recipe site.
 
 ## Decision
 
-The recipe model is **name-only `contributor` attribution plus free-form `notes`** —
-nothing more. No scanned cards, no oral-history audio, no provenance chains, no separate
-"Family Notes" feature, and no `/stories/` collection. This is a permanent scope decision,
-not a deferral.
+Each recipe carries **name-only `contributor` attribution, free-form `notes`, and its optional
+Markdown body** (a single recipe's headnote / history / serving suggestions, rendered via the
+"Read more" disclosure — see `recipe-schema.md` and `docs/agents/intake.md`). What's dropped is
+the **heritage *layer*** on top of that: no scanned original cards, no oral-history audio, no
+per-recipe provenance chains, no moderated "Family Notes" feature, and **no separate `/stories/`
+collection**. This is a permanent scope decision, not a deferral.
+
+> Scope boundary: a recipe's own headnote/story (its Markdown body) stays — that's part of the
+> recipe. "No stories" refers to the *separate* `/stories/` narrative section and the heritage
+> apparatus (scans/audio/provenance), not to per-recipe prose.
 
 ## Consequences
 
