@@ -4,7 +4,7 @@ description: A baked, buttery homemade snack mix — Chex, Cheerios, and pretzel
 course: appetizer
 cuisine: American
 tags: [snack-mix, potluck, make-ahead, crowd-size]
-servings: 32
+servings: 48
 ingredients:
   - qty: 1
     unit: lb
@@ -38,17 +38,25 @@ ingredients:
   - qty: 0.5
     unit: tsp
     item: MSG
-    note: "no authoritative weight standard — left without grams"
+    grams: 2
+    gramsSource: "MSG ≈ 4 g/tsp (12 g/tbsp)"
   - qty: 1
     item: package pretzels
     note: "package size not specified on the card (a standard bag ≈ 16 oz / 454 g)"
   - qty: 1
     unit: quart
-    item: Chex cereal
-    note: "the card reads \"1 quart each type of Chex cereal\" — one quart of each variety; the number of varieties isn't specified"
+    item: Rice Chex
   - qty: 1
-    item: box Cheerios
-    note: "box size not specified on the card"
+    unit: quart
+    item: Corn Chex
+  - qty: 1
+    unit: quart
+    item: Wheat Chex
+  - qty: 18
+    unit: oz
+    item: Cheerios
+    grams: 510
+    gramsSource: "18 oz box (28.35 g/oz)"
   - qty: 1
     unit: quart
     item: mixed nuts
