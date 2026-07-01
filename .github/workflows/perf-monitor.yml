@@ -30,8 +30,10 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Live preflight + content-encoding (deterministic alert signal)
+        id: livecheck
         run: node scripts/live-perf-check.mjs
       - name: Lighthouse mobile CWV — median of 3 (informational)
+        if: always() # still capture the CWV report even when the live-check above failed
         continue-on-error: true
         uses: treosh/lighthouse-ci-action@v12
         with:
@@ -46,10 +48,16 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
+          LIVECHECK: ${{ steps.livecheck.outcome }}
         run: |
           TITLE="perf-monitor: live site regression"
           run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          body=$(printf 'The weekly perf monitor failed the live preflight/content-encoding check — the site is unreachable, de-indexed, or serving uncompressed responses.\n\nRun: %s' "$run_url")
+          if [ "$LIVECHECK" = "failure" ]; then
+            cause="the live preflight/content-encoding check failed — the site is unreachable, de-indexed, or serving uncompressed responses."
+          else
+            cause="a step in the weekly perf monitor failed (see the run log — likely tooling/setup, not the site itself)."
+          fi
+          body=$(printf '<!-- perf-monitor-auto -->\nWeekly perf monitor: %s\n\nRun: %s' "$cause" "$run_url")
           num=$(gh issue list --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')
           if [ -n "$num" ]; then
             gh issue comment "$num" --body "$body"

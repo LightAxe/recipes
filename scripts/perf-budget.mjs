@@ -31,6 +31,13 @@ if (N === 0) {
   console.error('perf-budget: no recipe pages in dist/ — build first (npm run build).');
   process.exit(1);
 }
+if (!existsSync('dist/pagefind')) {
+  // Without this, an absent Pagefind index measures 0 bytes and silently passes its budget.
+  console.error(
+    'perf-budget: dist/pagefind missing — run a full build (postbuild runs pagefind).',
+  );
+  process.exit(1);
+}
 
 // Budgets seeded from the current build + headroom (~1.4–2×): tight enough to catch a real
 // regression, loose enough that normal edits/growth don't. Update deliberately when a change

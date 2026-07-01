@@ -25,14 +25,19 @@ async function main() {
     return;
   }
   const robotsTxt = await robots.text();
-  const allows = /Allow:\s*\//i.test(robotsTxt);
-  const advertisesSitemap = /Sitemap:/i.test(robotsTxt);
+  // Anchored to line start (multiline) so "Disallow: /" — the canonical "site going dark"
+  // directive this monitor exists to catch — does NOT satisfy the Allow check.
+  const allows = /^Allow:\s*\/\s*$/im.test(robotsTxt);
+  const advertisesSitemap = /^Sitemap:\s*\S/im.test(robotsTxt);
 
   // 2. Indexable (only enforced when we expect to be live)?
   let recipeNoindex = false;
   try {
     const rec = await fetch(`${SITE}/recipes/snickerdoodles/`);
-    recipeNoindex = /name="robots"[^>]*noindex/i.test(await rec.text());
+    // Order-independent: a <meta> that has BOTH name="robots" and a noindex content value.
+    recipeNoindex = /<meta(?=[^>]*name=["']robots["'])(?=[^>]*noindex)[^>]*>/i.test(
+      await rec.text(),
+    );
   } catch (e) {
     problems.push(`could not fetch a recipe page — ${e.message}`);
   }
@@ -45,7 +50,12 @@ async function main() {
     );
   }
 
-  // 3. Content-encoding: CloudFront must serve Brotli/gzip for the main asset types.
+  // 3. Content-encoding: CloudFront must serve Brotli/gzip for the main asset types. Skipped
+  // under STAGED — a staged S3-only origin has no CloudFront in front, so it serves identity.
+  if (STAGED) {
+    notes.push('STAGED=1 — skipping the content-encoding check');
+    return;
+  }
   for (const path of ['/', '/recipes/snickerdoodles/', '/pagefind/pagefind.js']) {
     try {
       const r = await fetch(`${SITE}${path}`, { headers: { 'Accept-Encoding': 'br, gzip' } });
