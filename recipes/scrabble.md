@@ -38,8 +38,8 @@ ingredients:
   - qty: 0.5
     unit: tsp
     item: MSG
-    grams: 4
-    gramsSource: "1 tbsp MSG = 24 g (so 1 tsp = 8 g)"
+    grams: 2
+    gramsSource: "MSG ≈ 4 g/tsp (12 g/tbsp)"
   - qty: 1
     item: package pretzels
     note: "package size not specified on the card (a standard bag ≈ 16 oz / 454 g)"
