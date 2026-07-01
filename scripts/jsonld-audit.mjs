@@ -60,6 +60,9 @@ const VALIDATORS = {
         if (!isUrl(li.url)) p.push(`item ${i}: url must be an absolute URL`);
       }
     });
+    const pos = o.itemListElement.map((li) => li.position);
+    if (pos.some((n, i) => n !== i + 1))
+      p.push(`positions must be 1..n in order (got ${pos})`);
     return p;
   },
   Article(o) {
@@ -98,10 +101,12 @@ async function* htmlFiles(dir) {
 
 let pages = 0;
 let blocks = 0;
+let recipePages = 0; // pages at /recipes/<slug>/ — each must carry exactly one Recipe block
 for await (const file of htmlFiles(DIST)) {
   pages++;
   const html = await readFile(file, 'utf8');
   const rel = file.replace(`${DIST}/`, '/').replace(/\/index\.html$/, '/');
+  if (/^\/recipes\/[^/]+\/$/.test(rel)) recipePages++;
   for (const block of html.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g) ||
     []) {
     blocks++;
@@ -113,8 +118,16 @@ for await (const file of htmlFiles(DIST)) {
       failures.push(`${rel}: JSON-LD does not parse — ${e.message}`);
       continue;
     }
-    const type = obj && obj['@type'];
-    if (!isStr(obj['@context'])) failures.push(`${rel}: [${type}] missing @context`);
+    if (!obj || typeof obj !== 'object') {
+      failures.push(`${rel}: JSON-LD block is not an object (got ${JSON.stringify(obj)})`);
+      continue;
+    }
+    const type = obj['@type'];
+    // schema.org is the only @context we emit — a wrong domain breaks rich results silently.
+    if (obj['@context'] !== 'https://schema.org')
+      failures.push(
+        `${rel}: [${type}] @context must be "https://schema.org" (got ${obj['@context']})`,
+      );
     const validate = VALIDATORS[type];
     if (!validate) {
       // The core guarantee: a new/unknown top-level type must get a validator here.
@@ -134,6 +147,15 @@ console.log(
       .map(([t, n]) => `${t}×${n}`)
       .join(', '),
 );
+// Non-vacuity: an empty/partial dist/, or a build that stopped emitting JSON-LD, must FAIL —
+// not silently "pass" with zero blocks. And every recipe page must carry exactly one Recipe
+// block, so a dropped block on any single recipe page is caught (not just malformed ones).
+if (blocks === 0)
+  failures.push('no JSON-LD blocks found in dist/ — build empty or emitting none?');
+if (recipePages > 0 && typeCounts.Recipe !== recipePages)
+  failures.push(
+    `Recipe block count (${typeCounts.Recipe || 0}) != recipe pages (${recipePages}) — a page is missing its Recipe JSON-LD`,
+  );
 if (failures.length) {
   console.error(`\nJSON-LD AUDIT FAILED: ${failures.length} problem(s):`);
   for (const f of failures) console.error('  ✗ ' + f);

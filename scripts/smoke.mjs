@@ -155,6 +155,10 @@ ok(
 // page follows the SITE_LIVE gate (indexable on live) + is included. This can't drift as the
 // collection changes — new/renamed terms are covered automatically.
 const sitemap = await read('dist/sitemap-0.xml');
+// Count DISTINCT recipe slugs on a taxonomy page. Each recipe appears twice (its card <a href>
+// and its absolute URL inside the ItemList JSON-LD); the Set collapses those. Nav/footer only
+// link `/recipes/` (no slug), so they contribute nothing. TaxonomyList renders only <CardGrid>,
+// so there are no cross-recipe links to inflate the count.
 const recipeLinkCount = (html) =>
   new Set(html.match(/\/recipes\/[a-z0-9]+(?:-[a-z0-9]+)*\//g) || []).size;
 
