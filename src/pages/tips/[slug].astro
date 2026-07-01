@@ -1,6 +1,7 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import { formatDate } from '../../lib/format';
 import { articleJsonLd, breadcrumbJsonLd } from '../../lib/jsonld';
 
@@ -39,13 +40,13 @@ const jsonLd = [
 
 <Base title={data.title} description={data.description} jsonLd={jsonLd}>
   <article class="tip wrap">
-    <nav aria-label="Breadcrumb" class="crumbs">
-      <a href="/">Home</a>
-      <span aria-hidden="true">›</span>
-      <a href="/tips/">Tips</a>
-      <span aria-hidden="true">›</span>
-      <span aria-current="page">{data.title}</span>
-    </nav>
+    <Breadcrumbs
+      items={[
+        { name: 'Home', href: '/' },
+        { name: 'Tips', href: '/tips/' },
+        { name: data.title },
+      ]}
+    />
     <header class="head">
       <p class="eyebrow">Tip</p>
       <h1>{data.title}</h1>
@@ -66,17 +67,6 @@ const jsonLd = [
 <style>
   .tip {
     padding-block: 1.75rem 1rem;
-  }
-  .crumbs {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 1.25rem;
-  }
-  .crumbs a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--muted);
   }
   .head h1 {
     font-size: var(--text-h1);

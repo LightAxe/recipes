@@ -6,6 +6,7 @@
 import type { CollectionEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import CardGrid from './CardGrid.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
 import { itemListJsonLd, breadcrumbJsonLd } from '../lib/jsonld';
 import { AXIS_META, type Axis } from '../lib/taxonomy';
 
@@ -41,32 +42,25 @@ const jsonLd = [
   noindex={noindex}
 >
   <section class="wrap">
-    <nav aria-label="Breadcrumb" class="crumbs">
-      <a href="/">Home</a>
-      <span aria-hidden="true">›</span>
-      <span class="axis">{meta.label}</span>
-      <span aria-hidden="true">›</span>
-      <span aria-current="page">{heading}</span>
-    </nav>
+    <Breadcrumbs
+      items={[
+        { name: 'Home', href: '/' },
+        {
+          name: meta.label,
+        } /* href-less axis segment — no index page; dropped from JSON-LD */,
+        { name: heading },
+      ]}
+    />
     <p class="eyebrow">{meta.label}</p>
     <h1>{heading}</h1>
     <p class="count">{count} recipe{count === 1 ? '' : 's'}</p>
-    <CardGrid recipes={recipes} />
+    <CardGrid recipes={recipes} headingLevel={2} />
   </section>
 </Base>
 
 <style>
   section {
     padding-block: 1.75rem 1rem;
-  }
-  .crumbs {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 1.25rem;
-  }
-  .crumbs a,
-  .crumbs .axis {
-    color: var(--muted);
   }
   h1 {
     font-size: clamp(2rem, 5vw, 2.8rem);

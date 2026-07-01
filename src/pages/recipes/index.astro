@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import RecipeCard from '../../components/RecipeCard.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import { itemListJsonLd, breadcrumbJsonLd } from '../../lib/jsonld';
 import { allRecipes, taxonomyIndex, byTitle } from '../../lib/browse';
 import { COURSE_SLUGS, courseLabel, slugify, AXIS_META } from '../../lib/taxonomy';
@@ -64,11 +65,7 @@ const facetGroups = [
   jsonLd={jsonLd}
 >
   <section class="wrap">
-    <nav aria-label="Breadcrumb" class="crumbs">
-      <a href="/">Home</a>
-      <span aria-hidden="true">›</span>
-      <span aria-current="page">All Recipes</span>
-    </nav>
+    <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'All Recipes' }]} />
     <p class="eyebrow">The collection</p>
     <h1>All Recipes</h1>
     <p class="count" id="recipe-count" data-total={recipes.length} role="status">
@@ -138,7 +135,7 @@ const facetGroups = [
               data-title={d.title}
               data-date={d.date}
             >
-              <RecipeCard recipe={r} />
+              <RecipeCard recipe={r} headingLevel={2} />
             </li>
           );
         })
@@ -156,14 +153,6 @@ const facetGroups = [
 <style>
   section {
     padding-block: 1.75rem 1rem;
-  }
-  .crumbs {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 1.25rem;
-  }
-  .crumbs a {
-    color: var(--muted);
   }
   h1 {
     font-size: clamp(2rem, 5vw, 2.8rem);

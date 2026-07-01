@@ -29,3 +29,7 @@ npm-debug.log*
 # External / vendored Claude skills stay local to each clone — NOT committed (user
 # preference: keep external skills out of the repo). Our own .claude/agents/ ARE committed.
 .claude/skills/
+
+# grill-me-codex planning scratch (process artifacts, not project docs)
+PLAN.md
+PLAN-REVIEW-LOG.md

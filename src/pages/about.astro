@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import { aboutPageJsonLd, breadcrumbJsonLd } from '../lib/jsonld';
 
 const description =
@@ -15,11 +16,7 @@ const jsonLd = [
 
 <Base title="About" description={description} jsonLd={jsonLd}>
   <section class="wrap">
-    <nav aria-label="Breadcrumb" class="crumbs">
-      <a href="/">Home</a>
-      <span aria-hidden="true">›</span>
-      <span aria-current="page">About</span>
-    </nav>
+    <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'About' }]} />
     <p class="eyebrow">The collection</p>
     <h1>About</h1>
     <p class="lede">
@@ -45,17 +42,6 @@ const jsonLd = [
   section {
     padding-block: 1.75rem 1rem;
   }
-  .crumbs {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 1.25rem;
-  }
-  .crumbs a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--muted);
-  }
   h1 {
     font-size: clamp(2rem, 5vw, 2.8rem);
     margin: 0.9rem 0 0.5rem;
@@ -79,5 +65,8 @@ const jsonLd = [
   }
   .prose a {
     color: var(--accent-ink);
+    /* Underline so in-paragraph links are distinguishable without relying on colour
+       (WCAG 1.4.1) — the accent/text contrast alone is under 3:1 in dark mode. */
+    text-decoration: underline;
   }
 </style>
