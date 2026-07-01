@@ -176,7 +176,9 @@ for (const axis of ['category', 'cuisine', 'tag', 'from']) {
     const count = recipeLinkCount(html);
     const noindex = /name="robots"\s+content="noindex"/.test(html);
     const inSitemap = sitemap.includes(`/${axis}/${term}/`);
-    if (count <= 1) {
+    // Singleton == exactly 1 recipe, matching TaxonomyList's `recipes.length === 1` noindex
+    // rule (a taxonomy term only builds a page when ≥1 recipe uses it, so 0 can't occur).
+    if (count === 1) {
       singletons++;
       ok(`singleton /${axis}/${term}/ is noindex`, noindex);
       ok(`singleton /${axis}/${term}/ excluded from sitemap`, !inSitemap);

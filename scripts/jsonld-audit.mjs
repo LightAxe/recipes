@@ -44,7 +44,7 @@ const VALIDATORS = {
       }
     });
     // positions must be 1..n in order
-    const pos = o.itemListElement.map((li) => li.position);
+    const pos = o.itemListElement.map((li) => li?.position);
     if (pos.some((n, i) => n !== i + 1))
       p.push(`positions must be 1..n in order (got ${pos})`);
     return p;
@@ -60,7 +60,7 @@ const VALIDATORS = {
         if (!isUrl(li.url)) p.push(`item ${i}: url must be an absolute URL`);
       }
     });
-    const pos = o.itemListElement.map((li) => li.position);
+    const pos = o.itemListElement.map((li) => li?.position);
     if (pos.some((n, i) => n !== i + 1))
       p.push(`positions must be 1..n in order (got ${pos})`);
     return p;

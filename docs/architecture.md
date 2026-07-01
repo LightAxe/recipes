@@ -135,7 +135,8 @@ reactive state. This is a reversible call.
 ## 7. SEO & structured data
 
 - **schema.org/Recipe JSON-LD** generated from frontmatter into each recipe's `<head>`
-  (ADR-0004); validated against Google's Rich Results Test before launch.
+  (ADR-0004); every page's JSON-LD is validated structurally at build by `npm run test:jsonld`
+  (`scripts/jsonld-audit.mjs`, in CI), with Google's Rich Results Test as a manual spot-check.
 - **`ItemList`** on category/index pages to qualify for host carousels.
 - `sitemap.xml` (Astro integration), sensible titles/OG tags/canonical URLs, and an
   optional RSS feed of newly added recipes (siblings ship RSS).
