@@ -106,7 +106,9 @@ for await (const file of htmlFiles(DIST)) {
   pages++;
   const html = await readFile(file, 'utf8');
   const rel = file.replace(`${DIST}/`, '/').replace(/\/index\.html$/, '/');
-  if (/^\/recipes\/[^/]+\/$/.test(rel)) recipePages++;
+  const isRecipePage = /^\/recipes\/[^/]+\/$/.test(rel);
+  if (isRecipePage) recipePages++;
+  let pageRecipeBlocks = 0; // Recipe blocks on THIS page (checked per-page, not just in aggregate)
   for (const block of html.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g) ||
     []) {
     blocks++;
@@ -123,6 +125,7 @@ for await (const file of htmlFiles(DIST)) {
       continue;
     }
     const type = obj['@type'];
+    if (type === 'Recipe') pageRecipeBlocks++;
     // schema.org is the only @context we emit — a wrong domain breaks rich results silently.
     if (obj['@context'] !== 'https://schema.org')
       failures.push(
@@ -139,6 +142,12 @@ for await (const file of htmlFiles(DIST)) {
     typeCounts[type] = (typeCounts[type] || 0) + 1;
     for (const problem of validate(obj)) failures.push(`${rel}: [${type}] ${problem}`);
   }
+  // Per-page (not aggregate): every recipe page carries exactly one Recipe block. An aggregate
+  // total would let a page with two Recipe blocks mask another page that emits none.
+  if (isRecipePage && pageRecipeBlocks !== 1)
+    failures.push(
+      `${rel}: expected exactly 1 Recipe JSON-LD block, found ${pageRecipeBlocks}`,
+    );
 }
 
 console.log(
@@ -148,14 +157,11 @@ console.log(
       .join(', '),
 );
 // Non-vacuity: an empty/partial dist/, or a build that stopped emitting JSON-LD, must FAIL —
-// not silently "pass" with zero blocks. And every recipe page must carry exactly one Recipe
-// block, so a dropped block on any single recipe page is caught (not just malformed ones).
+// not silently "pass" with zero blocks. (The per-page Recipe check above covers dropped blocks.)
 if (blocks === 0)
   failures.push('no JSON-LD blocks found in dist/ — build empty or emitting none?');
-if (recipePages > 0 && typeCounts.Recipe !== recipePages)
-  failures.push(
-    `Recipe block count (${typeCounts.Recipe || 0}) != recipe pages (${recipePages}) — a page is missing its Recipe JSON-LD`,
-  );
+if (recipePages === 0)
+  failures.push('no /recipes/<slug>/ pages found in dist/ — build broken?');
 if (failures.length) {
   console.error(`\nJSON-LD AUDIT FAILED: ${failures.length} problem(s):`);
   for (const f of failures) console.error('  ✗ ' + f);
