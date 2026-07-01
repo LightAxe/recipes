@@ -1,13 +1,19 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import CardGrid from '../components/CardGrid.astro';
 import { websiteJsonLd, itemListJsonLd } from '../lib/jsonld';
+import { allRecipes, taxonomyIndex, byNewest } from '../lib/browse';
+import { COURSE_SLUGS, courseLabel } from '../lib/taxonomy';
 
-const recipes = (await getCollection('recipes')).sort(
-  (a, b) => (b.data.datePublished?.getTime() ?? 0) - (a.data.datePublished?.getTime() ?? 0),
-);
+const recipes = (await allRecipes()).sort(byNewest);
 const latest = recipes.slice(0, 6);
+const index = await taxonomyIndex();
+const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slug) => ({
+  slug,
+  label: courseLabel(slug),
+  count: index.category.get(slug)!.items.length,
+}));
+
 const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
 ---
 
@@ -22,11 +28,42 @@ const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
     <p class="lede">
       Our family's recipes, gathered in one place — to cook from, print, and pass down.
     </p>
+    <form class="hero-search" role="search" action="/search/" method="get">
+      <label class="vh" for="hero-search-input">Search recipes</label>
+      <input
+        type="search"
+        id="hero-search-input"
+        name="q"
+        placeholder={`Search ${recipes.length} recipes…`}
+        autocomplete="off"
+      />
+      <button type="submit">Search</button>
+    </form>
   </section>
 
   <section class="wrap">
     <div class="head">
-      <h2>Latest</h2>
+      <h2>Browse by category</h2>
+    </div>
+    <ul class="tiles" role="list">
+      {
+        courses.map((c) => (
+          <li>
+            <a href={`/category/${c.slug}/`}>
+              <span class="tile-label">{c.label}</span>
+              <span class="tile-count">
+                {c.count} recipe{c.count === 1 ? '' : 's'}
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="wrap">
+    <div class="head">
+      <h2>Latest additions</h2>
       <a class="all" href="/recipes/">All recipes →</a>
     </div>
     <CardGrid recipes={latest} />
@@ -45,8 +82,39 @@ const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
     font-size: var(--text-lede);
     color: var(--muted);
     max-width: 44ch;
-    margin: 0;
+    margin: 0 0 1.75rem;
   }
+  .hero-search {
+    display: flex;
+    gap: 0.6rem;
+    max-width: 34rem;
+  }
+  .hero-search input {
+    flex: 1;
+    min-height: 48px;
+    padding: 0 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+  }
+  .hero-search input:focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 1px;
+  }
+  .hero-search button {
+    min-height: 48px;
+    padding-inline: 1.2rem;
+    border: 1px solid var(--accent-ink);
+    border-radius: var(--radius);
+    background: var(--accent-ink);
+    color: var(--bg);
+    font-family: var(--font-display);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
   .head {
     display: flex;
     align-items: baseline;
@@ -63,5 +131,62 @@ const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
     font-weight: 700;
     white-space: nowrap;
     text-decoration: none;
+  }
+
+  .tiles {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (min-width: 38rem) {
+    .tiles {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (min-width: 58rem) {
+    .tiles {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .tiles a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-height: 88px;
+    justify-content: center;
+    padding: 1.1rem 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .tiles a:hover,
+  .tiles a:focus-visible {
+    transform: translateY(-3px);
+    border-color: var(--accent-ink);
+  }
+  .tile-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  .tile-count {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .vh {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 </style>

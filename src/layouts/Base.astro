@@ -12,8 +12,10 @@ interface Props {
   description?: string;
   /** schema.org JSON-LD objects to embed in <head>. */
   jsonLd?: Record<string, unknown>[];
+  /** Force noindex on a live build (e.g. single-recipe taxonomy pages). */
+  noindex?: boolean;
 }
-const { title, description, jsonLd = [] } = Astro.props;
+const { title, description, jsonLd = [], noindex = false } = Astro.props;
 const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`;
 const canonical = abs(Astro.url.pathname);
 ---
@@ -36,8 +38,11 @@ const canonical = abs(Astro.url.pathname);
     <title>{fullTitle}</title>
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={canonical} />
-    {/* Staged until launch: noindex unless SITE_LIVE=true (see lib/site.ts). */}
-    {!SITE_LIVE && <meta name="robots" content="noindex" />}
+    {
+      /* Staged until launch: noindex unless SITE_LIVE=true (see lib/site.ts). Also
+        noindex per-page (e.g. single-recipe taxonomy pages — thin content). */
+    }
+    {(!SITE_LIVE || noindex) && <meta name="robots" content="noindex" />}
     <link
       rel="alternate"
       type="application/rss+xml"

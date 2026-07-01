@@ -54,6 +54,36 @@ try {
   const after = await page.locator('.amount').first().textContent();
   if (before === after) errors.push(`scaler did not rescale amount (still "${before}")`);
 
+  // ── Phase 3: /recipes/ facet filter (progressive enhancement) ──
+  await page.goto(`${BASE}/recipes/`, { waitUntil: 'load' });
+  await sleep(200);
+  if ((await page.locator('#facets').getAttribute('hidden')) !== null) {
+    errors.push('facet panel still [hidden] — filter JS did not init');
+  }
+  const totalCards = await page.locator('#recipe-grid > li:not([hidden])').count();
+  await page.locator('#facets input[data-axis="course"]').first().check();
+  await sleep(150);
+  const filtered = await page.locator('#recipe-grid > li:not([hidden])').count();
+  if (!(filtered > 0 && filtered < totalCards)) {
+    errors.push(`facet filter did not narrow the grid (${totalCards} → ${filtered})`);
+  }
+  if (!/[?&]course=/.test(page.url())) {
+    errors.push(`facet filter did not write URL state (${page.url()})`);
+  }
+
+  // ── Categories dropdown opens (native <details>, JS-enhanced) ──
+  await page.locator('#cats-menu > summary').click();
+  await sleep(80);
+  if (!(await page.locator('#cats-menu').evaluate((d) => d.open))) {
+    errors.push('Categories dropdown did not open');
+  }
+
+  // ── Site-wide search returns a hit (Pagefind lazy-loads on focus/typing) ──
+  await page.locator('#site-search').fill('chicken');
+  await sleep(700);
+  const hits = await page.locator('#site-search-results .sr-card').count();
+  if (hits < 1) errors.push('search returned no results for "chicken"');
+
   await browser.close();
 } catch (e) {
   errors.push(`harness: ${e.message}`);

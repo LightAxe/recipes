@@ -85,9 +85,47 @@ ok('print stylesheet present', hasPrint);
 const home = await read('dist/index.html');
 ok('home links to /recipes/', home.includes('/recipes/'));
 ok(
+  'home has category tiles',
+  home.includes('Browse by category') && home.includes('/category/'),
+);
+ok(
   'all-recipes lists the recipe',
   (await read('dist/recipes/index.html')).includes('/recipes/snickerdoodles/'),
 );
+
+// ── Phase 3: browse & find ──────────────────────────────────────────────────
+const dessert = await read('dist/category/dessert/index.html');
+ok(
+  'category page renders a card grid of recipes',
+  dessert.includes('class="grid"') && (dessert.match(/href="\/recipes\//g) || []).length > 3,
+);
+ok(
+  'taxonomy routes built (tag / cuisine / from)',
+  existsSync('dist/tag/chicken/index.html') &&
+    existsSync('dist/cuisine/american/index.html') &&
+    existsSync('dist/from/sandy/index.html'),
+);
+
+// Singleton (1-recipe) taxonomy pages are always noindex; multi-recipe pages follow the
+// SITE_LIVE gate (so on a live build they are indexable). /category/drink/ = 1 recipe.
+const drink = await read('dist/category/drink/index.html');
+ok('singleton taxonomy page is noindex', /name="robots"\s+content="noindex"/.test(drink));
+if (live) {
+  ok(
+    'multi-recipe taxonomy page is indexable on live build',
+    !/name="robots"\s+content="noindex"/.test(dessert),
+  );
+}
+
+// Sitemap: singletons + the /search/ utility page are excluded; real list pages included.
+const sitemap = await read('dist/sitemap-0.xml');
+ok('multi-recipe taxonomy page in sitemap', sitemap.includes('/category/dessert/'));
+ok('singleton taxonomy page excluded from sitemap', !sitemap.includes('/category/drink/'));
+ok('search page excluded from sitemap', !sitemap.includes('/search/'));
+
+// Search: the page exists and Pagefind generated its static index at build (postbuild).
+ok('search page exists', existsSync('dist/search/index.html'));
+ok('pagefind index generated', existsSync('dist/pagefind/pagefind.js'));
 
 let failed = 0;
 for (const c of checks) {

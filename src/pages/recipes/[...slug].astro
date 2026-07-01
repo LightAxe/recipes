@@ -3,7 +3,7 @@ import { getCollection, render, type CollectionEntry } from 'astro:content';
 import { Picture, getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import { groupIngredients, normalizeSteps } from '../../lib/recipe';
-import { courseLabel } from '../../lib/taxonomy';
+import { courseLabel, slugify } from '../../lib/taxonomy';
 import { formatQty, formatDuration } from '../../lib/format';
 import { recipeJsonLd, breadcrumbJsonLd } from '../../lib/jsonld';
 import { abs } from '../../lib/site';
@@ -76,8 +76,8 @@ const jsonLd = [
 ---
 
 <Base title={data.title} description={data.description} jsonLd={jsonLd}>
-  <article class="recipe wrap">
-    <nav class="crumbs" aria-label="Breadcrumb">
+  <article class="recipe wrap" data-pagefind-body>
+    <nav class="crumbs" aria-label="Breadcrumb" data-pagefind-ignore>
       <a href="/">Home</a>
       <span aria-hidden="true">›</span>
       <a href="/recipes/">Recipes</a>
@@ -86,8 +86,8 @@ const jsonLd = [
     </nav>
 
     <header class="head">
-      <p class="eyebrow">{courseLabel(data.course)}</p>
-      <h1>{data.title}</h1>
+      <p class="eyebrow" data-pagefind-meta="course">{courseLabel(data.course)}</p>
+      <h1 data-pagefind-meta="title">{data.title}</h1>
       <div class="meta">
         {data.contributor && <span class="by">{data.contributor}</span>}
         {
@@ -122,6 +122,7 @@ const jsonLd = [
       data-base-servings={data.servings}
       data-slug={recipe.id}
       data-weight-eligible={weightEligible ? '1' : ''}
+      data-pagefind-ignore
       hidden
     >
       {
@@ -313,6 +314,15 @@ const jsonLd = [
         }
       </section>
     </div>
+
+    <nav class="more" aria-label="Keep browsing" data-pagefind-ignore>
+      <a href={`/category/${data.course}/`}>More {courseLabel(data.course)} →</a>
+      {
+        data.contributor && (
+          <a href={`/from/${slugify(data.contributor)}/`}>More from {data.contributor} →</a>
+        )
+      }
+    </nav>
   </article>
 </Base>
 
@@ -651,6 +661,25 @@ const jsonLd = [
   }
   .prose {
     max-width: 60ch;
+  }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+  .more a {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--accent-ink);
+    text-decoration: none;
+  }
+  .more a:hover,
+  .more a:focus-visible {
+    text-decoration: underline;
   }
 
   /* Cook mode: enlarge steps, dim chrome (no step navigator). */

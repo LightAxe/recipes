@@ -1,0 +1,11 @@
+---
+import TaxonomyList from '../../components/TaxonomyList.astro';
+import { taxonomyPaths } from '../../lib/browse';
+
+export async function getStaticPaths() {
+  return taxonomyPaths('from');
+}
+const { axis, label, recipes } = Astro.props;
+---
+
+<TaxonomyList axis={axis} label={label} recipes={recipes} />

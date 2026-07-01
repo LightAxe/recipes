@@ -59,7 +59,9 @@ export function recipeJsonLd(recipe: Recipe, imageUrl?: string) {
   return json;
 }
 
-export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
+// A breadcrumb item without `path` is a non-linking label (e.g. the axis segment
+// "Categories", which has no index page) — emitted as a ListItem with no `item` URL.
+export function breadcrumbJsonLd(items: { name: string; path?: string }[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -67,7 +69,7 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
       '@type': 'ListItem',
       position: i + 1,
       name: it.name,
-      item: abs(it.path),
+      ...(it.path ? { item: abs(it.path) } : {}),
     })),
   };
 }
@@ -91,5 +93,13 @@ export function websiteJsonLd() {
     '@type': 'WebSite',
     name: SITE_NAME,
     url: SITE,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: abs('/search/?q={search_term_string}'),
+      },
+      'query-input': 'required name=search_term_string',
+    },
   };
 }
