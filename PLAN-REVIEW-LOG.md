@@ -1,65 +1,51 @@
-# Plan Review Log: Phase 3 — Browse & Find (search + taxonomy browse)
+# Plan Review Log: Phase 4 — Reference content (Tips, Conversions, About) + nav + no-photo card
 Act 1 (grill) complete — plan locked with the user. MAX_ROUNDS=5.
 
-Grill outcomes (Rob's calls): scope = recipe-discovery only (Tips/Conversions/About deferred);
-all four taxonomy axes (category/tag/cuisine/from); site-wide instant search; in-page JS facet
-filter on /recipes/; full home rebuild (tiles + latest + search); header Categories dropdown.
-Technical calls taken by Claude: singleton-page noindex+sitemap-exclude policy; Pagefind
-lazy-load; URL-state facet filtering; shared taxonomy slug/count source of truth.
+Grill outcomes (Rob's calls): ship Tips hub + Conversions + About + #14 + nav in one phase;
+Tips hub seeded with general how-tos + Conversions anchor (I draft, Rob edits); Conversions from
+a curated, cited data module → bespoke data-driven page; About is contribute-only (no story yet);
+no-photo card = course line-icon on a uniform one-accent tint; header gains Tips + About with a
+mobile hamburger sheet (IA §4). Technical calls taken by Claude: tips collection schema (flat, no
+tags); Article/AboutPage/ItemList JSON-LD (no HowTo); hamburger built on native `<details>` for a
+no-JS base; uniform tint (no per-course palette); search-result cards unchanged.
 
 ## Round 1 — Codex
 **Findings**
-- High: `dist/pagefind/` would be uploaded with one-year immutable caching by the first S3 sync, but Pagefind's `/pagefind/` bundle/index uses stable names → browser-cached stale search. Fix: exclude `pagefind/**` from the immutable sync, upload with short revalidation caching.
-- High: the singleton policy assumed all course pages are ≥2, but current content has singleton courses `drink` and `sauce`. Fix: compute singleton noindex/sitemap exclusion across all four axes, including course.
-- High: `Base.astro` has only the global `SITE_LIVE` noindex gate, so singleton pages have no way to emit `noindex` on a live build. Fix: add a page-level `noindex`/`robots` prop, emit when `!SITE_LIVE || pageNoindex`.
-- High: the config-time scan says `recipes/*.md` with `gray-matter`, but `gray-matter` isn't a dependency and `TEMPLATE.md` would be included unless excluded. Fix: mirror the content loader's include/exclude (`!TEMPLATE.md`) and add a parser dep (or reuse `yaml`).
-- High: Pagefind result metadata is raw client data; rendering title/image/course via template strings = XSS from recipe frontmatter/search metadata. Fix: render with DOM APIs/`textContent`, validate result URLs start with `/recipes/`, never inject raw metadata as HTML.
-- Medium: `data-pagefind-filter(course)` alone can't render cards; filters filter, display needs metadata. Fix: add explicit `data-pagefind-meta` for title, course label, image/alt, time/yield.
-- Medium: "reuse `RecipeCard`/`CardGrid`" isn't implementable client-side — those Astro components expect `CollectionEntry<'recipes'>`. Fix: define a serializable search-card shape + a small client renderer that visually matches `RecipeCard`.
-- Medium: `/recipes/` filtering omits the contributor axis though the IA specifies course/cuisine/tag/contributor. Fix: include contributor data/filter or explicitly revise scope/docs.
-- Medium: no-JS A–Z/Newest sort is impossible on a single static `/recipes/` page if sort is client-only. Fix: hide sort until JS enhances (static deterministic order), or generate real sorted routes.
-- Medium: taxonomy breadcrumbs `Home › <axis> › <term>` imply axis index pages, which are out of scope. Fix: make the axis crumb non-linking / omit from JSON-LD.
-- Medium: search lazy-loading says "never on page load," but `/search/?q=` must load on page load for deep-linked results. Fix: lazy on focus globally, auto-load on `/search/` when `q` present; catch missing-index in dev.
-- Medium: "single source of truth" is false while course slugs are in `content.config.ts` and labels in `taxonomy.ts`. Fix: export courses/labels/slugify from one module, import into both schema and UI, with a test.
-- Low: slugification order is ambiguous; if `&`→`and` happens after stripping punctuation, `Cajun & Creole` → `cajun-creole`. Fix: replace `&` with ` and ` before stripping, unit-test that case.
+- [High] tips Zod schema lists `body`, but Astro content schemas validate FRONTMATTER only (body is `entry.body`/`render(entry)`). Fix: drop `body` from the schema.
+- [High] plan says reuse `units.ts` constants, but `ML`/`G` are module-private (only `KNOWN_UNITS` exported). Fix: export the needed constants and import them.
+- [High] `/tips/[slug]` + a bespoke `/tips/conversions/` collide if a tip named "conversions" exists — no reserved-slug guard. Fix: reserve/exclude `conversions` (and future reserved slugs) in the loader/getStaticPaths + validate.
+- [Medium] new tips/about/conversions pages could enter Pagefind, but search.ts only renders `/recipes/…/` results. Fix: keep them out of the index (no `data-pagefind-body`) OR broaden search intentionally.
+- [Medium] `itemListJsonLd` is recipe-specific (emits `/recipes/${id}/`). Fix: add a generic itemList helper for the tips hub.
+- [Medium] plan omits `BreadcrumbList` JSON-LD on the new breadcrumbed pages (Phase 3 emits it). Fix: add `breadcrumbJsonLd` to tips/about/conversions + smoke-parse.
+- [Medium] orphaned `reference/useful-information.md` ignored. Fix: migrate/split/defer it explicitly.
+- [Medium] footer "gains Tips + About" understates it — current footer has no quick-link set; IA wants Recipes/Categories/Tips/About/RSS + a contribute line. Fix: implement the full footer IA.
+- [Low] hamburger `<summary>` needs an accessible "Menu" name; don't duplicate stale ARIA — rely on native `<details>` state or sync `aria-expanded` on the `toggle` event.
 
 VERDICT: REVISE
 
 ### Claude's response
-All 13 accepted — every one is legitimate. Two are real catches against my own assumptions (singleton **course** pages exist; client-result XSS). Revisions to PLAN.md:
-- **Singleton policy now spans all four axes incl. course** (removed the false "course always ≥2"); `drink`/`sauce` will be noindex+desitemapped until a 2nd recipe joins.
-- **Base.astro gains a `noindex` prop**; emits when `!SITE_LIVE || pageNoindex`. List pages pass `noindex` for singletons.
-- **One taxonomy module** (`src/lib/taxonomy.ts`) exports course slugs+labels + `slugify` + the term-count/singleton-set; `content.config.ts` imports the slugs for its Zod enum (kills the duplication). Slugify does `&`→` and ` **before** punctuation stripping; Vitest covers `cajun-and-creole`.
-- **Config-time scan** mirrors the loader's `['*.md','!TEMPLATE.md']` and adds `gray-matter` as a dev dep (explicit, simplest).
-- **Search results**: dedicated serializable search-card shape + a small XSS-safe client renderer (title/meta via `textContent`, only Pagefind's own `excerpt` uses innerHTML, result URL validated to `^/recipes/`). Explicit `data-pagefind-meta` for all display fields.
-- **Pagefind deploy caching**: `pagefind/**` excluded from the immutable pass, synced with short revalidation.
-- **Lazy-load nuance**: focus-triggered globally, but `/search/` auto-runs when `?q=` is present.
-- **/recipes/ facet set adds contributor** (IA consistency); **sort control is hidden-until-JS** over a deterministic A–Z static order (no-JS never sees a broken sort).
-- **Breadcrumb axis segment is non-linking** (no axis index pages in scope) and omitted as a linked item from `BreadcrumbList`.
+All 9 accepted.
+- **Schema:** dropped `body` from the tips Zod schema (frontmatter-only; body via `render(entry)`).
+- **units.ts:** will export the generic volume constants (`ML`) so `conversions.ts` shares one source of truth for generic volume math.
+- **Reserved slug:** `conversions` is reserved — the tips collection/getStaticPaths excludes it and a check fails the build if a `tips/conversions.md` is ever added; `/tips/conversions/` stays the bespoke page.
+- **Pagefind:** the new pages deliberately get **no `data-pagefind-body`** — search stays recipe-only this phase (broadening it is out of scope). Noted explicitly + a smoke check that they aren't indexed.
+- **JSON-LD:** add a **generic `itemListJsonLd`** (URL+name pairs) for the hub; add **`breadcrumbJsonLd`** to every new breadcrumbed page.
+- **reference/useful-information.md:** **migrate** it into `tips/` as the anchor **family** reference tip (reshape recipe-frontmatter → tip frontmatter; keep its prose; roasting temps stay as *transcribed lore with the existing caveat*, NOT elevated into the authoritative Conversions tables). Delete the orphaned `reference/` file. This replaces one of my planned generic tips with real family content.
+- **Footer:** implement the fuller IA footer (quick links Recipes/Categories/Tips/About/RSS + "Add a recipe — email Rob" line), not just two links.
+- **Hamburger:** the `<summary>` gets an accessible "Menu" name (visible label or `aria-label`); rely on native `<details>` open state, only mirroring `aria-expanded` via the `toggle` event if needed — no hand-managed stale ARIA.
 
 ## Round 2 — Codex
-Confirmed all 13 R1 findings addressed. Remaining:
-- High: sitemap `filter(value)` receives **absolute** URLs; the singleton exclusion set must be canonical absolute URLs w/ trailing slash (`new URL(path, site).href`).
-- High: Categories nav is a JS dropdown with no no-JS fallback — conflicts with "no-JS browses fully." Fix: native `<details>/<summary>` (or link fallback) enhanced by JS.
-- Medium: within-axis slug collisions are only a "risk," not enforced. Fix: `termIndex` fails the build on collision + a unit test.
-- Medium: Pagefind build ownership muddy ("postbuild" + "wired into CI/deploy"). Fix: Pagefind in npm `postbuild` only; CI/deploy just call `npm run build`.
-- Medium: multi-select query semantics underspecified. Fix: repeated params (`tag=a&tag=b`) via `getAll()`, sorted for stable URLs.
-- Low: stale counts — repo has 116 tags / 6 contributors, not 118 / 7.
+Confirmed 8/9 R1 findings addressed. One remaining:
+- [Medium] "no `data-pagefind-body` keeps new pages out of search" is wrong — Pagefind exclusion is `data-pagefind-ignore` or index config; pages without a body tag can still be indexed. Fix: mark new pages `data-pagefind-ignore` or scope Pagefind to `/recipes/**`, then smoke-test no non-recipe result URLs.
 
-### Claude's response
-All 6 accepted:
-- Sitemap exclusion set built as **canonical absolute URLs** (`new URL(path, site).href`, trailing slash) to match what `@astrojs/sitemap` passes to `filter`.
-- **Categories nav is a native `<details>/<summary>`** listing the course links (fully works no-JS); JS enhances it (Esc/outside-click close, focus mgmt). No-JS browse promise restored.
-- **Slug collisions now fail the build**: `termIndex` throws on a within-axis slug collision; Vitest covers a colliding-label case. Moved from "risk" to a hard requirement.
-- **Pagefind lives in npm `postbuild` only**; CI and deploy just run `npm run build` (deploy still owns *uploading* `dist/pagefind/` with short-cache headers, but never re-invokes pagefind directly).
-- **Multi-select query = repeated params** (`tag=a&tag=b`) read via `URLSearchParams.getAll()`, values **sorted** for canonical/stable shareable URLs.
-- **Dropped the hardcoded counts** from the plan (they rot); the build scan is the live source. Corrected the contributor mention to ~6.
+VERDICT: REVISE
+
+### Claude's response — PARTIAL REJECT + harden
+Rejected the mechanism claim (logged reason): Pagefind's documented behavior is that once ANY `data-pagefind-body` exists on the site, it indexes ONLY body-tagged pages and ignores the rest. Verified in our Phase 3 build: "Found a data-pagefind-body element on the site. Ignoring pages without this tag" → indexed exactly 77 (the recipe pages). `data-pagefind-ignore` is for subtrees of *indexed* pages, so it's the wrong tool here; the correct exclusion IS the absence of a body tag. Adopted Codex's verification idea and named the hard guarantee: (1) new pages carry no `data-pagefind-body` (excluded by construction); (2) `search.ts` `safeRecipeUrl` allowlist guarantees only `/recipes/…/` ever renders even if indexing changed; (3) added a smoke assertion that the built Pagefind index/search surfaces only `/recipes/…/` URLs.
 
 ## Round 3 — Codex
-**VERDICT: APPROVED.** "No material implementation blockers remain." Three Low non-blocking nits:
-- Low: risk section still said "118 tags" — make count-free.
-- Low: sitemap helper should reuse `termIndex` (not just `slugify`) for a true single source.
-- Low: facet URL/`data-*` values should be taxonomy **slugs**, not display labels, or `Cajun & Creole` desyncs from `cajun-and-creole`.
+No new material issues found.
 
-### Claude's response
-Converged. Folded all three Low nits in anyway (cheap, no reason to ship known nits): tag-risk wording is now count-free; the config scan passes minimal records through the shared `termIndex`; facet `data-*`/query values are explicitly slugs (labels display-only). Plan locked.
+The prior findings are addressed in `PLAN.md`, and the rejected Pagefind finding now has a logged rationale plus a useful smoke-test guard: raw Pagefind/search output must surface only `/recipes/.../` URLs. That is enough to keep the plan implementable without expanding scope.
+
+VERDICT: APPROVED

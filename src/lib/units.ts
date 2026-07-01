@@ -4,8 +4,9 @@
 export type System = 'us' | 'metric';
 export type Measure = 'volume' | 'weight';
 
-/** Canonical volume units → milliliters. */
-const ML: Record<string, number> = {
+/** Canonical volume units → milliliters. Exported so the Conversions data (src/data/
+ *  conversions.ts) shares one source of truth for the generic volume math. */
+export const ML: Record<string, number> = {
   tsp: 4.92892,
   tbsp: 14.7868,
   floz: 29.5735,

@@ -1,0 +1,83 @@
+---
+import Base from '../layouts/Base.astro';
+import { aboutPageJsonLd, breadcrumbJsonLd } from '../lib/jsonld';
+
+const description =
+  'About the Ogilvie family recipe collection — and how to add a recipe to it.';
+const jsonLd = [
+  aboutPageJsonLd({ name: 'About', description, path: '/about/' }),
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'About', path: '/about/' },
+  ]),
+];
+---
+
+<Base title="About" description={description} jsonLd={jsonLd}>
+  <section class="wrap">
+    <nav aria-label="Breadcrumb" class="crumbs">
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">About</span>
+    </nav>
+    <p class="eyebrow">The collection</p>
+    <h1>About</h1>
+    <p class="lede">
+      A home for the Ogilvie family's recipes — to cook from, print, and pass down.
+    </p>
+
+    <div class="prose">
+      <h2>Add a recipe</h2>
+      <p>
+        Have a recipe that belongs here — a handwritten card, a clipping, or one you know by
+        heart? Send it to <a href="mailto:rob@axpr.net">rob@axpr.net</a> (a photo of the card is
+        perfect) and it gets transcribed, weighed out in grams, and added to the collection.
+      </p>
+      <p>
+        Every recipe is preserved as faithfully as possible — the family voice, the notes in
+        the margins, the little variations — so nothing gets lost.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  section {
+    padding-block: 1.75rem 1rem;
+  }
+  .crumbs {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+  .crumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--muted);
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    margin: 0.9rem 0 0.5rem;
+  }
+  .lede {
+    font-size: var(--text-lede);
+    color: var(--muted);
+    max-width: 46ch;
+    margin: 0 0 1.75rem;
+  }
+  .prose {
+    max-width: 60ch;
+    line-height: 1.7;
+  }
+  .prose h2 {
+    font-size: var(--text-h2);
+    margin: 0 0 0.75rem;
+  }
+  .prose p {
+    margin: 0 0 1rem;
+  }
+  .prose a {
+    color: var(--accent-ink);
+  }
+</style>

@@ -14,6 +14,18 @@ export function formatDuration(iso?: string): string | null {
   return parts.join(' ') || null;
 }
 
+/** Human date, e.g. "June 29, 2026". Rendered in UTC so it (a) matches the machine-readable
+ *  <time datetime> (which is UTC from the frontmatter date) and (b) is deterministic across
+ *  build servers regardless of their local timezone. */
+export function formatDate(d: Date): string {
+  return d.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 const VULGAR: Record<string, string> = {
   '0.25': '¼',
   '0.5': '½',

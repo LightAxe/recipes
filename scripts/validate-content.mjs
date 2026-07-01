@@ -4,7 +4,7 @@
 //   never scale or convert. WARNS on genuinely unknown units (shown verbatim) and on
 //   off-list cuisines / single-use tags (possible typos/near-dupes).
 // Keep the unit list in sync with src/lib/units.ts SYNONYMS.
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { parse } from 'yaml';
 
 const RECIPES_DIR = 'recipes';
@@ -213,6 +213,15 @@ for (const [tag, n] of tagCounts) {
     warnings.push(
       `tag "${tag}" is used by only one recipe (check for typos / near-duplicates)`,
     );
+}
+
+// The `conversions` tip slug is reserved for the bespoke /tips/conversions/ page (the tips
+// loader excludes conversions.md, so such a file would silently do nothing) — hard-fail so it
+// can't slip in as a confusing no-op.
+if (existsSync('tips/conversions.md')) {
+  errors.push(
+    'tips/conversions.md uses the reserved "conversions" slug — the bespoke /tips/conversions/ page owns that route; rename the tip.',
+  );
 }
 
 for (const w of warnings) console.warn(`⚠️  ${w}`);

@@ -1,0 +1,126 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { formatDate } from '../../lib/format';
+import { articleJsonLd, breadcrumbJsonLd } from '../../lib/jsonld';
+
+export async function getStaticPaths() {
+  const tips = await getCollection('tips');
+  // `conversions` is reserved for the bespoke page (src/pages/tips/conversions.astro); the
+  // loader already excludes conversions.md, but filter defensively so the routes can't collide.
+  return tips
+    .filter((t) => t.id !== 'conversions')
+    .map((tip) => ({ params: { slug: tip.id }, props: { tip } }));
+}
+
+interface Props {
+  tip: CollectionEntry<'tips'>;
+}
+const { tip } = Astro.props;
+const { data } = tip;
+const { Content } = await render(tip);
+const updated = data.dateUpdated ?? data.datePublished;
+
+const jsonLd = [
+  articleJsonLd({
+    headline: data.title,
+    description: data.description,
+    path: `/tips/${tip.id}/`,
+    datePublished: data.datePublished,
+    dateModified: data.dateUpdated,
+  }),
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Tips', path: '/tips/' },
+    { name: data.title, path: `/tips/${tip.id}/` },
+  ]),
+];
+---
+
+<Base title={data.title} description={data.description} jsonLd={jsonLd}>
+  <article class="tip wrap">
+    <nav aria-label="Breadcrumb" class="crumbs">
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span>
+      <a href="/tips/">Tips</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">{data.title}</span>
+    </nav>
+    <header class="head">
+      <p class="eyebrow">Tip</p>
+      <h1>{data.title}</h1>
+      <p class="meta">
+        Updated <time datetime={updated.toISOString().slice(0, 10)}>{formatDate(updated)}</time
+        >
+      </p>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+    <nav class="more" aria-label="Keep browsing">
+      <a href="/tips/">← All tips</a>
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .tip {
+    padding-block: 1.75rem 1rem;
+  }
+  .crumbs {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+  .crumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--muted);
+  }
+  .head h1 {
+    font-size: var(--text-h1);
+    margin: 0.7rem 0 0.5rem;
+  }
+  .meta {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0 0 1.75rem;
+  }
+  .prose {
+    max-width: 62ch;
+    line-height: 1.7;
+  }
+  .prose :global(h2) {
+    font-size: var(--text-h2);
+    margin: 2rem 0 0.75rem;
+  }
+  .prose :global(p) {
+    margin: 0 0 1rem;
+  }
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin: 0 0 1rem;
+    padding-left: 1.4rem;
+  }
+  .prose :global(li) {
+    margin-bottom: 0.4rem;
+  }
+  .prose :global(a) {
+    color: var(--accent-ink);
+  }
+  .more {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+  .more a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--accent-ink);
+    text-decoration: none;
+  }
+</style>

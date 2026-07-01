@@ -1,21 +1,32 @@
-// Progressive enhancement for the Categories <details> dropdown. The menu already
-// works with no JS (native disclosure); this just adds the niceties: close on Escape
-// (returning focus to the summary) and on an outside click.
-const cats = document.getElementById('cats-menu') as HTMLDetailsElement | null;
-if (cats) {
+// Progressive enhancement for the header's native <details> menus — the Categories
+// dropdown and the mobile hamburger. Native disclosure already works with no JS; this adds
+// close on Escape (returning focus to that menu's summary), on an outside click, and when
+// focus tabs out of the menu. One set of document-level listeners handles both menus (no
+// duplicate registrations).
+const menus = ['cats-menu', 'mobile-menu']
+  .map((id) => document.getElementById(id))
+  .filter((el): el is HTMLDetailsElement => el instanceof HTMLDetailsElement);
+
+if (menus.length) {
   document.addEventListener('click', (e) => {
-    if (cats.open && !cats.contains(e.target as Node)) cats.open = false;
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && cats.open) {
-      cats.open = false;
-      cats.querySelector('summary')?.focus();
+    for (const m of menus) {
+      if (m.open && !m.contains(e.target as Node)) m.open = false;
     }
   });
-  // Close when keyboard focus tabs out of the menu entirely (not just on Esc), so an open
-  // panel never floats over the page after focus has moved elsewhere.
-  cats.addEventListener('focusout', (e) => {
-    const next = e.relatedTarget as Node | null;
-    if (cats.open && (!next || !cats.contains(next))) cats.open = false;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    for (const m of menus) {
+      if (!m.open) continue;
+      m.open = false;
+      // Only return focus to a *visible* summary — a menu orphaned open by a viewport resize
+      // across the breakpoint is display:none, so focusing its summary would just drop to body.
+      if (m.offsetParent !== null) m.querySelector('summary')?.focus();
+    }
   });
+  for (const m of menus) {
+    m.addEventListener('focusout', (e) => {
+      const next = e.relatedTarget as Node | null;
+      if (m.open && (!next || !m.contains(next))) m.open = false;
+    });
+  }
 }

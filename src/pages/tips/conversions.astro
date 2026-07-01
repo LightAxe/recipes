@@ -1,0 +1,209 @@
+---
+import Base from '../../layouts/Base.astro';
+import { breadcrumbJsonLd } from '../../lib/jsonld';
+import {
+  INGREDIENT_WEIGHTS,
+  VOLUME_EQUIVALENTS,
+  OVEN_TEMPS,
+  PAN_SIZES,
+} from '../../data/conversions';
+
+const jsonLd = [
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Tips', path: '/tips/' },
+    { name: 'Conversions', path: '/tips/conversions/' },
+  ]),
+];
+---
+
+<Base
+  title="Conversions"
+  description="Kitchen conversions: cups to grams for common ingredients, volume equivalents, oven temperatures (°F / °C / gas mark), and common tin sizes."
+  jsonLd={jsonLd}
+>
+  <section class="wrap">
+    <nav aria-label="Breadcrumb" class="crumbs">
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span>
+      <a href="/tips/">Tips</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Conversions</span>
+    </nav>
+    <p class="eyebrow">Kitchen reference</p>
+    <h1>Conversions</h1>
+    <p class="lede">Handy charts for cooking by weight and across ovens.</p>
+
+    <div class="tables">
+      <table>
+        <caption>Cups to grams — common ingredients (1 US cup)</caption>
+        <thead>
+          <tr>
+            <th scope="col">Ingredient</th>
+            <th scope="col">1 cup</th>
+            <th scope="col">Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            INGREDIENT_WEIGHTS.map((w) => (
+              <tr>
+                <th scope="row">{w.item}</th>
+                <td>{w.gramsPerCup} g</td>
+                <td class="src">{w.source}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+
+      <table>
+        <caption>Volume equivalents</caption>
+        <thead>
+          <tr>
+            <th scope="col">Measure</th>
+            <th scope="col">Metric</th>
+            <th scope="col">Also</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            VOLUME_EQUIVALENTS.map((v) => (
+              <tr>
+                <th scope="row">{v.unit}</th>
+                <td>{Math.round(v.ml)} mL</td>
+                <td class="src">{v.note ?? ''}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+
+      <table>
+        <caption>Oven temperatures</caption>
+        <thead>
+          <tr>
+            <th scope="col">Fahrenheit</th>
+            <th scope="col">Celsius</th>
+            <th scope="col">Gas mark</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            OVEN_TEMPS.map((t) => (
+              <tr>
+                <th scope="row">{t.f}°F</th>
+                <td>{t.c}°C</td>
+                <td>{t.gas}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+
+      <table>
+        <caption>Common tin &amp; pan sizes</caption>
+        <thead>
+          <tr>
+            <th scope="col">Pan</th>
+            <th scope="col">Metric</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            PAN_SIZES.map((p) => (
+              <tr>
+                <th scope="row">{p.name}</th>
+                <td>{p.metric}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      Ingredient weights follow the King Arthur Ingredient Weight Chart; water is taken as
+      1&nbsp;mL&nbsp;≈&nbsp;1&nbsp;g. Oven temperatures are the conventional baking
+      equivalents.
+    </p>
+  </section>
+</Base>
+
+<style>
+  section {
+    padding-block: 1.75rem 1rem;
+  }
+  .crumbs {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+  .crumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--muted);
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    margin: 0.9rem 0 0.5rem;
+  }
+  .lede {
+    font-size: var(--text-lede);
+    color: var(--muted);
+    margin: 0 0 1.75rem;
+  }
+  .tables {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 46rem) {
+    .tables {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  caption {
+    text-align: left;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.6rem;
+    color: var(--text);
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  thead th {
+    font-size: var(--text-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-ink);
+  }
+  tbody th {
+    font-weight: 600;
+  }
+  td {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .src {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .note {
+    margin-top: 2rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    max-width: 60ch;
+  }
+</style>

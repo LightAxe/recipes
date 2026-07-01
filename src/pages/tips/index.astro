@@ -1,0 +1,139 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { itemListJsonLdFrom, breadcrumbJsonLd } from '../../lib/jsonld';
+
+// Newest tips first; datePublished is required by the tips schema so no fallback needed.
+const tips = (await getCollection('tips')).sort(
+  (a, b) => b.data.datePublished.getTime() - a.data.datePublished.getTime(),
+);
+
+const jsonLd = [
+  itemListJsonLdFrom([
+    { path: '/tips/conversions/', name: 'Conversions' },
+    ...tips.map((t) => ({ path: `/tips/${t.id}/`, name: t.data.title })),
+  ]),
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Tips', path: '/tips/' },
+  ]),
+];
+---
+
+<Base
+  title="Tips & Reference"
+  description="Cooking tips, techniques, and kitchen reference for the Ogilvie family collection."
+  jsonLd={jsonLd}
+>
+  <section class="wrap">
+    <nav aria-label="Breadcrumb" class="crumbs">
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Tips</span>
+    </nav>
+    <p class="eyebrow">Kitchen reference</p>
+    <h1>Tips &amp; Reference</h1>
+    <p class="lede">Techniques, know-how, and handy charts to cook from.</p>
+
+    <ul class="cards" role="list">
+      <li>
+        <a class="card featured" href="/tips/conversions/">
+          <p class="kicker">Reference</p>
+          <h2>Conversions</h2>
+          <p class="desc">
+            Cups to grams, °F to °C to gas mark, and common tin sizes — with sources.
+          </p>
+        </a>
+      </li>
+      {
+        tips.map((t) => (
+          <li>
+            <a class="card" href={`/tips/${t.id}/`}>
+              <p class="kicker">How-to</p>
+              <h2>{t.data.title}</h2>
+              <p class="desc">{t.data.description}</p>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>
+
+<style>
+  section {
+    padding-block: 1.75rem 1rem;
+  }
+  .crumbs {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+  .crumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--muted);
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    margin: 0.9rem 0 0.5rem;
+  }
+  .lede {
+    font-size: var(--text-lede);
+    color: var(--muted);
+    max-width: 46ch;
+    margin: 0 0 1.75rem;
+  }
+  .cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 40rem) {
+    .cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .card {
+    display: block;
+    height: 100%;
+    padding: 1.4rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .card:hover,
+  .card:focus-visible {
+    transform: translateY(-4px);
+  }
+  .card.featured {
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent-ink) 25%, var(--line));
+  }
+  .kicker {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: var(--text-eyebrow);
+    color: var(--accent-ink);
+    margin: 0 0 0.35rem;
+  }
+  .card h2 {
+    margin: 0 0 0.4rem;
+    font-size: 1.4rem;
+  }
+  .desc {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+</style>

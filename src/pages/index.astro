@@ -68,6 +68,18 @@ const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
     </div>
     <CardGrid recipes={latest} />
   </section>
+
+  <section class="wrap">
+    <a class="tips-teaser" href="/tips/">
+      <span class="tt-kicker">Kitchen reference</span>
+      <span class="tt-title">Tips &amp; Conversions</span>
+      <span class="tt-desc"
+        >Cups to grams, oven temperatures, techniques, and family know-how <span
+          aria-hidden="true">→</span
+        ></span
+      >
+    </a>
+  </section>
 </Base>
 
 <style>
@@ -183,6 +195,41 @@ const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
     color: var(--muted);
     font-size: 0.82rem;
     font-variant-numeric: tabular-nums;
+  }
+  .tips-teaser {
+    display: block;
+    margin-top: 2.5rem;
+    padding: 1.4rem 1.6rem;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent-ink) 22%, var(--line));
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .tips-teaser:hover,
+  .tips-teaser:focus-visible {
+    transform: translateY(-3px);
+  }
+  .tt-kicker {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: var(--text-eyebrow);
+    color: var(--accent-ink);
+  }
+  .tt-title {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.4rem;
+    margin: 0.2rem 0 0.3rem;
+  }
+  .tt-desc {
+    display: block;
+    color: var(--muted);
   }
   .vh {
     position: absolute;
