@@ -21,6 +21,11 @@ concurrency:
 
 jobs:
   monitor:
+    # Only run once the site is actually launched. If SITE_LIVE isn't 'true' (pre-launch / re-gated
+    # per ADR-0011), the site is intentionally noindex/staged and the live-check would false-alarm
+    # every week — so the whole monitor stands down until go-live. (Also skips a manual dispatch
+    # while staged; run scripts/live-perf-check.mjs with STAGED=1 locally instead.)
+    if: ${{ vars.SITE_LIVE == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
