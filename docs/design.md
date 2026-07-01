@@ -95,7 +95,7 @@ The interactive layer is **progressive enhancement** over the static page, all d
 from these tokens: a **serving scaler** (`1×/2×/3×` + editable servings), **US/metric +
 volume/weight** toggles (weight gated on gram coverage; "prefer weight" remembered), and
 **tap-to-check** ingredients/steps (native checkboxes). **Lightweight cook mode** enlarges
-steps, dims chrome, and holds a screen wake lock — no step-by-step navigator. **No in-page
+steps, hides the surrounding chrome (reader mode), and holds a screen wake lock — no step-by-step navigator. **No in-page
 timers** — step durations are display-only text (ADR-0012). **Print** offers three modes —
 **Clean** (no photo, default), **With photo**, and a **4×6 card** — all reflecting the
 current scale/units. Richer browse/search is a later phase.
