@@ -20,6 +20,8 @@ jobs:
       - run: npm run validate:content
       - name: Build + smoke (staged)
         run: npm run build && npm run smoke
+      - name: Structured-data audit (JSON-LD, every page + type)
+        run: npm run test:jsonld
       - name: Headless browser smoke (no console errors; interactivity works)
         run: npx playwright install --with-deps chromium && npm run test:e2e
       - name: Accessibility guard (axe WCAG 2.1 AA + keyboard/layout, staged build)
