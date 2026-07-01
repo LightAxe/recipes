@@ -692,21 +692,30 @@ const jsonLd = [
     text-decoration: underline;
   }
 
-  /* Cook mode: enlarge steps, dim chrome (no step navigator). .crumbs is global — the
-     breadcrumb is now a separate component (its own cid), so a page-scoped .crumbs would
-     no longer match the rendered <nav>. */
-  :global(body.cook-mode) :global(.crumbs),
-  :global(body.cook-mode) .head .meta,
-  :global(body.cook-mode) .lede,
-  :global(body.cook-mode) .story,
-  :global(body.cook-mode) :is(.site-header, .site-footer) {
-    opacity: 0.4;
-  }
-  :global(body.cook-mode) .step-body p {
-    font-size: 1.35rem;
-    line-height: 1.5;
-  }
-  :global(body.cook-mode) .steps li {
-    margin-bottom: 2.25rem;
+  /* Cook mode is a SCREEN-only reading mode — wrapped in @media screen so it never touches the
+     print output. (A clean/full print made while cook mode is on must keep the description +
+     meta; print.css owns what prints, and body.cook-mode persists through printing.)
+     Enlarge the steps and HIDE the surrounding chrome — a focused "reader mode". Hiding (not
+     dimming to 0.4) is the point: dimmed-but-visible text failed WCAG 1.4.3, whereas hidden
+     text has no contrast surface (issue #25). The recipe title + the interactive controls
+     (incl. the toggle to exit) stay visible. .crumbs / header / footer are separate components,
+     so target them globally. */
+  @media screen {
+    :global(body.cook-mode) :global(.crumbs),
+    :global(body.cook-mode) .head .meta,
+    :global(body.cook-mode) .lede,
+    :global(body.cook-mode) .story,
+    :global(body.cook-mode) .more,
+    :global(body.cook-mode) :global(.site-header),
+    :global(body.cook-mode) :global(.site-footer) {
+      display: none;
+    }
+    :global(body.cook-mode) .step-body p {
+      font-size: 1.35rem;
+      line-height: 1.5;
+    }
+    :global(body.cook-mode) .steps li {
+      margin-bottom: 2.25rem;
+    }
   }
 </style>

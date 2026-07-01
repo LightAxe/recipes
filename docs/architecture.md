@@ -99,7 +99,7 @@ Each feature, designed as enhancement over static HTML:
 - **Tap-to-check ingredients & steps:** each is a list item with a checkbox/`aria-pressed`
   toggle; CSS strikes it through. Pure DOM, optional `localStorage` persistence per recipe.
 - **Cook mode:** a toggle that (a) adds a `cook-mode` class driving a CSS layout with
-  large step text and dimmed chrome, and (b) requests the **Screen Wake Lock API**
+  large step text and hidden chrome (a focused reader mode), and (b) requests the **Screen Wake Lock API**
   (re-acquire on `visibilitychange`, release on exit, with a battery note). No-JS: normal
   page, no wake lock — still fully usable.
 - **Step durations are display-only:** a step's `timer` (ISO-8601) renders as plain text —

@@ -33,3 +33,7 @@ npm-debug.log*
 # grill-me-codex planning scratch (process artifacts, not project docs)
 PLAN.md
 PLAN-REVIEW-LOG.md
+
+# transient agent verification scratch (never commit)
+/cook-mode-verify.mjs
+/cook-mode-debug.mjs

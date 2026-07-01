@@ -158,7 +158,7 @@ behavior in `src/scripts/`.*
   - requests **Screen Wake Lock** (re-acquire on `visibilitychange`, release on exit;
     "screen stays on" note); `cookmode.ts`.
   - switches to a **focused layout**: one large step at a time (≥lead size), big Prev/Next
-    (≥48px), dimmed chrome/backsplash, step counter, ingredients reachable.
+    (≥48px), hidden chrome (reader mode), step counter, ingredients reachable.
   - Exit always one obvious control; restores scroll position + focus.
 - `aria-pressed` on the toggle; the focused view is keyboard-navigable (←/→ between steps).
   **No-JS:** button hidden; the normal numbered steps already work.
@@ -215,8 +215,8 @@ behavior in `src/scripts/`.*
 - A centered row of alternating teal/tomato petals between sections (and in print).
 
 ### E3. TileBacksplash
-- Low-contrast `--sand`/`--cream` checkerboard behind hero/footer/section breaks; dims in
-  cook mode. CSS gradient/SVG, no extra requests.
+- Low-contrast `--sand`/`--cream` checkerboard behind hero/footer/section breaks; hidden with
+  the header/footer in cook mode. CSS gradient/SVG, no extra requests.
 
 ### E4. IngredientSpot
 - Hand-drawn 2px-ink + one-accent-fill spots from the starter set (`flour, egg, apple,
