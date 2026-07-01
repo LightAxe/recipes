@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "validate:content": "node scripts/validate-content.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "test:jsonld": "node scripts/jsonld-audit.mjs",
     "test:e2e": "node scripts/smoke-browser.mjs",
     "test:a11y": "node scripts/a11y.mjs"
   },

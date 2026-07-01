@@ -148,35 +148,62 @@ ok(
     recipeCrumb.itemListElement.slice(0, -1).every((li) => typeof li.item === 'string'),
 );
 
-// Singleton (1-recipe) taxonomy pages are always noindex; multi-recipe pages follow the
-// SITE_LIVE gate (so on a live build they are indexable). /category/drink/ = 1 recipe.
-const drink = await read('dist/category/drink/index.html');
-ok('singleton taxonomy page is noindex', /name="robots"\s+content="noindex"/.test(drink));
-// Singletons on the other three axes (contributor, cuisine, tag) prove the rule spans
-// all four axes, not just course.
-const emily = await read('dist/from/emily/index.html');
-ok('singleton /from/ page is noindex', /name="robots"\s+content="noindex"/.test(emily));
-const frenchCuisine = await read('dist/cuisine/french/index.html');
-ok(
-  'singleton /cuisine/ page is noindex',
-  /name="robots"\s+content="noindex"/.test(frenchCuisine),
-);
-const artichokeTag = await read('dist/tag/artichoke/index.html');
-ok('singleton /tag/ page is noindex', /name="robots"\s+content="noindex"/.test(artichokeTag));
-if (live) {
-  ok(
-    'multi-recipe taxonomy page is indexable on live build',
-    !/name="robots"\s+content="noindex"/.test(dessert),
-  );
-}
-
-// Sitemap: singletons + the /search/ utility page are excluded; real list pages included.
+// ── #12: singleton + sitemap rules, checked DATA-INDEPENDENTLY across all four axes ──
+// Derive each taxonomy page's recipe count from its own built output (the distinct
+// /recipes/<slug>/ links it renders) instead of hard-coding term slugs. The rule: a
+// singleton (1 recipe) page is always noindex + excluded from the sitemap; a multi-recipe
+// page follows the SITE_LIVE gate (indexable on live) + is included. This can't drift as the
+// collection changes — new/renamed terms are covered automatically.
 const sitemap = await read('dist/sitemap-0.xml');
-ok('multi-recipe taxonomy page in sitemap', sitemap.includes('/category/dessert/'));
-ok('singleton taxonomy page excluded from sitemap', !sitemap.includes('/category/drink/'));
-ok('singleton /from/ page excluded from sitemap', !sitemap.includes('/from/emily/'));
-ok('singleton /cuisine/ page excluded from sitemap', !sitemap.includes('/cuisine/french/'));
-ok('singleton /tag/ page excluded from sitemap', !sitemap.includes('/tag/artichoke/'));
+// Count DISTINCT recipe slugs on a taxonomy page. Each recipe appears twice (its card <a href>
+// and its absolute URL inside the ItemList JSON-LD); the Set collapses those. Nav/footer only
+// link `/recipes/` (no slug), so they contribute nothing. TaxonomyList renders only <CardGrid>,
+// so there are no cross-recipe links to inflate the count.
+const recipeLinkCount = (html) =>
+  new Set(html.match(/\/recipes\/[a-z0-9]+(?:-[a-z0-9]+)*\//g) || []).size;
+
+let taxPages = 0;
+let singletons = 0;
+let multi = 0;
+for (const axis of ['category', 'cuisine', 'tag', 'from']) {
+  const dir = `dist/${axis}`;
+  if (!existsSync(dir)) continue;
+  for (const term of await readdir(dir)) {
+    const f = `dist/${axis}/${term}/index.html`;
+    if (!existsSync(f)) continue;
+    taxPages++;
+    const html = await read(f);
+    const count = recipeLinkCount(html);
+    const noindex = /name="robots"\s+content="noindex"/.test(html);
+    const inSitemap = sitemap.includes(`/${axis}/${term}/`);
+    // Singleton == exactly 1 recipe, matching TaxonomyList's `recipes.length === 1` noindex
+    // rule (a taxonomy term only builds a page when ≥1 recipe uses it, so 0 can't occur).
+    if (count === 1) {
+      singletons++;
+      ok(`singleton /${axis}/${term}/ is noindex`, noindex);
+      ok(`singleton /${axis}/${term}/ excluded from sitemap`, !inSitemap);
+    } else {
+      multi++;
+      ok(`multi /${axis}/${term}/ in sitemap`, inSitemap);
+      if (live) ok(`multi /${axis}/${term}/ indexable on live build`, !noindex);
+    }
+  }
+}
+// The rules are only meaningfully exercised if the collection actually contains both kinds.
+ok('taxonomy pages were found to check', taxPages > 0);
+ok(
+  'at least one singleton and one multi-recipe page exist to cover both rules',
+  singletons > 0 && multi > 0,
+);
+
+// Every built recipe page appears in the sitemap (derived from dist, not a fixed count).
+const recipeSlugs = (await readdir('dist/recipes')).filter((s) =>
+  existsSync(`dist/recipes/${s}/index.html`),
+);
+const missingFromSitemap = recipeSlugs.filter((s) => !sitemap.includes(`/recipes/${s}/`));
+ok(`all ${recipeSlugs.length} recipes are in the sitemap`, missingFromSitemap.length === 0);
+
+// The /search/ utility page is permanently excluded from the sitemap.
 ok('search page excluded from sitemap', !sitemap.includes('/search/'));
 
 // Search: the page exists and Pagefind generated its static index at build (postbuild).
