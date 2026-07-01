@@ -19,13 +19,15 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug));
         name="q"
         placeholder="Search recipes…"
         autocomplete="off"
+        aria-controls="search-page-results"
       />
       <button type="submit">Search</button>
     </form>
 
-    <div id="search-page-results" aria-live="polite"></div>
+    <div id="search-page-results"></div>
+    <p id="search-page-status" class="vh" role="status"></p>
 
-    <div class="fallback">
+    <div class="fallback" id="search-fallback">
       <p>Looking for something specific? Search above, or browse by category:</p>
       <ul class="cat-links" role="list">
         {
@@ -89,7 +91,7 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug));
   }
   .cat-links a {
     display: inline-flex;
-    min-height: 40px;
+    min-height: 44px;
     align-items: center;
     padding: 0 0.85rem;
     border: 1px solid var(--line);

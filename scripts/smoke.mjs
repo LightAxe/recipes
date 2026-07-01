@@ -106,10 +106,63 @@ ok(
     existsSync('dist/from/sandy/index.html'),
 );
 
+// BreadcrumbList must be Google-valid: every non-last ListItem needs an `item` URL, so the
+// non-linking axis segment is dropped from the JSON-LD (not emitted URL-less).
+let crumb = null;
+for (const block of dessert.match(
+  /<script type="application\/ld\+json">[\s\S]*?<\/script>/g,
+) || []) {
+  const body = block.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, '');
+  try {
+    const o = JSON.parse(body);
+    if (o['@type'] === 'BreadcrumbList') crumb = o;
+  } catch {
+    /* not this block */
+  }
+}
+ok(
+  'taxonomy BreadcrumbList valid (non-last items have item URL)',
+  crumb &&
+    Array.isArray(crumb.itemListElement) &&
+    crumb.itemListElement.length >= 2 &&
+    crumb.itemListElement.slice(0, -1).every((li) => typeof li.item === 'string'),
+);
+
+// The recipe page's 3-item breadcrumb must also be valid (regression guard).
+let recipeCrumb = null;
+for (const block of recipe.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g) ||
+  []) {
+  const body = block.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, '');
+  try {
+    const o = JSON.parse(body);
+    if (o['@type'] === 'BreadcrumbList') recipeCrumb = o;
+  } catch {
+    /* not this block */
+  }
+}
+ok(
+  'recipe BreadcrumbList valid (non-last items have item URL)',
+  recipeCrumb &&
+    Array.isArray(recipeCrumb.itemListElement) &&
+    recipeCrumb.itemListElement.length === 3 &&
+    recipeCrumb.itemListElement.slice(0, -1).every((li) => typeof li.item === 'string'),
+);
+
 // Singleton (1-recipe) taxonomy pages are always noindex; multi-recipe pages follow the
 // SITE_LIVE gate (so on a live build they are indexable). /category/drink/ = 1 recipe.
 const drink = await read('dist/category/drink/index.html');
 ok('singleton taxonomy page is noindex', /name="robots"\s+content="noindex"/.test(drink));
+// Singletons on the other three axes (contributor, cuisine, tag) prove the rule spans
+// all four axes, not just course.
+const emily = await read('dist/from/emily/index.html');
+ok('singleton /from/ page is noindex', /name="robots"\s+content="noindex"/.test(emily));
+const frenchCuisine = await read('dist/cuisine/french/index.html');
+ok(
+  'singleton /cuisine/ page is noindex',
+  /name="robots"\s+content="noindex"/.test(frenchCuisine),
+);
+const artichokeTag = await read('dist/tag/artichoke/index.html');
+ok('singleton /tag/ page is noindex', /name="robots"\s+content="noindex"/.test(artichokeTag));
 if (live) {
   ok(
     'multi-recipe taxonomy page is indexable on live build',
@@ -121,6 +174,9 @@ if (live) {
 const sitemap = await read('dist/sitemap-0.xml');
 ok('multi-recipe taxonomy page in sitemap', sitemap.includes('/category/dessert/'));
 ok('singleton taxonomy page excluded from sitemap', !sitemap.includes('/category/drink/'));
+ok('singleton /from/ page excluded from sitemap', !sitemap.includes('/from/emily/'));
+ok('singleton /cuisine/ page excluded from sitemap', !sitemap.includes('/cuisine/french/'));
+ok('singleton /tag/ page excluded from sitemap', !sitemap.includes('/tag/artichoke/'));
 ok('search page excluded from sitemap', !sitemap.includes('/search/'));
 
 // Search: the page exists and Pagefind generated its static index at build (postbuild).

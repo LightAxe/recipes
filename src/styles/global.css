@@ -187,6 +187,7 @@ main {
 }
 .sr-card {
   display: block;
+  min-height: 44px;
   padding: 0.6rem 0.7rem;
   border-radius: var(--radius-xs, 6px);
   color: var(--text);
@@ -208,7 +209,7 @@ main {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-size: 0.62rem;
+  font-size: var(--text-eyebrow);
   color: var(--accent-ink);
   margin-top: 0.15rem;
 }

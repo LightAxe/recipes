@@ -20,10 +20,14 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
   <div class="wrap bar">
     <Wordmark />
     <nav aria-label="Primary" class="nav">
-      <a href="/recipes/" aria-current={onRecipes ? 'page' : undefined}>Recipes</a>
+      <a
+        href="/recipes/"
+        aria-current={path === '/recipes/' ? 'page' : onRecipes ? 'true' : undefined}
+        >Recipes</a
+      >
 
       <details class="cats" id="cats-menu">
-        <summary aria-haspopup="true">Categories</summary>
+        <summary>Categories <span class="caret" aria-hidden="true">▾</span></summary>
         <ul class="cats-list" role="list">
           {
             courses.map((c) => (
@@ -45,8 +49,10 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
           name="q"
           placeholder="Search recipes…"
           autocomplete="off"
+          aria-controls="site-search-results"
         />
         <div class="search-results" id="site-search-results" hidden></div>
+        <p id="site-search-status" class="vh" role="status"></p>
       </form>
 
       <ThemeToggle />
@@ -113,12 +119,12 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
   .cats > summary::-webkit-details-marker {
     display: none;
   }
-  .cats > summary::after {
-    content: '▾';
+  .cats > summary .caret {
+    display: inline-block;
     font-size: 0.8em;
     color: var(--muted);
   }
-  .cats[open] > summary::after {
+  .cats[open] > summary .caret {
     transform: rotate(180deg);
   }
   .cats-list {
@@ -208,7 +214,8 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
       max-width: none;
     }
     .search {
-      order: 5;
+      /* Full-width row, but keep it in DOM order (between Categories and the theme
+         toggle) so tab order matches visual order — no CSS `order` reflow (WCAG 2.4.3). */
       flex-basis: 100%;
     }
     .cats-list,

@@ -84,37 +84,85 @@ function renderResults(container: HTMLElement, items: PagefindResultData[]): voi
 }
 
 const MAX_RESULTS = 8;
+// How many ranked results to fetch/inspect before capping — a bounded window so the
+// URL filter can run *before* the cap without fetching the entire result set.
+const FETCH_MULTIPLIER = 4;
 
-function wire(input: HTMLInputElement, results: HTMLElement, dropdown: boolean): void {
+interface WireOpts {
+  dropdown: boolean;
+  /** Visually-hidden aria-live region — announces the result count to screen readers. */
+  status?: HTMLElement | null;
+  /** Browse-fallback block (on /search/) — hidden while a query is active. */
+  fallback?: HTMLElement | null;
+}
+
+function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): void {
+  const { dropdown, status = null, fallback = null } = opts;
+  const container = input.closest('form') ?? input.parentElement;
   let debounce = 0;
   let lastQuery = '';
+  // True once the user has closed the dropdown (Esc / outside-click / tab-out); an in-flight
+  // Pagefind response then drops itself instead of reopening the panel. Reset on the next
+  // keystroke. (Only meaningful for the dropdown; the /search/ page never dismisses.)
+  let dismissed = false;
+  const announce = (msg: string) => {
+    if (status) status.textContent = msg;
+  };
+  const setVisible = (visible: boolean) => {
+    results.hidden = !visible;
+  };
+  // The dropdown floats over the page, so a resolving async search must not reopen it once
+  // focus has left the search box (e.g. the user tabbed/clicked away while it loaded).
+  const focusInside = () => {
+    const a = document.activeElement;
+    return !!a && (a === input || (!!container && container.contains(a)));
+  };
 
   async function run(raw: string): Promise<void> {
     const query = raw.trim();
     lastQuery = query;
     if (!query) {
       results.replaceChildren();
-      if (dropdown) results.hidden = true;
+      setVisible(false);
+      if (fallback) fallback.hidden = false; // no query → offer the browse fallback
+      announce('');
       return;
     }
+    if (fallback) fallback.hidden = true; // querying → the fallback would just be noise
     try {
       const pf = await loadPagefind();
       const search = await pf.search(query);
       if (query !== lastQuery) return; // a newer keystroke superseded this one
-      const items = await Promise.all(
-        search.results.slice(0, MAX_RESULTS).map((r) => r.data()),
-      );
+      // We index only recipe pages (data-pagefind-body), but stay robust if that ever
+      // changes: fetch a bounded window, drop any non-recipe URL, and cap AFTER filtering
+      // so a stray indexed page could never push real recipe hits out of the shown set.
+      const stubs = search.results.slice(0, MAX_RESULTS * FETCH_MULTIPLIER);
+      const fetched = await Promise.all(stubs.map((r) => r.data()));
       if (query !== lastQuery) return;
+      // Dropdown only: if the user has since closed it or moved focus away, drop this
+      // result entirely (don't re-render, re-show, or announce over the page).
+      if (dropdown && (dismissed || !focusInside())) return;
+      const items = fetched.filter((it) => safeRecipeUrl(it.url)).slice(0, MAX_RESULTS);
       renderResults(results, items);
-      results.hidden = false;
+      setVisible(true);
+      announce(
+        items.length
+          ? `${items.length} result${items.length === 1 ? '' : 's'} for “${query}”`
+          : `No recipes found for “${query}”`,
+      );
     } catch {
-      // No index (dev) or load failure: degrade silently — the <form> still submits
-      // to /search/ as the non-JS fallback.
-      if (dropdown) results.hidden = true;
+      // No index (dev) or a transient load failure. Clear stale results so an old query's
+      // cards can't linger under the new text, and say so (the <form> still submits to
+      // /search/, and the browse fallback returns, as the non-JS path).
+      results.replaceChildren();
+      setVisible(false);
+      if (fallback) fallback.hidden = false;
+      announce('Search is unavailable right now — browse by category below.');
     }
   }
 
   input.addEventListener('input', () => {
+    dismissed = false; // a fresh keystroke re-enables showing results
     window.clearTimeout(debounce);
     debounce = window.setTimeout(() => void run(input.value), 180);
   });
@@ -122,27 +170,60 @@ function wire(input: HTMLInputElement, results: HTMLElement, dropdown: boolean):
   input.addEventListener('focus', () => void loadPagefind().catch(() => {}), { once: true });
 
   if (dropdown) {
+    // Fully dismiss the dropdown: cancel a pending debounced search and mark it dismissed so
+    // a slow in-flight response can't reopen it. `refocus` returns focus to the input.
+    const dismiss = (refocus: boolean) => {
+      window.clearTimeout(debounce);
+      dismissed = true;
+      setVisible(false);
+      if (refocus) input.focus();
+    };
     document.addEventListener('click', (e) => {
-      if (e.target !== input && !results.contains(e.target as Node)) results.hidden = true;
+      if (e.target !== input && !results.contains(e.target as Node)) dismiss(false);
     });
+    // Escape from the input OR from within the results closes the panel; from the results
+    // it also returns focus to the input.
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') results.hidden = true;
+      if (e.key === 'Escape') dismiss(false);
     });
+    results.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') dismiss(true);
+    });
+    // Close when focus tabs out of the search box + results entirely (keyboard users
+    // tabbing past the last result shouldn't leave the panel floating over the page).
+    if (container) {
+      container.addEventListener('focusout', (e) => {
+        const next = e.relatedTarget as Node | null;
+        if (!next || !container.contains(next)) dismiss(false);
+      });
+    }
   }
 }
 
 // Header box (dropdown).
 const headerInput = document.getElementById('site-search') as HTMLInputElement | null;
 const headerResults = document.getElementById('site-search-results');
-if (headerInput && headerResults) wire(headerInput, headerResults, true);
+if (headerInput && headerResults) {
+  wire(headerInput, headerResults, {
+    dropdown: true,
+    status: document.getElementById('site-search-status'),
+  });
+}
 
 // /search/ page (inline results) — auto-run a deep-linked ?q= on page load.
 const pageInput = document.getElementById('search-page-input') as HTMLInputElement | null;
 const pageResults = document.getElementById('search-page-results');
 if (pageInput && pageResults) {
-  wire(pageInput, pageResults, false);
+  wire(pageInput, pageResults, {
+    dropdown: false,
+    status: document.getElementById('search-page-status'),
+    fallback: document.getElementById('search-fallback'),
+  });
   const q = new URLSearchParams(location.search).get('q');
   if (q) {
+    // Hide the browse fallback up front so a deep-linked ?q= doesn't flash it during the
+    // debounce + Pagefind load; run() manages it thereafter.
+    document.getElementById('search-fallback')?.setAttribute('hidden', '');
     pageInput.value = q;
     pageInput.dispatchEvent(new Event('input'));
   }

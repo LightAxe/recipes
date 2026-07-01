@@ -82,7 +82,7 @@ const jsonLd = [
       <span aria-hidden="true">›</span>
       <a href="/recipes/">Recipes</a>
       <span aria-hidden="true">›</span>
-      {data.title}
+      <span aria-current="page">{data.title}</span>
     </nav>
 
     <header class="head">
@@ -316,10 +316,15 @@ const jsonLd = [
     </div>
 
     <nav class="more" aria-label="Keep browsing" data-pagefind-ignore>
-      <a href={`/category/${data.course}/`}>More {courseLabel(data.course)} →</a>
+      <a href={`/category/${data.course}/`}>
+        More {courseLabel(data.course)}
+        <span aria-hidden="true">→</span>
+      </a>
       {
         data.contributor && (
-          <a href={`/from/${slugify(data.contributor)}/`}>More from {data.contributor} →</a>
+          <a href={`/from/${slugify(data.contributor)}/`}>
+            More from {data.contributor} <span aria-hidden="true">→</span>
+          </a>
         )
       }
     </nav>
@@ -411,7 +416,7 @@ const jsonLd = [
     overflow: hidden;
   }
   .seg {
-    min-height: 40px;
+    min-height: 44px;
     padding: 0 0.8rem;
     border: 0;
     background: var(--surface);
@@ -427,7 +432,7 @@ const jsonLd = [
     color: var(--on-accent);
   }
   .toggle {
-    min-height: 40px;
+    min-height: 44px;
     padding: 0 0.9rem;
     border: 1px solid var(--line);
     border-radius: var(--radius-pill, 999px);
@@ -672,6 +677,10 @@ const jsonLd = [
     border-top: 1px solid var(--line);
   }
   .more a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 0.2rem;
     font-family: var(--font-display);
     font-weight: 700;
     color: var(--accent-ink);

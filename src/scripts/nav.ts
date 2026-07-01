@@ -12,4 +12,10 @@ if (cats) {
       cats.querySelector('summary')?.focus();
     }
   });
+  // Close when keyboard focus tabs out of the menu entirely (not just on Esc), so an open
+  // panel never floats over the page after focus has moved elsewhere.
+  cats.addEventListener('focusout', (e) => {
+    const next = e.relatedTarget as Node | null;
+    if (cats.open && (!next || !cats.contains(next))) cats.open = false;
+  });
 }

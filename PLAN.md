@@ -182,3 +182,7 @@ goes live the same way Phase 2 did.
 - Server-side search, any backend, analytics on search queries.
 - A global all-tags index / tag cloud.
 - Redesigning the recipe page itself (Phase 2 owns it) beyond adding foot "More …" links + breadcrumb.
+- **Richer search-result cards + the Pagefind _filter_ plane.** Result cards show title · course ·
+  excerpt only; `data-pagefind-filter` and image/time/yield result `meta` are intentionally **not**
+  emitted this phase — they'd be dead index weight with no renderer consuming them. Add them together
+  with the UI that displays/filters on them (revised down from the original plan's step 10 wording).

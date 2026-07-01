@@ -64,7 +64,7 @@ const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
   <section class="wrap">
     <div class="head">
       <h2>Latest additions</h2>
-      <a class="all" href="/recipes/">All recipes →</a>
+      <a class="all" href="/recipes/">All recipes <span aria-hidden="true">→</span></a>
     </div>
     <CardGrid recipes={latest} />
   </section>
@@ -127,6 +127,9 @@ const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
     font-size: 1.6rem;
   }
   .all {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     font-family: var(--font-display);
     font-weight: 700;
     white-space: nowrap;

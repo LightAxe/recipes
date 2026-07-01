@@ -75,11 +75,18 @@ function init(controls: HTMLElement) {
     if (servesEl) servesEl.textContent = String(servings); // keep header in sync (prints too)
     // base yield is only valid at ×1 — hide it once scaled so prints aren't misleading
     if (yieldEl) yieldEl.hidden = Math.abs(factor - 1) > 1e-9;
+    // Roving tabindex: only the checked radio is in the tab order (ARIA radiogroup). If the
+    // current factor matches no preset (custom servings), keep the first one tabbable so the
+    // group stays keyboard-reachable.
+    let anyActive = false;
     for (const p of presets) {
       const active = Math.abs(Number(p.dataset.scale) - factor) < 1e-9;
       p.setAttribute('aria-checked', String(active));
       p.classList.toggle('active', active);
+      p.tabIndex = active ? 0 : -1;
+      if (active) anyActive = true;
     }
+    if (!anyActive && presets[0]) presets[0].tabIndex = 0;
     if (sysBtn) {
       sysBtn.textContent = system === 'us' ? 'US' : 'Metric';
       sysBtn.setAttribute(
@@ -109,6 +116,21 @@ function init(controls: HTMLElement) {
   servingsInput?.addEventListener('change', () => setServings(Number(servingsInput.value)));
   for (const p of presets)
     p.addEventListener('click', () => setServings(base * Number(p.dataset.scale)));
+  // Arrow keys move + select within the radiogroup (ARIA radio pattern).
+  const radiogroup = controls.querySelector<HTMLElement>('[role="radiogroup"]');
+  radiogroup?.addEventListener('keydown', (e) => {
+    const idx = presets.indexOf(document.activeElement as HTMLButtonElement);
+    if (idx === -1) return;
+    let next = -1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (idx + 1) % presets.length;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp')
+      next = (idx - 1 + presets.length) % presets.length;
+    if (next < 0) return;
+    e.preventDefault();
+    const btn = presets[next];
+    setServings(base * Number(btn.dataset.scale));
+    btn.focus();
+  });
   sysBtn?.addEventListener('click', () => {
     system = system === 'us' ? 'metric' : 'us';
     // Persist the global weight pref untouched (don't write the gated view).
@@ -145,6 +167,7 @@ function wirePrint() {
         if (pageCard) pageCard.media = 'print';
       }
       menu.open = false;
+      menu.querySelector('summary')?.focus(); // keep focus on the visible trigger, not <body>
       const cleanup = () => {
         document.body.classList.remove('print-full', 'print-card');
         if (pageCard) pageCard.media = 'not all';
@@ -153,6 +176,18 @@ function wirePrint() {
       window.addEventListener('afterprint', cleanup);
       window.print();
     });
+  });
+  // Dismiss the menu on Escape / when focus tabs out (parity with the Categories menu),
+  // so an open, absolutely-positioned panel never lingers over the controls after focus moves.
+  menu.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menu.open) {
+      menu.open = false;
+      menu.querySelector('summary')?.focus(); // return focus, don't drop it to <body>
+    }
+  });
+  menu.addEventListener('focusout', (e) => {
+    const next = e.relatedTarget as Node | null;
+    if (menu.open && (!next || !menu.contains(next))) menu.open = false;
   });
 }
 

@@ -41,9 +41,10 @@ jobs:
 
       # Two-pass sync: long-cache immutable hashed assets, short-cache the
       # documents that change in place (HTML/XML/TXT). Matches the personal-site
-      # pattern (ADR-0006). Pagefind's /pagefind/ bundle uses STABLE filenames
-      # (pagefind.js, the index) so it must NOT be immutable-cached — it's synced
-      # in the short-cache pass so a re-index is never served stale.
+      # pattern (ADR-0006). Pagefind's /pagefind/ bundle has stable-named entry files
+      # (pagefind.js, pagefind-entry.json) that are rewritten in place on every
+      # re-index, so the bundle must NOT be immutable-cached — it's synced in the
+      # short-cache pass so a re-index is never served stale.
       - name: Sync to S3
         run: |
           aws s3 sync ./dist "s3://${{ vars.SITE_BUCKET_NAME }}" --delete \
