@@ -2,7 +2,7 @@
 // pageerror (this is what would have caught the TDZ crash that killed all the recipe
 // interactivity), and verifies the scaler actually changes an amount. Run: needs `dist/`
 // built first (npm run build). Uses Playwright chromium.
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -153,6 +153,74 @@ try {
   if (searchW < 200) errors.push(`mobile search is crushed (${Math.round(searchW)}px wide)`);
 
   await browser.close();
+
+  // ── WebKit (Safari engine): link/button activation inside the JS-enhanced menus ──
+  // Safari doesn't focus <a>/<button> on click, so a menu's focusout fires with a null
+  // relatedTarget — a naive "close on focusout" tears the panel down mid-mousedown and the
+  // click never lands. This shipped to production once (Categories links dead in Safari) because
+  // the smoke ran Chromium only. These checks run in WebKit specifically to guard that class.
+  const wk = await webkit.launch();
+  const wkPage = await (
+    await wk.newContext({ viewport: { width: 1200, height: 800 } })
+  ).newPage();
+  // Categories dropdown → a category link must navigate.
+  await wkPage.goto(`${BASE}/`, { waitUntil: 'load' });
+  await sleep(150);
+  await wkPage.locator('#cats-menu > summary').click();
+  await sleep(100);
+  const catHref = await wkPage.locator('#cats-menu .cats-list a').first().getAttribute('href');
+  await wkPage.locator('#cats-menu .cats-list a').first().click();
+  await sleep(400);
+  if (!wkPage.url().endsWith(catHref)) {
+    errors.push(`webkit: Categories link did not navigate (still ${wkPage.url()})`);
+  }
+  // Search dropdown → a result link must navigate.
+  await wkPage.goto(`${BASE}/`, { waitUntil: 'load' });
+  await sleep(150);
+  await wkPage.locator('#site-search').fill('chicken');
+  await sleep(900);
+  if ((await wkPage.locator('#site-search-results .sr-card').count()) > 0) {
+    const rHref = await wkPage
+      .locator('#site-search-results .sr-card')
+      .first()
+      .getAttribute('href');
+    await wkPage.locator('#site-search-results .sr-card').first().click();
+    await sleep(400);
+    if (!wkPage.url().includes(rHref)) {
+      errors.push(`webkit: search result did not navigate (still ${wkPage.url()})`);
+    }
+  } else {
+    errors.push('webkit: search returned no results for "chicken"');
+  }
+  // Mobile hamburger sheet → a link must navigate.
+  await wkPage.setViewportSize({ width: 390, height: 820 });
+  await wkPage.goto(`${BASE}/`, { waitUntil: 'load' });
+  await sleep(150);
+  await wkPage.locator('#mobile-menu > summary').click();
+  await sleep(100);
+  await wkPage.locator('#mobile-menu .sheet a[href="/tips/"]').click();
+  await sleep(400);
+  if (!wkPage.url().endsWith('/tips/')) {
+    errors.push(`webkit: mobile menu link did not navigate (still ${wkPage.url()})`);
+  }
+  // Print menu → a print option's click handler must fire (menu not torn down on mousedown).
+  await wkPage.setViewportSize({ width: 1200, height: 800 });
+  await wkPage.goto(`${BASE}/recipes/snickerdoodles/`, { waitUntil: 'load' });
+  await sleep(200);
+  await wkPage.evaluate(() => {
+    window.__printed = 0;
+    window.print = () => {
+      window.__printed++;
+    };
+  });
+  await wkPage.locator('.print-menu > summary').click();
+  await sleep(100);
+  await wkPage.locator('.print-menu [data-print="clean"]').click();
+  await sleep(150);
+  if (!(await wkPage.evaluate(() => window.__printed))) {
+    errors.push('webkit: print option did not fire (menu closed on mousedown)');
+  }
+  await wk.close();
 } catch (e) {
   errors.push(`harness: ${e.message}`);
 } finally {
