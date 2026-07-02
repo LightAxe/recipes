@@ -4,6 +4,9 @@ description: A sweet-hot pepper jelly of ground jalapeños and bell peppers set 
 course: canning
 cuisine: American
 tags: [jalapeno, pepper, jelly, spicy, vegetarian, vegan]
+image:
+  src: ./images/jalapeno-jelly/hero.jpg
+  alt: A jar of translucent red-amber jalapeño pepper jelly flecked with peppers, sealed with a canning lid on a granite countertop.
 yield: 5 eight-ounce jars
 ingredients:
   - qty: 0.333
