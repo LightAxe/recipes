@@ -9,6 +9,7 @@ ingredients:
   - qty: 1
     unit: bag
     item: frozen sweet corn
+    note: "about a 16 oz bag"
     grams: 454
     gramsApprox: true
     gramsSource: "typical package ≈ 16 oz (454 g)"
@@ -24,6 +25,7 @@ ingredients:
     unit: can
     item: black beans
     prep: drained
+    note: "about a 15 oz can"
     grams: 255
     gramsApprox: true
     gramsSource: "USDA — canned black beans, 15 oz can drained ≈ 1.5 cups ≈ 255 g"
