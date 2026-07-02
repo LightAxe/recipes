@@ -6,9 +6,6 @@ course: main
 cuisine: Italian
 tags: [chicken, pasta, spinach, artichoke, cream, wine]
 servings: 6
-prepTime: PT20M
-cookTime: PT30M
-totalTime: PT50M
 ingredients:
   - qty: 0.5
     unit: cup
