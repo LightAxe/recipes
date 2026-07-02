@@ -4,6 +4,9 @@ description: A baked, buttery homemade snack mix — Chex, Cheerios, and pretzel
 course: appetizer
 cuisine: American
 tags: [snack-mix, potluck, make-ahead, crowd-size]
+image:
+  src: ./images/scrabble/hero.jpg
+  alt: A baked Chex-and-Cheerios snack mix with pretzel sticks in a scalloped ceramic bowl, surrounded by autumn leaves and frosted berries.
 servings: 48
 ingredients:
   - qty: 1
