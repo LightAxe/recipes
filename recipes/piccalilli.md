@@ -79,8 +79,7 @@ instructions:
   - text: "Process the jars 10 minutes (safe through 6,000 ft — see the altitude note below)."
     timer: PT10M
 notes:
-  - "Processing time varies with altitude (USDA/NCHFP, pints): the card's 10 minutes covers up to 6,000 ft; process 15 minutes above that."
-  - "This is the family method; for a fully tested canning process, follow current NCHFP guidance (nchfp.uga.edu)."
+  - "Processing time varies with altitude (pints): 10 minutes up to 6,000 ft; process 15 minutes above that."
   - "Smaller batch (handwritten on the card): 4 cups tomatoes, 1 cup bell pepper, 1 cup onions, 1/8 cup salt, 1 1/8 tablespoons mustard seed, 2 cups brown sugar, 2 cups vinegar. This handwritten version is a smaller (roughly quarter) batch — the printed amounts in the ingredient list are the full recipe."
   - "The handwritten smaller batch doesn't note the cinnamon or the spice bag (cloves, allspice, cinnamon sticks); scale those to taste if making the small batch."
 datePublished: 2026-07-02

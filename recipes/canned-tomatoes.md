@@ -37,7 +37,7 @@ instructions:
   - text: "In a pot, bring tomatoes to boiling for 10 minutes."
     section: Hot pack
     timer: PT10M
-  - text: "Pack the hot tomatoes into jars, leaving 1/2 inch (1.3 cm) headspace."
+  - text: "Pack the hot tomatoes into jars and cover them with the hot cooking juice, leaving 1/2 inch (1.3 cm) headspace."
     section: Hot pack
   - text: "Add 2 tablespoons bottled lemon juice to each quart (1 tablespoon per pint) to acidify, plus 1 teaspoon pickling salt per quart (1/2 teaspoon per pint) for flavor, if desired."
     section: Hot pack
@@ -47,6 +47,5 @@ instructions:
 notes:
   - "Raw pack or hot pack — choose one. Process pints and quarts 85 minutes in a boiling-water bath at 0–1,000 ft; increase the time at higher altitudes. These times are for whole or halved tomatoes; chopped or crushed tomatoes use a different process."
   - "Optional: a leaf or two of fresh basil per jar. Canning basil in the jar doesn't adhere to current USDA/NCHFP guidance — use at your own discretion."
-  - "This is the family method; for a fully tested canning process, follow current NCHFP guidance (nchfp.uga.edu)."
 datePublished: 2026-07-02
 ---

@@ -6,8 +6,14 @@ cuisine: American
 tags: [beet, pickles, make-ahead, vegetarian, vegan]
 yield: enough sweet spiced brine for roughly 6–8 pint jars of beets
 ingredients:
-  - item: beets
-    note: "as many as needed to fill your jars"
+  - qty: 7
+    unit: lb
+    item: beets
+    prep: cooked, peeled, and sliced
+    note: "about 7 lb (2–2½-inch beets) — fills roughly 8 pint jars"
+    grams: 3175
+    gramsApprox: true
+    gramsSource: "7 lb = 3.18 kg"
   - item: onions
     prep: thinly sliced
     note: optional
@@ -76,7 +82,6 @@ instructions:
 notes:
   - "Processing time varies with altitude (USDA/NCHFP pickled beets, pints): 30 minutes at 0–1,000 ft, 35 to 3,000 ft, 40 to 6,000 ft, 45 above."
   - "Onions are optional — add thinly sliced onions and simmer them with the beets."
-  - "Beet quantity is up to you: cook enough to fill your jars, and reserve extra brine to top them off."
-  - "This is the family method; for a fully tested canning process (including tested quantities and ratios), follow current NCHFP guidance (nchfp.uga.edu)."
+  - "The spiced-vinegar brine makes more than 8 pints needs; reserve the extra and use it to top off the jars so the beets are covered."
 datePublished: 2026-07-02
 ---
