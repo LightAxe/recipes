@@ -25,8 +25,14 @@ if (menus.length) {
   });
   for (const m of menus) {
     m.addEventListener('focusout', (e) => {
+      // Close only when focus genuinely lands OUTSIDE the menu (keyboard tab-out) — i.e. there's
+      // a real relatedTarget. A NULL relatedTarget must NOT close: Safari/WebKit doesn't focus
+      // <a>/<button> on click (macOS convention), so clicking a menu link blurs the summary with
+      // relatedTarget=null; closing here would tear the <details> down mid-mousedown and the link
+      // click would never navigate (it selects text instead). Click-away is handled by the
+      // document click listener above, so nothing regresses.
       const next = e.relatedTarget as Node | null;
-      if (m.open && (!next || !m.contains(next))) m.open = false;
+      if (m.open && next && !m.contains(next)) m.open = false;
     });
   }
 }

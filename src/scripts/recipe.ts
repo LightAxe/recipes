@@ -185,9 +185,17 @@ function wirePrint() {
       menu.querySelector('summary')?.focus(); // return focus, don't drop it to <body>
     }
   });
+  // Close on an outside click (the print options are <button>s, and Safari/WebKit doesn't focus
+  // buttons on click — so we can't rely on focusout alone, and mustn't: a null-relatedTarget
+  // focusout close would tear the menu down mid-mousedown and the print click would never fire).
+  document.addEventListener('click', (e) => {
+    if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+  });
   menu.addEventListener('focusout', (e) => {
+    // Only on a real relatedTarget outside the menu (keyboard tab-out). Null relatedTarget (a
+    // WebKit button/link click inside) must not close — outside clicks are handled above.
     const next = e.relatedTarget as Node | null;
-    if (menu.open && (!next || !menu.contains(next))) menu.open = false;
+    if (menu.open && next && !menu.contains(next)) menu.open = false;
   });
 }
 

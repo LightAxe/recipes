@@ -202,10 +202,14 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
     });
     // Close when focus tabs out of the search box + results entirely (keyboard users
     // tabbing past the last result shouldn't leave the panel floating over the page).
+    // Only on a REAL relatedTarget outside the panel: a null relatedTarget must not dismiss —
+    // Safari/WebKit doesn't focus <a> on click, so clicking a result link blurs the input with
+    // relatedTarget=null, and dismissing here would remove the link mid-mousedown so the result
+    // never navigates. Click-away is covered by the document click listener above.
     if (container) {
       container.addEventListener('focusout', (e) => {
         const next = e.relatedTarget as Node | null;
-        if (!next || !container.contains(next)) dismiss(false);
+        if (next && !container.contains(next)) dismiss(false);
       });
     }
   }
