@@ -22,6 +22,8 @@ ingredients:
     grams: 6
     gramsApprox: true
     gramsSource: "King Arthur — table salt 1 tsp = 6 g"
+  - item: fresh basil leaves
+    note: "optional — a leaf or two per jar (see note)"
 instructions:
   - text: "Skin and core the tomatoes, leaving them whole or cutting them in half."
     section: Prep
@@ -43,9 +45,8 @@ instructions:
     section: Hot pack
     timer: PT85M
 notes:
-  - "Raw pack and hot pack are two options for the same jars — choose one. For whole or halved tomatoes packed in their own juice, USDA/NCHFP processing is 85 minutes for both pints and quarts in a boiling-water bath at 0–1,000 ft; increase the time at higher altitudes (see the National Center for Home Food Preservation, nchfp.uga.edu)."
-  - "The 85-minute time is the tested USDA/NCHFP process for whole or halved tomatoes packed in their own juice — so keep the tomatoes whole or halved. Crushed or chopped tomatoes have a different tested procedure and processing time; use NCHFP's crushed-tomatoes directions if you want to chop them."
-  - "The original family card called for less lemon juice and much shorter processing times; the acidification and times here have been updated to current USDA safe-canning guidance."
-  - "For basil flavor, add fresh basil when you open and use the jar — not in the jar before canning. Fresh basil is a low-acid addition that isn't part of the tested tomato process, so keeping it out of the jar keeps the batch on the safe, tested method."
+  - "Raw pack or hot pack — choose one. Process pints and quarts 85 minutes in a boiling-water bath at 0–1,000 ft; increase the time at higher altitudes. These times are for whole or halved tomatoes; chopped or crushed tomatoes use a different process."
+  - "Optional: a leaf or two of fresh basil per jar. Canning basil in the jar doesn't adhere to current USDA/NCHFP guidance — use at your own discretion."
+  - "This is the family method; for a fully tested canning process, follow current NCHFP guidance (nchfp.uga.edu)."
 datePublished: 2026-07-02
 ---

@@ -74,8 +74,9 @@ instructions:
     section: Canning
     timer: PT30M
 notes:
-  - "Processing time is altitude-dependent (USDA/NCHFP pickled beets, pints in a boiling-water bath): 30 minutes at 0–1,000 ft, 35 minutes at 1,001–3,000 ft, 40 minutes at 3,001–6,000 ft, and 45 minutes above 6,000 ft."
-  - "Onions are optional — add thinly sliced onions and simmer them right along with the beets."
-  - "Beet quantity is up to you: cook enough to fill your jars. The spiced-vinegar brine makes a large batch, so reserve whatever you don't simmer the beets in and pour it over the packed jars."
+  - "Processing time varies with altitude (USDA/NCHFP pickled beets, pints): 30 minutes at 0–1,000 ft, 35 to 3,000 ft, 40 to 6,000 ft, 45 above."
+  - "Onions are optional — add thinly sliced onions and simmer them with the beets."
+  - "Beet quantity is up to you: cook enough to fill your jars, and reserve extra brine to top them off."
+  - "This is the family method; for a fully tested canning process (including tested quantities and ratios), follow current NCHFP guidance (nchfp.uga.edu)."
 datePublished: 2026-07-02
 ---
