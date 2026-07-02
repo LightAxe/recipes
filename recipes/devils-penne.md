@@ -68,9 +68,9 @@ ingredients:
   - item: seasoned flour
     note: "for dredging"
   - qty: 0.25
+    unit: medium
     item: white onion
     prep: diced
-    note: "medium"
     grams: 28
     gramsApprox: true
     gramsSource: "USDA — medium onion ≈ 110 g; ¼ ≈ 28 g"
