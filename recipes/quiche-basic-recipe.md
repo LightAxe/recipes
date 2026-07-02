@@ -4,6 +4,9 @@ description: A flexible, make-it-your-own quiche — an egg-and-dairy custard po
 course: main
 cuisine: French
 tags: [quiche, egg, cheese]
+image:
+  src: ./images/quiche-basic-recipe/hero.jpg
+  alt: A deep golden-brown quiche with a browned cheese-and-herb custard top in a fluted glass pie plate, cooling on a stovetop.
 servings: 6
 yield: 1 nine- or ten-inch quiche
 cookTime: PT50M
