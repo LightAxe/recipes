@@ -217,6 +217,27 @@ try {
       await scan(page, `mobile-nav-open/${theme}`);
       await ctx.close();
     }
+    // /search/ ACTIVE state (#13): a query renders result cards + reveals the course filter
+    // plane (a dynamic fieldset). Scan it at desktop AND 390px — the plane is where the new
+    // controls could overflow or fall below tap-target size on mobile.
+    for (const w of [
+      { name: 'desktop', width: 1024, height: 800 },
+      { name: 'mobile', width: 390, height: 820 },
+    ]) {
+      const { ctx, page } = await themedPage(theme, '/search/');
+      await page.setViewportSize({ width: w.width, height: w.height });
+      await page.locator('#search-page-input').fill('chicken');
+      await sleep(900); // Pagefind + render + filter plane
+      await scan(page, `search-active-${w.name}/${theme}`);
+      if (w.name === 'mobile') {
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth > window.innerWidth + 1,
+        );
+        if (overflow)
+          failures.push(`search-active-mobile/${theme}: horizontal overflow at 390px`);
+      }
+      await ctx.close();
+    }
     // Computed-contrast of accent "badges" that axe structurally CANNOT evaluate: CSS
     // ::before/::after generated content (the step-number badges) and elements positioned
     // off-screen until focus (the skip link). Two AA fails reached review through this exact

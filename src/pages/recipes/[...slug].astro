@@ -48,6 +48,12 @@ const times = (
   .map(([k, v]) => [k, formatDuration(v)] as const)
   .filter(([, v]) => v);
 
+// Search-index extras (#13): a single time value + a display-ready serves string for the
+// richer result cards (mirroring RecipeCard), and the course SLUG for the /search/ filter plane
+// (indexed via the attribute form below so Pagefind captures the slug, not the visible label).
+const searchTime = formatDuration(data.totalTime) ?? formatDuration(data.cookTime) ?? '';
+const searchServes = data.servings ? `Serves ${data.servings}` : (data.yield ?? '');
+
 // Weight toggle is offered only when ≥60% of *measurable* ingredients have grams.
 const measurable = data.ingredients.filter((i) => i.qty != null || i.grams != null);
 const withGrams = measurable.filter((i) => i.grams != null);
@@ -85,6 +91,16 @@ const jsonLd = [
         { name: data.title },
       ]}
     />
+
+    {
+      /* Pagefind search metadata (#13) — empty elements, no visible output. Inline `key:value`
+        meta forms carry the card fields; the course FILTER uses the attribute form so the SLUG
+        is indexed (not the visible label). Kept inside data-pagefind-body, outside any
+        data-pagefind-ignore region. */
+    }
+    {searchTime && <span hidden data-pagefind-meta={`time:${searchTime}`} />}
+    {searchServes && <span hidden data-pagefind-meta={`serves:${searchServes}`} />}
+    <span hidden data-pagefind-filter="course[data-course]" data-course={data.course}></span>
 
     <header class="head">
       <p class="eyebrow" data-pagefind-meta="course">{courseLabel(data.course)}</p>

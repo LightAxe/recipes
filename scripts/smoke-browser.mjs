@@ -152,6 +152,52 @@ try {
     .evaluate((el) => el.getBoundingClientRect().width);
   if (searchW < 200) errors.push(`mobile search is crushed (${Math.round(searchW)}px wide)`);
 
+  // ── #13: /search/ course filter plane (progressive enhancement) ──
+  await page.setViewportSize({ width: 1100, height: 900 });
+  await page.goto(`${BASE}/search/`, { waitUntil: 'load' });
+  await page.locator('#search-page-input').fill('chicken');
+  await sleep(1000);
+  const sTotal = await page.locator('#search-page-results .sr-card').count();
+  if (sTotal < 2)
+    errors.push(`/search/ "chicken" returned ${sTotal} cards (expected several)`);
+  if (!(await page.locator('#search-page-results .sr-meta').first().count())) {
+    errors.push('/search/ result card is missing its time·serves meta line (#13)');
+  }
+  if (!(await page.locator('#course-filter').isVisible())) {
+    errors.push('/search/ course filter plane did not appear for an active query');
+  }
+  // Filter to one course → narrows + writes ?course=
+  await page.locator('#course-filter input[value="main"]').check();
+  await sleep(800);
+  const sMain = await page.locator('#search-page-results .sr-card').count();
+  if (!(sMain > 0 && sMain < sTotal)) {
+    errors.push(`course filter did not narrow /search/ (${sTotal} → ${sMain})`);
+  }
+  if (!/[?&]course=main/.test(page.url())) {
+    errors.push(`course filter did not write URL state (${page.url()})`);
+  }
+  // Add a second course → the set must be the OR/union (guards the {any:[...]} fix), not smaller.
+  const hasSoup = (await page.locator('#course-filter input[value="soup"]').count()) > 0;
+  if (hasSoup) {
+    await page.locator('#course-filter input[value="soup"]').check();
+    await sleep(800);
+    const sOr = await page.locator('#search-page-results .sr-card').count();
+    if (sOr < sMain)
+      errors.push(`two-course filter shrank instead of OR-ing (${sMain} → ${sOr})`);
+  }
+  // Back restores the previous (single-course) selection via popstate.
+  await page.goBack();
+  await sleep(700);
+  if (hasSoup && (await page.locator('#course-filter input[value="soup"]').isChecked())) {
+    errors.push('Back did not undo the second course filter on /search/ (popstate)');
+  }
+  // Empty query hides the plane + restores the browse fallback.
+  await page.locator('#search-page-input').fill('');
+  await sleep(500);
+  if (await page.locator('#course-filter').isVisible()) {
+    errors.push('course filter plane stayed visible with an empty query');
+  }
+
   await browser.close();
 
   // ── WebKit (Safari engine): link/button activation inside the JS-enhanced menus ──
@@ -191,6 +237,25 @@ try {
     }
   } else {
     errors.push('webkit: search returned no results for "chicken"');
+  }
+  // /search/ page → a result that's been narrowed by a course FILTER must still navigate (the
+  // filter re-renders the result cards, so this re-checks the Safari focus class on fresh nodes).
+  await wkPage.goto(`${BASE}/search/`, { waitUntil: 'load' });
+  await sleep(150);
+  await wkPage.locator('#search-page-input').fill('chicken');
+  await sleep(1000);
+  if ((await wkPage.locator('#course-filter input[value="main"]').count()) > 0) {
+    await wkPage.locator('#course-filter input[value="main"]').check();
+    await sleep(700);
+    const fHref = await wkPage
+      .locator('#search-page-results .sr-card')
+      .first()
+      .getAttribute('href');
+    await wkPage.locator('#search-page-results .sr-card').first().click();
+    await sleep(400);
+    if (fHref && !wkPage.url().includes(fHref)) {
+      errors.push(`webkit: filtered /search/ result did not navigate (still ${wkPage.url()})`);
+    }
   }
   // Mobile hamburger sheet → a link must navigate.
   await wkPage.setViewportSize({ width: 390, height: 820 });

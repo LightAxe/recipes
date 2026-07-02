@@ -1,28 +1,40 @@
-// Site-wide search island (header box + the /search/ page both use it). Pagefind is
-// **lazy-loaded** — its WASM + index are fetched on first focus/keystroke, never on page
-// load — so idle pages keep their performance budget. The one exception is a deep-linked
-// /search/?q=… , which auto-runs on load (handled at the bottom).
+// Site-wide search island (header dropdown + the /search/ page both use it). Pagefind is
+// **lazy-loaded** — its WASM + index are fetched on first focus/keystroke, never on page load —
+// so idle pages keep their performance budget. The /search/ page additionally supports a
+// deep-linked ?q=…&course=… , auto-run on load, and a course FILTER plane (#13).
 //
-// Security: Pagefind result metadata derives from recipe frontmatter and is untrusted
-// client data. Titles/meta are written with textContent (never innerHTML); only
-// Pagefind's own `excerpt` (which escapes text and injects just <mark>) uses innerHTML;
-// and a result URL must match ^/recipes/ before it can become an href.
+// Security: Pagefind result metadata derives from recipe frontmatter and is untrusted client
+// data. Titles/meta are written with textContent (never innerHTML); only Pagefind's own
+// `excerpt` (escaped text + <mark>) uses innerHTML; a result URL must match ^/recipes/ before
+// it can become an href; and course filter values are whitelisted against the rendered checkboxes.
 
-type PagefindResultData = {
-  url?: unknown;
-  excerpt?: unknown;
-  meta?: { title?: unknown; course?: unknown; image?: unknown; image_alt?: unknown };
+type PagefindMeta = {
+  title?: unknown;
+  course?: unknown;
+  time?: unknown;
+  serves?: unknown;
+  image?: unknown;
+  image_alt?: unknown;
 };
+type PagefindResultData = { url?: unknown; excerpt?: unknown; meta?: PagefindMeta };
+type PagefindSearch = {
+  results: { data: () => Promise<PagefindResultData> }[];
+  // Per-filter-value counts for the current query, as if THIS filter weren't applied — used for
+  // the checkbox counts so selecting one course doesn't zero the others.
+  totalFilters?: { course?: Record<string, number> } | null;
+};
+type SearchOpts = { filters?: { course?: { any: string[] } } };
 type PagefindModule = {
-  search: (q: string) => Promise<{ results: { data: () => Promise<PagefindResultData> }[] }>;
+  search: (q: string | null, opts?: SearchOpts) => Promise<PagefindSearch>;
+  // Must be awaited once before totalFilters counts are reliable.
+  filters?: () => Promise<Record<string, Record<string, number>>>;
 };
 
 let pfPromise: Promise<PagefindModule> | null = null;
 function loadPagefind(): Promise<PagefindModule> {
   if (!pfPromise) {
-    // Non-literal specifier (typed `string`, not a literal) + @vite-ignore so neither
-    // TS nor the bundler tries to resolve the generated index at build time (it only
-    // exists in dist/ after `pagefind`).
+    // Non-literal specifier (typed `string`, not a literal) + @vite-ignore so neither TS nor the
+    // bundler tries to resolve the generated index at build time (it only exists in dist/).
     const url: string = '/pagefind/pagefind.js';
     pfPromise = import(/* @vite-ignore */ url).catch((e) => {
       pfPromise = null; // allow a later retry (e.g. dev, where there is no index)
@@ -68,6 +80,17 @@ function renderResults(container: HTMLElement, items: PagefindResultData[]): voi
       a.append(c);
     }
 
+    // Richer card (#13): a `time · serves` line (display-ready meta from the recipe article).
+    // The hero-image slot is intentionally not rendered yet — no recipe ships a photo.
+    const time = text(it.meta?.time);
+    const serves = text(it.meta?.serves);
+    if (time || serves) {
+      const m = document.createElement('p');
+      m.className = 'sr-meta';
+      m.textContent = [time, serves].filter(Boolean).join(' · ');
+      a.append(m);
+    }
+
     const excerpt = text(it.excerpt);
     if (excerpt) {
       const ex = document.createElement('p');
@@ -83,10 +106,10 @@ function renderResults(container: HTMLElement, items: PagefindResultData[]): voi
   container.append(ul);
 }
 
-const MAX_RESULTS = 8;
-// How many ranked results to fetch/inspect before capping — a bounded window so the
-// URL filter can run *before* the cap without fetching the entire result set.
-const FETCH_MULTIPLIER = 4;
+const DROPDOWN_MAX = 8;
+const PAGE_MAX = 60; // the /search/ page shows the full result set (counts must not contradict it)
+const FETCH_MULTIPLIER = 4; // over-fetch window so the recipe-URL filter can run before capping
+const MAX_COURSES = 64; // defensive cap on selected filter values (hostile deep-links)
 
 interface WireOpts {
   dropdown: boolean;
@@ -94,80 +117,169 @@ interface WireOpts {
   status?: HTMLElement | null;
   /** Browse-fallback block (on /search/) — hidden while a query is active. */
   fallback?: HTMLElement | null;
+  /** Course filter <fieldset> (server-rendered, /search/ only). */
+  filterPanel?: HTMLElement | null;
+  /** Render cap (dropdown 8, page 60). */
+  max?: number;
 }
 
 function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): void {
-  const { dropdown, status = null, fallback = null } = opts;
+  const { dropdown, status = null, fallback = null, filterPanel = null } = opts;
+  const max = opts.max ?? DROPDOWN_MAX;
+  const isPage = !dropdown;
   const container = input.closest('form') ?? input.parentElement;
   let debounce = 0;
-  let lastQuery = '';
-  // True once the user has closed the dropdown (Esc / outside-click / tab-out); an in-flight
-  // Pagefind response then drops itself instead of reopening the panel. Reset on the next
-  // keystroke. (Only meaningful for the dropdown; the /search/ page never dismisses.)
+  // Monotonic request id: every run() captures the current token; after each await it re-checks
+  // it and bails if a newer run (new query OR new filter selection) has started. Replaces the
+  // old lastQuery-only guard, which couldn't tell two same-query/different-filter runs apart.
+  let token = 0;
+  // True once the dropdown is closed (Esc / outside-click / tab-out); an in-flight response then
+  // drops itself instead of reopening. Reset on the next keystroke. (Dropdown only.)
   let dismissed = false;
+
+  const courseBoxes = filterPanel
+    ? Array.from(
+        filterPanel.querySelectorAll<HTMLInputElement>('input[type=checkbox][name="course"]'),
+      )
+    : [];
+  const knownSlugs = new Set(courseBoxes.map((b) => b.value)); // whitelist for URL hardening
+  const clearBtn = filterPanel?.querySelector<HTMLButtonElement>('[data-clear]') ?? null;
+  const checkedCourses = () => courseBoxes.filter((b) => b.checked).map((b) => b.value);
+
   const announce = (msg: string) => {
     if (status) status.textContent = msg;
   };
   const setVisible = (visible: boolean) => {
     results.hidden = !visible;
   };
-  // The dropdown floats over the page, so a resolving async search must not reopen it once
-  // focus has left the search box (e.g. the user tabbed/clicked away while it loaded).
   const focusInside = () => {
     const a = document.activeElement;
     return !!a && (a === input || (!!container && container.contains(a)));
   };
 
-  async function run(raw: string): Promise<void> {
-    const query = raw.trim();
-    lastQuery = query;
+  // ── URL state (page only): ?q=…&course=…&course=… , repeated params, canonical-sorted ──
+  function writeURL(push: boolean): void {
+    if (!isPage) return;
+    const p = new URLSearchParams();
+    const q = input.value.trim();
+    if (q) {
+      p.set('q', q);
+      // Refine-only: course params are meaningful only alongside a query.
+      [...checkedCourses()].sort().forEach((c) => p.append('course', c));
+    }
+    const qs = p.toString();
+    const url = location.pathname + (qs ? `?${qs}` : '');
+    history[push ? 'pushState' : 'replaceState'](null, '', url);
+  }
+  function readURL(): { q: string; courses: string[] } {
+    const p = new URLSearchParams(location.search);
+    const q = p.get('q') ?? '';
+    // Whitelist against rendered checkboxes, cap, and ignore entirely when q is empty.
+    const courses = q
+      ? p
+          .getAll('course')
+          .filter((c) => knownSlugs.has(c))
+          .slice(0, MAX_COURSES)
+      : [];
+    return { q, courses };
+  }
+  // Reflect a set of checked courses onto the checkboxes (used by deep-link + popstate).
+  function setChecked(courses: string[]): void {
+    const set = new Set(courses);
+    for (const b of courseBoxes) b.checked = set.has(b.value);
+  }
+
+  // Update the filter plane's per-course counts + which checkboxes show, from the query's
+  // unfiltered per-course distribution. A checked course with count 0 stays visible (so it can
+  // be unchecked); an unchecked course with count 0 is hidden (no noise).
+  function updateFilterUI(counts: Record<string, number> | null): void {
+    if (!filterPanel) return;
+    const checked = new Set(checkedCourses());
+    for (const b of courseBoxes) {
+      const n = counts?.[b.value] ?? 0;
+      const row = b.closest('li') ?? b.parentElement;
+      if (row) (row as HTMLElement).hidden = !(n > 0 || checked.has(b.value));
+      const countEl = row?.querySelector('.cf-count');
+      if (countEl) countEl.textContent = `${n}`;
+    }
+    if (clearBtn) clearBtn.hidden = checked.size === 0;
+  }
+
+  async function run(): Promise<void> {
+    const query = input.value.trim();
+    const my = ++token;
     if (!query) {
       results.replaceChildren();
       setVisible(false);
       if (fallback) fallback.hidden = false; // no query → offer the browse fallback
+      if (filterPanel) filterPanel.hidden = true; // nothing to filter
       announce('');
       return;
     }
-    if (fallback) fallback.hidden = true; // querying → the fallback would just be noise
+    if (fallback) fallback.hidden = true;
     try {
       const pf = await loadPagefind();
-      const search = await pf.search(query);
-      if (query !== lastQuery) return; // a newer keystroke superseded this one
-      // We index only recipe pages (data-pagefind-body), but stay robust if that ever
-      // changes: fetch a bounded window, drop any non-recipe URL, and cap AFTER filtering
-      // so a stray indexed page could never push real recipe hits out of the shown set.
-      const stubs = search.results.slice(0, MAX_RESULTS * FETCH_MULTIPLIER);
-      // Fail-soft: one fragment's data() rejecting must not sink the whole query — keep the
-      // fulfilled results and drop the failures. (Promise.all would reject the lot.)
-      const settled = await Promise.allSettled(stubs.map((r) => r.data()));
-      // Re-check the guards *after* the awaited settle, before touching the DOM:
-      if (query !== lastQuery) return; // a newer keystroke superseded this one
-      // Dropdown only: if the user has since closed it or moved focus away, drop this
-      // result entirely (don't re-render, re-show, or announce over the page).
+      if (my !== token) return;
+      // Filter counts need the filter index loaded once before totalFilters is reliable.
+      if (filterPanel && pf.filters) await pf.filters();
+      if (my !== token) return;
+
+      const courses = isPage ? checkedCourses() : [];
+      const search = await pf.search(
+        query,
+        courses.length ? { filters: { course: { any: courses } } } : undefined,
+      );
+      if (my !== token) return; // superseded by a newer query/filter
+      if (dropdown && (dismissed || !focusInside())) return;
+
+      const total = search.results.length;
+      const windowed = search.results.slice(0, max * FETCH_MULTIPLIER);
+      // Fail-soft: one fragment's data() rejecting must not sink the whole query.
+      const settled = await Promise.allSettled(windowed.map((r) => r.data()));
+      if (my !== token) return;
       if (dropdown && (dismissed || !focusInside())) return;
       const fetched = settled
         .filter(
           (s): s is PromiseFulfilledResult<PagefindResultData> => s.status === 'fulfilled',
         )
         .map((s) => s.value);
-      // Every fragment failed (not merely some) → treat as an outage, not "no results",
-      // so the user gets the unavailable notice + browse fallback (via the catch below).
-      if (stubs.length && !fetched.length) throw new Error('all result fragments failed');
-      const items = fetched.filter((it) => safeRecipeUrl(it.url)).slice(0, MAX_RESULTS);
+      if (windowed.length && !fetched.length) throw new Error('all result fragments failed');
+      const items = fetched.filter((it) => safeRecipeUrl(it.url)).slice(0, max);
       renderResults(results, items);
       setVisible(true);
+
+      if (filterPanel) {
+        // Counts = the query's UNFILTERED per-course distribution. When courses are selected the
+        // filtered search's totalFilters could suppress alternatives, so fetch a companion
+        // unfiltered search for the true distribution (once — cheap, cached WASM).
+        let counts = search.totalFilters?.course ?? null;
+        if (courses.length) {
+          const unfiltered = await pf.search(query);
+          if (my !== token) return;
+          counts = unfiltered.totalFilters?.course ?? counts;
+        }
+        // The query has matches (we rendered), so the plane is shown; filtered-to-zero still
+        // shows it (counts>0 exist) so the user can uncheck. Empty/no-match handled above/catch.
+        filterPanel.hidden = false;
+        updateFilterUI(counts);
+      }
+
+      const shown = items.length;
+      const scope = courses.length
+        ? ` in ${courses.length} categor${courses.length === 1 ? 'y' : 'ies'}`
+        : '';
       announce(
-        items.length
-          ? `${items.length} result${items.length === 1 ? '' : 's'} for “${query}”`
-          : `No recipes found for “${query}”`,
+        shown
+          ? `Showing ${shown}${total > shown ? ` of ${total}` : ''} result${total === 1 ? '' : 's'} for “${query}”${scope}`
+          : `No recipes found for “${query}”${courses.length ? ' with those filters' : ''}`,
       );
     } catch {
-      // No index (dev) or a transient load failure. Clear stale results so an old query's
-      // cards can't linger under the new text, and say so (the <form> still submits to
-      // /search/, and the browse fallback returns, as the non-JS path).
+      // No index (dev) or a transient load failure. Clear stale results + say so; the <form>
+      // still submits to /search/ and the browse fallback returns (the non-JS path).
       results.replaceChildren();
       setVisible(false);
       if (fallback) fallback.hidden = false;
+      if (filterPanel) filterPanel.hidden = true;
       announce('Search is unavailable right now — browse by category below.');
     }
   }
@@ -175,14 +287,34 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
   input.addEventListener('input', () => {
     dismissed = false; // a fresh keystroke re-enables showing results
     window.clearTimeout(debounce);
-    debounce = window.setTimeout(() => void run(input.value), 180);
+    debounce = window.setTimeout(() => {
+      writeURL(false); // typing → canonicalize the URL without spamming history
+      void run();
+    }, 180);
   });
-  // Lazy warm-up: kick off the Pagefind fetch the moment the user engages the box.
   input.addEventListener('focus', () => void loadPagefind().catch(() => {}), { once: true });
 
+  // ── /search/ page: course filter wiring + URL history ──
+  if (isPage && filterPanel) {
+    filterPanel.addEventListener('change', () => {
+      writeURL(true); // a discrete filter toggle → a history entry (Back steps through it)
+      void run();
+    });
+    clearBtn?.addEventListener('click', () => {
+      setChecked([]);
+      writeURL(true);
+      void run();
+      input.focus(); // Clear lives in the plane; keep focus in the search UI, not <body>
+    });
+    window.addEventListener('popstate', () => {
+      const { q, courses } = readURL();
+      input.value = q;
+      setChecked(courses);
+      void run(); // re-apply without pushing a new entry
+    });
+  }
+
   if (dropdown) {
-    // Fully dismiss the dropdown: cancel a pending debounced search and mark it dismissed so
-    // a slow in-flight response can't reopen it. `refocus` returns focus to the input.
     const dismiss = (refocus: boolean) => {
       window.clearTimeout(debounce);
       dismissed = true;
@@ -192,20 +324,15 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
     document.addEventListener('click', (e) => {
       if (e.target !== input && !results.contains(e.target as Node)) dismiss(false);
     });
-    // Escape from the input OR from within the results closes the panel; from the results
-    // it also returns focus to the input.
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') dismiss(false);
     });
     results.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') dismiss(true);
     });
-    // Close when focus tabs out of the search box + results entirely (keyboard users
-    // tabbing past the last result shouldn't leave the panel floating over the page).
-    // Only on a REAL relatedTarget outside the panel: a null relatedTarget must not dismiss —
-    // Safari/WebKit doesn't focus <a> on click, so clicking a result link blurs the input with
-    // relatedTarget=null, and dismissing here would remove the link mid-mousedown so the result
-    // never navigates. Click-away is covered by the document click listener above.
+    // Close only on a REAL relatedTarget outside the panel (keyboard tab-out). A null
+    // relatedTarget must not dismiss — Safari doesn't focus <a> on click, so a result click blurs
+    // the input with relatedTarget=null and dismissing would kill the navigation. (See PR #30.)
     if (container) {
       container.addEventListener('focusout', (e) => {
         const next = e.relatedTarget as Node | null;
@@ -215,7 +342,7 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
   }
 }
 
-// Header box (dropdown).
+// Header box (dropdown) — no filter plane, compact cap.
 const headerInput = document.getElementById('site-search') as HTMLInputElement | null;
 const headerResults = document.getElementById('site-search-results');
 if (headerInput && headerResults) {
@@ -225,20 +352,34 @@ if (headerInput && headerResults) {
   });
 }
 
-// /search/ page (inline results) — auto-run a deep-linked ?q= on page load.
+// /search/ page (inline results + course filter) — hydrate a deep-linked ?q=&course= on load.
 const pageInput = document.getElementById('search-page-input') as HTMLInputElement | null;
 const pageResults = document.getElementById('search-page-results');
 if (pageInput && pageResults) {
+  const filterPanel = document.getElementById('course-filter');
   wire(pageInput, pageResults, {
     dropdown: false,
     status: document.getElementById('search-page-status'),
     fallback: document.getElementById('search-fallback'),
+    filterPanel,
+    max: PAGE_MAX,
   });
-  const q = new URLSearchParams(location.search).get('q');
+  // Deep-link hydrate: set q + course checkboxes, then dispatch input to run + canonicalize URL.
+  const p = new URLSearchParams(location.search);
+  const q = p.get('q');
   if (q) {
-    // Hide the browse fallback up front so a deep-linked ?q= doesn't flash it during the
-    // debounce + Pagefind load; run() manages it thereafter.
     document.getElementById('search-fallback')?.setAttribute('hidden', '');
+    const known = new Set(
+      Array.from(
+        filterPanel?.querySelectorAll<HTMLInputElement>(
+          'input[type=checkbox][name="course"]',
+        ) ?? [],
+      ).map((b) => b.value),
+    );
+    const courses = new Set(p.getAll('course').filter((c) => known.has(c)));
+    filterPanel
+      ?.querySelectorAll<HTMLInputElement>('input[type=checkbox][name="course"]')
+      .forEach((b) => (b.checked = courses.has(b.value)));
     pageInput.value = q;
     pageInput.dispatchEvent(new Event('input'));
   }
