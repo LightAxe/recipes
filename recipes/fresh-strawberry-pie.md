@@ -8,7 +8,7 @@ servings: 12
 yield: 1 nine-inch pie
 prepTime: PT30M
 cookTime: PT15M
-totalTime: PT45M
+totalTime: PT3H45M
 ingredients:
   - qty: 1
     item: pie crust
