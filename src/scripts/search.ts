@@ -208,6 +208,15 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
     if (clearBtn) clearBtn.hidden = checked.size === 0;
   }
 
+  // Hide the filter plane, moving focus back to the input first if it was inside the fieldset —
+  // otherwise a plane that hides while a checkbox is focused (no-match query, or popstate) would
+  // drop focus to <body>. (The Clear button handles its own focus separately.)
+  function hidePanel(): void {
+    if (!filterPanel) return;
+    if (filterPanel.contains(document.activeElement)) input.focus();
+    filterPanel.hidden = true;
+  }
+
   async function run(): Promise<void> {
     const query = input.value.trim();
     const my = ++token;
@@ -215,7 +224,7 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
       results.replaceChildren();
       setVisible(false);
       if (fallback) fallback.hidden = false; // no query → offer the browse fallback
-      if (filterPanel) filterPanel.hidden = true; // nothing to filter
+      hidePanel(); // nothing to filter
       announce('');
       return;
     }
@@ -260,8 +269,12 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
         // query hides the plane (no empty shell); a filtered-to-zero query still shows it (other
         // courses have counts) so the user can uncheck. Then paint counts + per-row visibility.
         const hasMatches = !!counts && Object.values(counts).some((n) => n > 0);
-        filterPanel.hidden = !hasMatches;
-        if (hasMatches) updateFilterUI(counts);
+        if (hasMatches) {
+          filterPanel.hidden = false;
+          updateFilterUI(counts);
+        } else {
+          hidePanel();
+        }
       }
 
       const shown = items.length;
@@ -279,7 +292,7 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
       results.replaceChildren();
       setVisible(false);
       if (fallback) fallback.hidden = false;
-      if (filterPanel) filterPanel.hidden = true;
+      hidePanel();
       announce('Search is unavailable right now — browse by category below.');
     }
   }
