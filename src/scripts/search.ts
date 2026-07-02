@@ -201,7 +201,11 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
     for (const b of courseBoxes) {
       const n = counts?.[b.value] ?? 0;
       const row = b.closest('li') ?? b.parentElement;
-      if (row) (row as HTMLElement).hidden = !(n > 0 || checked.has(b.value));
+      const hide = !(n > 0 || checked.has(b.value));
+      // Hiding a row that holds keyboard focus (unchecking a checked course whose count just
+      // dropped to 0) would drop focus to <body> — same class as the hidePanel case. Reseat first.
+      if (row && hide && row.contains(document.activeElement)) input.focus();
+      if (row) (row as HTMLElement).hidden = hide;
       const countEl = row?.querySelector('.cf-count');
       if (countEl) countEl.textContent = `(${n})`;
     }
@@ -224,6 +228,9 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
       results.replaceChildren();
       setVisible(false);
       if (fallback) fallback.hidden = false; // no query → offer the browse fallback
+      // writeURL drops `course` when q is empty, so clear the checkboxes too — otherwise stale
+      // checks silently resurrect filters the URL no longer carries on the next keystroke.
+      if (isPage) setChecked([]);
       hidePanel(); // nothing to filter
       announce('');
       return;
@@ -287,6 +294,11 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
           : `No recipes found for “${query}”${courses.length ? ' with those filters' : ''}`,
       );
     } catch {
+      // A superseded run's late rejection (e.g. a per-query index-chunk fetch failing on a flaky
+      // network) must NOT clobber a newer run's rendered results — same invariant the success path
+      // holds after every await. Bail before touching the DOM.
+      if (my !== token) return;
+      if (dropdown && (dismissed || !focusInside())) return;
       // No index (dev) or a transient load failure. Clear stale results + say so; the <form>
       // still submits to /search/ and the browse fallback returns (the non-JS path).
       results.replaceChildren();

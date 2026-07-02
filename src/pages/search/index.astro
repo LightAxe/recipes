@@ -136,6 +136,11 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug));
     align-items: center;
     gap: 0.35rem;
   }
+  /* Self-sufficient row hiding: [hidden] must win over the inline-flex above without relying on the
+     global normalize reset's [hidden] rule. */
+  .cf-list li[hidden] {
+    display: none;
+  }
   .cf-opt {
     display: inline-flex;
     align-items: center;
