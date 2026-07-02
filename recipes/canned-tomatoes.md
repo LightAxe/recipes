@@ -31,11 +31,11 @@ instructions:
     section: Raw pack
   - text: "Add 2 tablespoons bottled lemon juice to each quart (1 tablespoon per pint) to acidify, plus 1 teaspoon pickling salt per quart (1/2 teaspoon per pint) for flavor, if desired."
     section: Raw pack
-  - text: "Adjust lids and process pints and quarts 85 minutes in a boiling-water bath (at 0–1,000 ft; increase the time at higher altitudes)."
+  - text: "Adjust lids and process pints and quarts in a boiling-water bath — 85 minutes at 0–1,000 ft (see the altitude note below for higher elevations)."
     section: Raw pack
     timer: PT85M
 notes:
-  - "Process pints and quarts 85 minutes in a boiling-water bath at 0–1,000 ft; increase the time at higher altitudes. These times are for whole or halved tomatoes packed in their own juice; chopped or crushed tomatoes use a different process."
+  - "Processing time varies with altitude (pints and quarts, boiling-water bath): 85 minutes at 0–1,000 ft, 90 to 3,000 ft, 95 to 6,000 ft, 100 above. These times are for whole or halved tomatoes packed in their own juice; chopped or crushed tomatoes use a different process."
   - "Optional: a leaf or two of fresh basil per jar. Canning basil in the jar doesn't adhere to current USDA/NCHFP guidance — use at your own discretion."
 datePublished: 2026-07-02
 ---
