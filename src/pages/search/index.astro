@@ -35,16 +35,18 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug));
         hidden until a query with matches is active. JS shows/updates counts + wires it. */
     }
     <fieldset id="course-filter" class="course-filter" hidden>
-      <legend>Filter by course</legend>
+      <legend>Filter by category</legend>
       <ul role="list" class="cf-list">
         {
           courses.map((slug) => (
             <li>
+              {/* Count lives inside the label (not aria-hidden) so a checkbox's accessible name
+                  is e.g. "Main Dishes (12)" — the per-category count is available to SR users. */}
               <label class="cf-opt">
                 <input type="checkbox" name="course" value={slug} />
                 <span>{courseLabel(slug)}</span>
+                <span class="cf-count" />
               </label>
-              <span class="cf-count" aria-hidden="true" />
             </li>
           ))
         }

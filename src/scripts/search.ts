@@ -200,7 +200,7 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
       const row = b.closest('li') ?? b.parentElement;
       if (row) (row as HTMLElement).hidden = !(n > 0 || checked.has(b.value));
       const countEl = row?.querySelector('.cf-count');
-      if (countEl) countEl.textContent = `${n}`;
+      if (countEl) countEl.textContent = `(${n})`;
     }
     if (clearBtn) clearBtn.hidden = checked.size === 0;
   }
@@ -249,19 +249,16 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
       setVisible(true);
 
       if (filterPanel) {
-        // Counts = the query's UNFILTERED per-course distribution. When courses are selected the
-        // filtered search's totalFilters could suppress alternatives, so fetch a companion
-        // unfiltered search for the true distribution (once — cheap, cached WASM).
-        let counts = search.totalFilters?.course ?? null;
-        if (courses.length) {
-          const unfiltered = await pf.search(query);
-          if (my !== token) return;
-          counts = unfiltered.totalFilters?.course ?? counts;
-        }
-        // The query has matches (we rendered), so the plane is shown; filtered-to-zero still
-        // shows it (counts>0 exist) so the user can uncheck. Empty/no-match handled above/catch.
-        filterPanel.hidden = false;
-        updateFilterUI(counts);
+        // Counts = the query's UNFILTERED per-course distribution. Pagefind's `totalFilters` gives
+        // this even on a filtered search (verified: it reports counts as if THIS filter weren't
+        // applied), so no companion search is needed — selecting one course doesn't zero the rest.
+        const counts = search.totalFilters?.course ?? null;
+        // Visibility predicate (PLAN.md): show iff the query has any unfiltered matches. A no-match
+        // query hides the plane (no empty shell); a filtered-to-zero query still shows it (other
+        // courses have counts) so the user can uncheck. Then paint counts + per-row visibility.
+        const hasMatches = !!counts && Object.values(counts).some((n) => n > 0);
+        filterPanel.hidden = !hasMatches;
+        if (hasMatches) updateFilterUI(counts);
       }
 
       const shown = items.length;
@@ -312,6 +309,24 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
       setChecked(courses);
       void run(); // re-apply without pushing a new entry
     });
+    // The course checkboxes live OUTSIDE the GET form, so a native submit (Enter / the Search
+    // button) would reload to ?q=… and drop them. With JS the results are already live, so cancel
+    // the submit and just re-run — the URL already carries q + course via writeURL.
+    input.form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      writeURL(false);
+      void run();
+    });
+    // Deep-link / shared URL: hydrate q + course checkboxes, canonicalize, run — one apply path
+    // shared with popstate (readURL/setChecked), so initial load and Back never diverge.
+    const initial = readURL();
+    if (initial.q) {
+      input.value = initial.q;
+      setChecked(initial.courses);
+      if (fallback) fallback.hidden = true;
+      writeURL(false);
+      void run();
+    }
   }
 
   if (dropdown) {
@@ -352,35 +367,16 @@ if (headerInput && headerResults) {
   });
 }
 
-// /search/ page (inline results + course filter) — hydrate a deep-linked ?q=&course= on load.
+// /search/ page (inline results + course filter). Deep-link hydration lives inside wire()'s
+// page branch (one apply path shared with popstate).
 const pageInput = document.getElementById('search-page-input') as HTMLInputElement | null;
 const pageResults = document.getElementById('search-page-results');
 if (pageInput && pageResults) {
-  const filterPanel = document.getElementById('course-filter');
   wire(pageInput, pageResults, {
     dropdown: false,
     status: document.getElementById('search-page-status'),
     fallback: document.getElementById('search-fallback'),
-    filterPanel,
+    filterPanel: document.getElementById('course-filter'),
     max: PAGE_MAX,
   });
-  // Deep-link hydrate: set q + course checkboxes, then dispatch input to run + canonicalize URL.
-  const p = new URLSearchParams(location.search);
-  const q = p.get('q');
-  if (q) {
-    document.getElementById('search-fallback')?.setAttribute('hidden', '');
-    const known = new Set(
-      Array.from(
-        filterPanel?.querySelectorAll<HTMLInputElement>(
-          'input[type=checkbox][name="course"]',
-        ) ?? [],
-      ).map((b) => b.value),
-    );
-    const courses = new Set(p.getAll('course').filter((c) => known.has(c)));
-    filterPanel
-      ?.querySelectorAll<HTMLInputElement>('input[type=checkbox][name="course"]')
-      .forEach((b) => (b.checked = courses.has(b.value)));
-    pageInput.value = q;
-    pageInput.dispatchEvent(new Event('input'));
-  }
 }

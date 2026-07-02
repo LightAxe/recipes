@@ -75,9 +75,17 @@ behavior in `src/scripts/`.*
 
 ### B5. SearchField + Results
 - Visible open `<input type="search">` (not behind an icon) with a label; submits to
-  `/search/`. Pagefind powers results as a **CardGrid** of RecipeCards with highlighted
-  matches. **No-JS:** the field still submits to `/search/`, which shows a "browse by
-  category" fallback. (`information-architecture.md` §5.)
+  `/search/`. Pagefind powers results as lightweight **result cards** (`.sr-card`: title ·
+  category · `time · serves` · highlighted excerpt — a hero-image slot is reserved for when
+  recipes carry photos), rendered client-side into both the header dropdown (compact, 8) and
+  the `/search/` page (full set).
+- **`/search/` course filter (#13):** a server-rendered `<fieldset>` of category checkboxes
+  (slug value + label) that **refines an active query** — multi-select OR, live per-category
+  counts (the query's unfiltered distribution, so alternatives don't zero out), "Clear",
+  URL-synced as `?q=&course=&course=` (repeated params, pushState/popstate like `/recipes/`),
+  and "Showing X of Y" announced. Shown only when the query has matches; `/recipes/` still owns
+  full browse. **No-JS:** the plane stays hidden and the field submits to `/search/`, which
+  shows a "browse by category" fallback. (`information-architecture.md` §5.)
 
 ### B6. Footer (universe)
 - Enamel checker strip. Left: `© 2026 Ogilvie Family`. Quick links + RSS. "Add a recipe —

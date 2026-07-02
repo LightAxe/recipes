@@ -191,6 +191,13 @@ try {
   if (hasSoup && (await page.locator('#course-filter input[value="soup"]').isChecked())) {
     errors.push('Back did not undo the second course filter on /search/ (popstate)');
   }
+  // A query with NO matches must NOT leave an empty filter-plane shell (visibility gated on
+  // the query having unfiltered matches).
+  await page.locator('#search-page-input').fill('zzzqqqxxnope');
+  await sleep(800);
+  if (await page.locator('#course-filter').isVisible()) {
+    errors.push('course filter plane showed an empty shell for a zero-match query');
+  }
   // Empty query hides the plane + restores the browse fallback.
   await page.locator('#search-page-input').fill('');
   await sleep(500);
