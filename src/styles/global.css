@@ -215,6 +215,12 @@ main {
   color: var(--accent-ink);
   margin-top: 0.15rem;
 }
+.sr-meta {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
 .sr-excerpt {
   margin: 0.3rem 0 0;
   color: var(--muted);

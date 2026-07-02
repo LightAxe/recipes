@@ -30,6 +30,30 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug));
       <button type="submit">Search</button>
     </form>
 
+    {
+      /* Course filter plane (#13) — server-rendered (gives the client slug→label for free),
+        hidden until a query with matches is active. JS shows/updates counts + wires it. */
+    }
+    <fieldset id="course-filter" class="course-filter" hidden>
+      <legend>Filter by category</legend>
+      <ul role="list" class="cf-list">
+        {
+          courses.map((slug) => (
+            <li>
+              {/* Count lives inside the label (not aria-hidden) so a checkbox's accessible name
+                  is e.g. "Main Dishes (12)" — the per-category count is available to SR users. */}
+              <label class="cf-opt">
+                <input type="checkbox" name="course" value={slug} />
+                <span>{courseLabel(slug)}</span>
+                <span class="cf-count" />
+              </label>
+            </li>
+          ))
+        }
+      </ul>
+      <button type="button" class="cf-clear" data-clear hidden>Clear filters</button>
+    </fieldset>
+
     <div id="search-page-results"></div>
     <p id="search-page-status" class="vh" role="status"></p>
 
@@ -82,6 +106,73 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug));
     font-family: var(--font-display);
     font-weight: 700;
     cursor: pointer;
+  }
+  .course-filter {
+    margin: 0 0 1.25rem;
+    padding: 0.75rem 1rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .course-filter legend {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: var(--text-eyebrow);
+    color: var(--muted);
+    padding-inline: 0.25rem;
+  }
+  .cf-list {
+    list-style: none;
+    margin: 0.4rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+  }
+  .cf-list li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  /* Self-sufficient row hiding: [hidden] must win over the inline-flex above without relying on the
+     global normalize reset's [hidden] rule. */
+  .cf-list li[hidden] {
+    display: none;
+  }
+  .cf-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    cursor: pointer;
+  }
+  .cf-opt input {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--accent-ink);
+  }
+  .cf-count {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .cf-clear {
+    margin-top: 0.6rem;
+    min-height: 44px;
+    padding-inline: 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--accent-ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .cf-clear:hover,
+  .cf-clear:focus-visible {
+    border-color: var(--accent-ink);
   }
   .fallback {
     margin-top: 2rem;
