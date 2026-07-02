@@ -1,6 +1,7 @@
 ---
 title: Devil's Penne
 description: Pounded chicken breast dredged and pan-fried, then folded with penne in a white-wine cream sauce with sun-dried tomatoes, Parmesan, and spinach — tossed in the bowl with kalamata olives and marinated artichoke hearts.
+contributor: Rob
 course: main
 cuisine: Italian
 tags: [chicken, pasta, spinach, artichoke, cream, wine]
