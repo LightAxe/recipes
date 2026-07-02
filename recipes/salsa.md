@@ -4,6 +4,9 @@ description: A big-batch salsa for canning — tomatoes, sweet peppers, onions, 
 course: canning
 cuisine: Mexican
 tags: [salsa, tomato, pepper, jalapeno, vegetarian, vegan]
+image:
+  src: ./images/salsa/hero.jpg
+  alt: Nine jars of home-canned salsa with metal lids on a granite counter, chunks of tomato, sweet pepper, and jalapeño visible through the glass; a "Canning Lids & Rings" box behind.
 servings: 48
 yield: about 6 quarts (roughly 12 pint jars)
 ingredients:
