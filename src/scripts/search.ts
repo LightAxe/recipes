@@ -164,8 +164,11 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
     const q = input.value.trim();
     if (q) {
       p.set('q', q);
-      // Refine-only: course params are meaningful only alongside a query.
-      [...checkedCourses()].sort().forEach((c) => p.append('course', c));
+      // Refine-only: course params are meaningful only alongside a query. checkedCourses()
+      // returns a fresh array, so sorting it in place is safe.
+      checkedCourses()
+        .sort()
+        .forEach((c) => p.append('course', c));
     }
     const qs = p.toString();
     const url = location.pathname + (qs ? `?${qs}` : '');
@@ -291,9 +294,10 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
   });
   input.addEventListener('focus', () => void loadPagefind().catch(() => {}), { once: true });
 
-  // ── /search/ page: course filter wiring + URL history ──
-  if (isPage && filterPanel) {
-    filterPanel.addEventListener('change', () => {
+  // ── /search/ page: course filter wiring + URL history ── (gated on isPage, not filterPanel,
+  // so a plain ?q= deep-link + popstate still work even if the filter fieldset weren't rendered)
+  if (isPage) {
+    filterPanel?.addEventListener('change', () => {
       writeURL(true); // a discrete filter toggle → a history entry (Back steps through it)
       void run();
     });
@@ -314,16 +318,17 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
     // the submit and just re-run — the URL already carries q + course via writeURL.
     input.form?.addEventListener('submit', (e) => {
       e.preventDefault();
+      window.clearTimeout(debounce); // don't let a pending debounced run() fire a duplicate
       writeURL(false);
       void run();
     });
     // Deep-link / shared URL: hydrate q + course checkboxes, canonicalize, run — one apply path
-    // shared with popstate (readURL/setChecked), so initial load and Back never diverge.
+    // shared with popstate (readURL/setChecked), so initial load and Back never diverge. (run()
+    // hides the fallback before its first await, so no separate fallback toggle is needed here.)
     const initial = readURL();
     if (initial.q) {
       input.value = initial.q;
       setChecked(initial.courses);
-      if (fallback) fallback.hidden = true;
       writeURL(false);
       void run();
     }
