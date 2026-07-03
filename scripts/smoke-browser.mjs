@@ -136,6 +136,18 @@ try {
   if (!(await page.locator('#mobile-menu .sheet a[href="/tips/"]').isVisible())) {
     errors.push('hamburger sheet is missing the Tips link');
   }
+  // The open sheet must sit WITHIN the viewport horizontally. Guards the class of bug where the
+  // panel is right-anchored to a hamburger that wrapped to the left, rendering the menu (labels
+  // and all) off-screen to the left with only the right-aligned counts peeking in.
+  const sheetBox = await page.locator('#mobile-menu .sheet').evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return { left: Math.round(r.left), right: Math.round(r.right), vw: window.innerWidth };
+  });
+  if (sheetBox.left < 0 || sheetBox.right > sheetBox.vw + 1) {
+    errors.push(
+      `mobile menu sheet is off-screen (left ${sheetBox.left}, right ${sheetBox.right}, viewport ${sheetBox.vw})`,
+    );
+  }
   await page.keyboard.press('Escape');
   await sleep(80);
   if (await page.locator('#mobile-menu').evaluate((d) => d.open)) {

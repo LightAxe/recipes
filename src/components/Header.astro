@@ -352,6 +352,22 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug)).map((slu
     }
     .menu {
       display: block;
+      /* Anchor the dropdown to the header row (.bar), not the hamburger button. The button can
+         wrap to the left on narrow phones, and a right-anchored panel then renders off-screen to
+         the left. Making .menu static hands the sheet's containing block to the relatively-
+         positioned .bar below. */
+      position: static;
+    }
+    .bar {
+      position: relative;
+    }
+    /* Full-width dropdown across the header content — always on-screen and roomy for labels,
+       wherever the hamburger wrapped. */
+    .sheet {
+      left: 0;
+      right: 0;
+      width: auto;
+      max-width: none;
     }
     .search input {
       width: 100%;
