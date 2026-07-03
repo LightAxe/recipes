@@ -58,7 +58,8 @@ that family members of every age can use.
 - **Visibility:** public-by-design with schema.org JSON-LD/RSS/sitemap (ADR [0004]). Domain
   **recipes.axpr.net**; **staged behind a `SITE_LIVE` gate** (noindex until go-live, ADR [0011]).
 - **Photo handling:** optimized at build with sharp (`astro:assets`), committed in-repo;
-  **EXIF stripped**.
+  **EXIF stripped from the committed source** before commit (public repo — see the EXIF step
+  under _Working agreements for agents_; `sips` resizing does **not** strip it).
 - **Intake:** maintainer provides recipes to **Claude Code**, which writes the files.
   ADR [0005]. Procedure: [`docs/agents/intake.md`](./docs/agents/intake.md). A dedicated
   **`recipe-intake` agent** ([`.claude/agents/recipe-intake.md`](./.claude/agents/recipe-intake.md))
@@ -141,6 +142,16 @@ editing history. See `docs/adr/README.md` for the format and how to add one.
 - Optimize every reader-facing choice for the **least technical, oldest family member**
   first, then make sure it still delights younger users.
 - Don't add social/engagement features without an ADR justifying them.
+- **Strip EXIF from every committed hero photo.** Recipe hero images are committed to this
+  **public** repo, so device / GPS / timestamp metadata must be removed from the committed
+  source before it lands. Astro's *build derivatives* are stripped by sharp, but the committed
+  `recipes/images/<slug>/hero.jpg` source is **not** stripped automatically — resizing with
+  `sips` preserves EXIF. After resizing, re-encode with sharp to drop metadata. From the repo
+  root (so `node_modules` resolves):
+  `node -e "const s=require('sharp'),f='recipes/images/<slug>/hero.jpg';s(f).rotate().jpeg({quality:72}).toBuffer().then(b=>require('fs').writeFileSync(f,b))"`
+  (sharp drops all metadata by default; `.rotate()` first bakes in any EXIF orientation).
+  **Verify** with `sips -g all <file>` that no `make` / `model` / `software` / `datetime` /
+  `gps` fields remain before committing.
 - **Guard the guards.** CI enforces an accessibility guard (`npm run test:a11y`, axe + keyboard),
   a structured-data audit (`npm run test:jsonld`), and a performance budget (`npm run test:perf`,
   raw bytes + DOM, growth-aware). If a change touches **JS/CSS/images or bulk-adds recipes**, run
