@@ -254,10 +254,6 @@ const facetGroups = [
     .facets-groups {
       grid-template-columns: repeat(4, 1fr);
     }
-    /* Desktop: the tag box can fill alongside the other columns — show ~11 and scroll. */
-    .fgroup.scroll .opts {
-      max-height: 30rem;
-    }
   }
   .fgroup {
     border: 0;
@@ -280,6 +276,13 @@ const facetGroups = [
        grow on desktop where it sits alongside the other columns (see the ≥44rem override). */
     max-height: 18rem;
     overflow-y: auto;
+  }
+  /* Desktop: the tag box can fill alongside the other columns — show ~11 and scroll. Placed
+     AFTER the base rule so this equal-specificity override wins in the cascade at ≥44rem. */
+  @media (min-width: 44rem) {
+    .fgroup.scroll .opts {
+      max-height: 30rem;
+    }
   }
   .opt {
     display: flex;
