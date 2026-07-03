@@ -254,6 +254,10 @@ const facetGroups = [
     .facets-groups {
       grid-template-columns: repeat(4, 1fr);
     }
+    /* Desktop: the tag box can fill alongside the other columns — show ~11 and scroll. */
+    .fgroup.scroll .opts {
+      max-height: 30rem;
+    }
   }
   .fgroup {
     border: 0;
@@ -271,9 +275,10 @@ const facetGroups = [
     margin-bottom: 0.4rem;
   }
   .fgroup.scroll .opts {
-    /* The tag axis is a long tail (~68 shared tags). 11rem showed only ~5 — far too few.
-       Show ~12 and scroll for the rest. */
-    max-height: 30rem;
+    /* The tag axis is a long tail (~68 shared tags); 11rem showed only ~5 — far too few. On
+       phones the columns stack, so keep the nested scroll region modest here (~8) and let it
+       grow on desktop where it sits alongside the other columns (see the ≥44rem override). */
+    max-height: 18rem;
     overflow-y: auto;
   }
   .opt {
@@ -292,6 +297,12 @@ const facetGroups = [
     color: var(--muted);
     font-size: 0.78rem;
     font-variant-numeric: tabular-nums;
+  }
+  /* Let a long unbreakable label wrap instead of forcing a horizontal scrollbar inside the
+     (overflow-y:auto) tag box on classic-scrollbar platforms near the 44rem breakpoint. */
+  .opt span:not(.n) {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .grid {
