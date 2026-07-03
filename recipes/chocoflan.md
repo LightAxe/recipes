@@ -23,6 +23,7 @@ ingredients:
   - qty: 1
     unit: box
     item: chocolate fudge cake mix
+    note: "about a 15.25 oz box"
     grams: 432
     gramsApprox: true
     gramsSource: "typical boxed cake mix ≈ 15.25 oz (432 g)"
