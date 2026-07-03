@@ -1,7 +1,7 @@
 ---
 title: Chicken Wild Rice Soup
 description: "Mary's self-declared 'best soup you will ever consume': a rich, creamy chicken and wild rice soup built on a buttery roux."
-contributor: Mary Macfadzen
+contributor: Mary
 course: soup
 cuisine: American
 tags: [chicken, wild-rice, cream, one-pot]
