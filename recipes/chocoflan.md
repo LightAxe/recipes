@@ -56,8 +56,8 @@ ingredients:
   - qty: 1
     unit: cup
     item: milk
-    grams: 240
-    gramsSource: "milk ≈ 1.03 g/ml, 1 cup ≈ 240 g"
+    grams: 244
+    gramsSource: "milk ≈ 1.03 g/ml, 1 cup (237 ml) ≈ 244 g"
     section: Flan
   - qty: 5
     item: eggs
@@ -79,10 +79,10 @@ instructions:
   - "Spray a piece of foil with cooking spray and place it sprayed-side-down over the pan; cover tightly. Set the pan in a large roasting pan and add 1 inch of hot water to the roasting pan."
   - text: "Bake 1 hour 20 minutes, until a toothpick inserted in the cake comes out clean. Remove the pan from the water bath to a cooling rack and remove the foil."
     timer: PT1H20M
-  - text: "Cool at room temperature 1 hour, then refrigerate in the pan, uncovered, 2 hours."
+  - text: "Cool at room temperature 1 hour."
     timer: PT1H
+  - text: "Refrigerate in the pan, uncovered, 2 hours."
+    timer: PT2H
   - "Run a thin metal spatula around the outer and inner edges to loosen. Place a serving plate upside down over the pan, then invert. Remove the pan and spoon any remaining caramel over the top. Store loosely covered in the refrigerator."
-notes:
-  - "Any caramel topping works — a thinner one works best."
 datePublished: 2026-07-02
 ---
