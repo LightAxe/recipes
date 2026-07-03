@@ -34,12 +34,12 @@ ingredients:
     gramsSource: "3/4 lb = 340 g (453.6 g/lb)"
 instructions:
   - "Sort and rinse the beans: pour the dried pinto beans out onto a clean surface or into a colander and pick through them carefully, removing any debris, shriveled beans, or small stones. Thoroughly rinse the sorted beans under cold running water."
-  - "Combine and season: transfer the rinsed beans to a large pot. Add enough water to cover the beans so the water line sits exactly 1.5 to 2 inches above them. Add the lard and salt to taste directly into the pot before turning on the heat."
+  - "Combine and season: transfer the rinsed beans to a large pot. Add enough water to cover the beans so the water line sits 1.5 to 2 inches above them. Add the lard and salt to taste directly into the pot before turning on the heat."
   - "Simmer until tender: bring the pot to a boil, then reduce the heat to a simmer. Partially cover the pot with a lid and let the beans cook slowly until they are very tender and start to break down. Check the pot occasionally; if the liquid gets too low, add more water to keep the beans submerged."
   - "Blend the beans: once the beans are completely soft and the liquid has reduced, use an immersion blender directly in the pot. Blend the beans and the remaining cooking liquid until you reach your desired consistency."
   - "Simmer and thicken: continue to simmer the blended beans gently, stirring frequently, until they reach your preferred thickness."
   - "Stir in the cheese: remove the pot from the heat. Stir the shredded Monterey Jack directly into the hot beans until completely melted, creamy, and fully incorporated. Serve hot."
 notes:
-  - "\"The more cheese, the better they are.\" — Lola's Mother. More cheese is always better."
+  - "\"The more cheese, the better they are.\" — Lola's Mother"
 datePublished: 2026-07-02
 ---
