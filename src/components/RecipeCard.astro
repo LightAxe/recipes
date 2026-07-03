@@ -79,17 +79,30 @@ const time = formatDuration(data.totalTime) ?? formatDuration(data.cookTime);
     transform: translateY(-4px);
   }
   .thumb {
+    position: relative;
     aspect-ratio: 16 / 10;
     background: var(--sunken);
     display: grid;
     place-items: center;
     border-bottom: 1px solid var(--line);
   }
+  /* Absolutely position the image layer so it fills the fixed 16/10 thumb and crops via
+     object-fit, WITHOUT contributing to the thumb's layout height. Astro's <Picture> wraps the
+     <img> in a <picture>; left in flow, a portrait hero lays out at its natural (tall) size and
+     — because grid/flex items have min-height:auto — grows the thumb past its aspect-ratio,
+     ballooning the card and (via the grid's row-height stretch) every other card in its row.
+     Taking it out of flow keeps the thumb a stable 16/10 for any image aspect ratio. The
+     placeholder .ph-icon stays in flow and is centered by the grid. */
+  .thumb :global(picture),
   .thumb :global(img) {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
     display: block;
+  }
+  .thumb :global(img) {
+    object-fit: cover;
   }
   .ph-icon {
     width: 38%;
