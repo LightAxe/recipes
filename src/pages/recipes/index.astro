@@ -242,8 +242,13 @@ const facetGroups = [
   }
   .facets-groups {
     display: grid;
-    gap: 1rem;
+    /* Wider column-gap so a column's right-aligned count doesn't crowd the next column's labels. */
+    gap: 1rem 2.5rem;
     grid-template-columns: 1fr;
+    /* Size each column to its own content instead of stretching every column to the tallest.
+       The long tag list scrolls within its own cap (below) rather than forcing big empty gaps
+       under the shorter columns. */
+    align-items: start;
   }
   @media (min-width: 44rem) {
     .facets-groups {
@@ -266,8 +271,18 @@ const facetGroups = [
     margin-bottom: 0.4rem;
   }
   .fgroup.scroll .opts {
-    max-height: 11rem;
+    /* The tag axis is a long tail (~68 shared tags); 11rem showed only ~5 — far too few. On
+       phones the columns stack, so keep the nested scroll region modest here (~8) and let it
+       grow on desktop where it sits alongside the other columns (see the ≥44rem override). */
+    max-height: 18rem;
     overflow-y: auto;
+  }
+  /* Desktop: the tag box can fill alongside the other columns — show ~11 and scroll. Placed
+     AFTER the base rule so this equal-specificity override wins in the cascade at ≥44rem. */
+  @media (min-width: 44rem) {
+    .fgroup.scroll .opts {
+      max-height: 30rem;
+    }
   }
   .opt {
     display: flex;
@@ -285,6 +300,12 @@ const facetGroups = [
     color: var(--muted);
     font-size: 0.78rem;
     font-variant-numeric: tabular-nums;
+  }
+  /* Let a long unbreakable label wrap instead of forcing a horizontal scrollbar inside the
+     (overflow-y:auto) tag box on classic-scrollbar platforms near the 44rem breakpoint. */
+  .opt span:not(.n) {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .grid {
