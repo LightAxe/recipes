@@ -150,8 +150,11 @@ editing history. See `docs/adr/README.md` for the format and how to add one.
   root (so `node_modules` resolves):
   `node -e "const s=require('sharp'),f='recipes/images/<slug>/hero.jpg';s(f).rotate().jpeg({quality:72}).toBuffer().then(b=>require('fs').writeFileSync(f,b))"`
   (sharp drops all metadata by default; `.rotate()` first bakes in any EXIF orientation).
+  Do this **in one step on the still-tagged source** — stripping metadata first and rotating
+  later leaves nothing to auto-orient from and ships the photo sideways.
   **Verify** with `sips -g all <file>` that no `make` / `model` / `software` / `datetime` /
-  `gps` fields remain before committing.
+  `gps` fields remain, **and eyeball the result to confirm it still displays upright** (many
+  phone photos are stored rotated with an orientation tag).
 - **Guard the guards.** CI enforces an accessibility guard (`npm run test:a11y`, axe + keyboard),
   a structured-data audit (`npm run test:jsonld`), and a performance budget (`npm run test:perf`,
   raw bytes + DOM, growth-aware). If a change touches **JS/CSS/images or bulk-adds recipes**, run
