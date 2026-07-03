@@ -242,8 +242,13 @@ const facetGroups = [
   }
   .facets-groups {
     display: grid;
-    gap: 1rem;
+    /* Wider column-gap so a column's right-aligned count doesn't crowd the next column's labels. */
+    gap: 1rem 2.5rem;
     grid-template-columns: 1fr;
+    /* Size each column to its own content instead of stretching every column to the tallest.
+       The long tag list scrolls within its own cap (below) rather than forcing big empty gaps
+       under the shorter columns. */
+    align-items: start;
   }
   @media (min-width: 44rem) {
     .facets-groups {
@@ -266,7 +271,9 @@ const facetGroups = [
     margin-bottom: 0.4rem;
   }
   .fgroup.scroll .opts {
-    max-height: 11rem;
+    /* The tag axis is a long tail (~68 shared tags). 11rem showed only ~5 — far too few.
+       Show ~12 and scroll for the rest. */
+    max-height: 30rem;
     overflow-y: auto;
   }
   .opt {
