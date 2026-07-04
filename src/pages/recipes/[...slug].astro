@@ -403,6 +403,9 @@ const jsonLd = [
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    /* Let a wide control (the scaler: "Makes N servings" + the 1×/2×/3× presets) wrap onto a
+       second line on very narrow phones instead of overflowing the page (≤320px). */
+    flex-wrap: wrap;
   }
   .ctl-k {
     font-size: 0.85rem;
