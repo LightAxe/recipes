@@ -88,6 +88,9 @@ const courses = COURSE_SLUGS.filter((slug) => index.category.has(slug));
   }
   .page-search input {
     flex: 1;
+    /* Inputs keep an intrinsic ~20ch min-width that ignores flex-shrink; allow shrinking so the
+       search row fits narrow phones (≤360px) instead of overflowing the page. */
+    min-width: 0;
     min-height: 48px;
     padding: 0 0.85rem;
     border: 1px solid var(--line);

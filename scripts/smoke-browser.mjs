@@ -164,6 +164,29 @@ try {
     .evaluate((el) => el.getBoundingClientRect().width);
   if (searchW < 200) errors.push(`mobile search is crushed (${Math.round(searchW)}px wide)`);
 
+  // ── Very-narrow-phone (320px) horizontal-overflow guard across representative page types.
+  // The smallest phones (e.g. iPhone SE 1st-gen) must not scroll sideways. Guards the class of
+  // bug where a fixed-width control/input/tile forces the page wider than the viewport: the hero
+  // + page search inputs (intrinsic min-width), the homepage category tiles, and the recipe
+  // scaler row. The recipe page is picked from the live grid so this stays robust to renames. ──
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto(`${BASE}/recipes/`, { waitUntil: 'load' });
+  const firstRecipe = await page.locator('a.card').first().getAttribute('href');
+  for (const path of [
+    '/',
+    '/recipes/',
+    '/search/',
+    '/tips/',
+    '/tips/conversions/',
+    firstRecipe,
+  ].filter(Boolean)) {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto(`${BASE}${path}`, { waitUntil: 'load' });
+    await sleep(80);
+    const sw = await page.evaluate(() => document.documentElement.scrollWidth);
+    if (sw > 321) errors.push(`${path} overflows horizontally at 320px (scrollWidth ${sw})`);
+  }
+
   // ── #13: /search/ course filter plane (progressive enhancement) ──
   await page.setViewportSize({ width: 1100, height: 900 });
   await page.goto(`${BASE}/search/`, { waitUntil: 'load' });
