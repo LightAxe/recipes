@@ -175,13 +175,15 @@ const jsonLd = [websiteJsonLd(), itemListJsonLd(latest)];
       grid-template-columns: repeat(4, 1fr);
     }
   }
+  /* The grid item is the <li>; letting it shrink below its content lets the 2-col tracks narrow
+     on very small phones (with the label's overflow-wrap below) so the grid can't overflow. */
+  .tiles li {
+    min-width: 0;
+  }
   .tiles a {
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
-    /* Let the grid tracks shrink below the tiles' content width on very narrow phones so the
-       2-column grid doesn't overflow the page (≤320px). */
-    min-width: 0;
     min-height: 88px;
     justify-content: center;
     padding: 1.1rem 1.2rem;

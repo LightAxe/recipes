@@ -172,7 +172,14 @@ try {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto(`${BASE}/recipes/`, { waitUntil: 'load' });
   const firstRecipe = await page.locator('a.card').first().getAttribute('href');
-  for (const path of ['/', '/recipes/', '/search/', '/tips/', firstRecipe].filter(Boolean)) {
+  for (const path of [
+    '/',
+    '/recipes/',
+    '/search/',
+    '/tips/',
+    '/tips/conversions/',
+    firstRecipe,
+  ].filter(Boolean)) {
     await page.setViewportSize({ width: 320, height: 800 });
     await page.goto(`${BASE}${path}`, { waitUntil: 'load' });
     await sleep(80);
