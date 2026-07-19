@@ -45,7 +45,9 @@ This repository is dual-licensed by content type:
   licensed under the [GNU AGPL-3.0](./LICENSE).
 - **Content** — the family content (recipe prose and descriptions, stories, notes, and
   photographs in [`recipes/`](./recipes), [`tips/`](./tips), and site copy) is licensed
-  under [CC BY-NC-SA 4.0](./LICENSE-content).
+  under [CC BY-NC-SA 4.0](./LICENSE-content), as is everything else in the repository
+  that isn't code: project documentation ([`docs/`](./docs), [`research/`](./research),
+  [`AGENTS.md`](./AGENTS.md), this README).
 
 Ingredient lists and cooking facts aren't copyrightable and never were — the content
 license covers the words, stories, and images around them. By contributing to this
