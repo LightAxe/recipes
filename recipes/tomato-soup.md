@@ -61,11 +61,12 @@ instructions:
   - "Stir in the sugar, salt, pepper, and butter."
   - "Simmer until reduced to the thickness you like. (If using the flour: mix it with a little water, add slowly, and boil until thickened instead.)"
   - "Serve, or cool and freeze."
-  - text: "To can, leave the butter and flour out entirely — make the milled, seasoned base (through the seasoning step, no butter, no heavy reduction). Stir the butter in when reheating to serve, and thicken then if you like."
+  - text: "To can, leave the butter and flour out entirely — make the milled, seasoned base (through the seasoning step) and jar it thin, at about the consistency of tomato juice, without reducing. Stir the butter in when reheating to serve, and simmer down to thickness then."
     section: To pressure-can it
   - text: "Ladle hot into hot jars, leaving 1 inch headspace. Process in a pressure canner — pints 60 minutes, quarts 75 minutes (see the altitude note below)."
     section: To pressure-can it
 notes:
-  - "Pressure varies with altitude. Dial gauge: 11 lb at 0–2,000 ft, 12 lb to 4,000 ft, 13 lb to 6,000 ft, 14 lb to 8,000 ft. Weighted gauge: 10 lb at 0–1,000 ft, 15 lb above."
+  - "Pressure varies with altitude. Dial gauge: 11 lb at 0–2,000 ft, 12 lb to 4,000 ft, 13 lb to 6,000 ft, 14 lb to 8,000 ft, 15 lb above. Weighted gauge: 10 lb at 0–1,000 ft, 15 lb above."
+  - "There is no USDA/NCHFP-tested process for canning this blended soup, so home-canning it doesn't adhere to current guidance — use at your own discretion."
 datePublished: 2026-07-19
 ---
