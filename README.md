@@ -36,3 +36,18 @@ Requires Node ≥ 22.12.
 Recipes live as Markdown + structured frontmatter in [`recipes/`](./recipes) (decoupled
 from the site code so the archive outlives any framework). New recipes are added via the
 `recipe-intake` agent — see [`docs/agents/intake.md`](./docs/agents/intake.md).
+
+## Licensing
+
+This repository is dual-licensed by content type:
+
+- **Code** — the site source (templates, components, scripts, styles, build tooling) is
+  licensed under the [GNU AGPL-3.0](./LICENSE).
+- **Content** — the family content (recipe prose and descriptions, stories, notes, and
+  photographs in [`recipes/`](./recipes), [`tips/`](./tips), and site copy) is licensed
+  under [CC BY-NC-SA 4.0](./LICENSE-content).
+
+Ingredient lists and cooking facts aren't copyrightable and never were — the content
+license covers the words, stories, and images around them. By contributing to this
+repository you agree to license your contribution under the matching license above
+(code → AGPL-3.0, content → CC BY-NC-SA 4.0).
