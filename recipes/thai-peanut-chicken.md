@@ -91,7 +91,7 @@ instructions:
   - text: "Reduce the heat to medium-low. Add the bell pepper strips and garlic and cook about 5 minutes, stirring often so the garlic doesn't scorch."
     timer: PT5M
   - "Meanwhile, whisk the chicken stock, peanut butter, soy sauce, and red pepper flakes (if using) together until smooth."
-  - text: "Pour the sauce into the skillet and let it come up to a boil, then drop the heat to a simmer and cook about 5 minutes, stirring often, until the sauce thickens."
+  - text: "Pour the sauce into the skillet and let it come up to a boil, then drop the heat to a simmer and cook about 5 minutes, stirring often, until the sauce thickens and the chicken is cooked through (165°F / 74°C)."
     timer: PT5M
   - "Serve over rice, topped with the sliced green onions and chopped peanuts."
 datePublished: 2026-07-19
