@@ -1,6 +1,6 @@
 ---
 title: Tomato Soup
-description: "Fresh tomatoes, onions, and celery boiled tender, blended and milled smooth, then seasoned with sugar, salt, pepper, and butter and simmered down to taste. Kathy Leith's recipe, which came to us by way of Amy Young-Leith and Dan and Janet Petesky's canning notes."
+description: "Fresh tomatoes, onions, and celery boiled tender, blended and milled smooth, then seasoned with sugar, salt, pepper, and butter and simmered down to taste. Kathy Leith's recipe, which came to us by way of Amy Young-Leith."
 contributor: Kathy Leith
 course: soup
 cuisine: American
@@ -61,7 +61,7 @@ instructions:
   - "Stir in the sugar, salt, pepper, and butter."
   - "Simmer until reduced to the thickness you like. (If using the flour: mix it with a little water, add slowly, and boil until thickened instead.)"
   - "Serve, or cool and freeze."
-  - text: "To can, leave the butter and flour out entirely — make the milled, seasoned base (through the seasoning step) and jar it thin, at about the consistency of tomato juice, without reducing. Stir the butter in when reheating to serve, and simmer down to thickness then."
+  - text: "To can, leave the butter and flour out entirely — make the milled, seasoned base (through the seasoning step) and jar it at about the consistency of tomato juice. Stir the butter in when reheating to serve, and simmer down to your preferred thickness then."
     section: To pressure-can it
   - text: "Ladle hot into hot jars, leaving 1 inch headspace. Process in a pressure canner — pints 60 minutes, quarts 75 minutes (see the altitude note below)."
     section: To pressure-can it
