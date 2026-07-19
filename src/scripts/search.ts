@@ -139,8 +139,8 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
 
   const courseBoxes = filterPanel
     ? Array.from(
-      filterPanel.querySelectorAll<HTMLInputElement>('input[type=checkbox][name="course"]'),
-    )
+        filterPanel.querySelectorAll<HTMLInputElement>('input[type=checkbox][name="course"]'),
+      )
     : [];
   const knownSlugs = new Set(courseBoxes.map((b) => b.value)); // whitelist for URL hardening
   const clearBtn = filterPanel?.querySelector<HTMLButtonElement>('[data-clear]') ?? null;
@@ -180,9 +180,9 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
     // Whitelist against rendered checkboxes, cap, and ignore entirely when q is empty.
     const courses = q
       ? p
-        .getAll('course')
-        .filter((c) => knownSlugs.has(c))
-        .slice(0, MAX_COURSES)
+          .getAll('course')
+          .filter((c) => knownSlugs.has(c))
+          .slice(0, MAX_COURSES)
       : [];
     return { q, courses };
   }
@@ -317,7 +317,7 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
       void run();
     }, 180);
   });
-  input.addEventListener('focus', () => void loadPagefind().catch(() => { }), { once: true });
+  input.addEventListener('focus', () => void loadPagefind().catch(() => {}), { once: true });
 
   // ── /search/ page: course filter wiring + URL history ── (gated on isPage, not filterPanel,
   // so a plain ?q= deep-link + popstate still work even if the filter fieldset weren't rendered)
