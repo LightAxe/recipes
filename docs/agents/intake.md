@@ -12,9 +12,13 @@ photo of a card, or forwarded email — into a recipe file. See ADR
    a smudged amount), **ask the maintainer** rather than guessing.
    - **License consent:** published content is licensed CC BY-NC-SA 4.0 (see the README's
      Licensing section). When the source is material someone sent in (an email, a photo of
-     their card), confirm with the maintainer that the sender is okay with publication
-     before the PR merges — the maintainer owns that conversation; just don't let it be
-     skipped silently.
+     their card), confirm with the maintainer — before the PR merges — that the sender
+     wrote the material (or otherwise holds the rights) and agrees to publication under
+     that license. The maintainer owns that conversation; just don't let it be skipped
+     silently. For third-party sources (a website print-out, a cookbook page), the
+     standing rule already applies: use only the uncopyrightable facts (ingredients,
+     quantities, steps) and rewrite all prose in our own words — no creative text or
+     photos from the source.
    - The source may be a photo, a recipe card, or a **website print-out** — ignore page furniture
      (nav, "printer-friendly", "email this recipe", comment counts, ads, decorative clip-art,
      embedded photos), but capture a printed "Submitted by / From" name as `contributor`.
