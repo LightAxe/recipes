@@ -46,6 +46,7 @@ ingredients:
     unit: cup
     item: chicken stock
     grams: 180
+    gramsApprox: true
     gramsSource: "USDA — chicken stock ≈ 240 g/cup"
     section: Sauce
   - qty: 0.5
@@ -85,12 +86,12 @@ ingredients:
     section: To serve
 instructions:
   - "Season the chicken cubes all over with sea salt and black pepper."
-  - text: "Heat the butter and olive oil in a large skillet over medium-high heat. Add the chicken and sear, turning the cubes so they color on all sides, 5–10 minutes, until well browned."
+  - text: "Melt the butter with the olive oil in a large skillet over medium-high heat. Add the chicken and sear, turning the cubes so they color on all sides, 5–10 minutes, until well browned."
     timer: PT10M
   - text: "Reduce the heat to medium-low. Add the bell pepper strips and garlic and cook about 5 minutes, stirring often so the garlic doesn't scorch."
     timer: PT5M
   - "Meanwhile, whisk the chicken stock, peanut butter, soy sauce, and red pepper flakes (if using) together until smooth."
-  - text: "Pour the sauce into the skillet and bring it to a boil over medium-high heat, then reduce to a simmer and cook about 5 minutes, stirring frequently, until the sauce thickens."
+  - text: "Pour the sauce into the skillet and let it come up to a boil, then drop the heat to a simmer and cook about 5 minutes, stirring often, until the sauce thickens."
     timer: PT5M
   - "Serve over rice, topped with the sliced green onions and chopped peanuts."
 datePublished: 2026-07-19
