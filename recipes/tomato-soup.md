@@ -11,10 +11,10 @@ ingredients:
   - qty: 1
     unit: peck
     item: tomatoes
-    note: about 13 pounds
-    grams: 5897
+    note: about 13 1/4 pounds
+    grams: 6010
     gramsApprox: true
-    gramsSource: "1 peck ≈ 13 lb (per the recipe) = 5.9 kg"
+    gramsSource: "1 peck ≈ 13.25 lb (per the recipe) = 6.0 kg"
   - qty: 4
     item: medium onions
     grams: 440
@@ -65,7 +65,6 @@ instructions:
     section: To pressure-can it
   - text: "Ladle hot into hot jars, leaving 1 inch headspace. Process in a pressure canner — pints 60 minutes, quarts 75 minutes (see the altitude note below)."
     section: To pressure-can it
-    timer: PT60M
 notes:
   - "Pressure varies with altitude. Dial gauge: 11 lb at 0–2,000 ft, 12 lb to 4,000 ft, 13 lb to 6,000 ft, 14 lb to 8,000 ft. Weighted gauge: 10 lb at 0–1,000 ft, 15 lb above."
 datePublished: 2026-07-19
