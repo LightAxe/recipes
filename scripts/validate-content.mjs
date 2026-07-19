@@ -158,6 +158,7 @@ const KNOWN_CUISINES = new Set(
     'Greek & Mediterranean',
     'Chinese',
     'Japanese',
+    'Thai',
     'Indian',
     'Middle Eastern',
     'Caribbean',

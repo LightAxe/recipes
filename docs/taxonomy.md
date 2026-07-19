@@ -52,7 +52,7 @@ The culinary tradition. Free string but **prefer an existing value** for coheren
 
 `American`, `Southern`, `Cajun & Creole`, `Tex-Mex`, `Mexican`, `Brazilian`, `Italian`,
 `French`, `Swiss`, `German`, `Scandinavian`, `Jewish`, `Greek & Mediterranean`, `Chinese`,
-`Japanese`, `Indian`, `Middle Eastern`, `Caribbean`.
+`Japanese`, `Thai`, `Indian`, `Middle Eastern`, `Caribbean`.
 
 - Omit if a recipe has no meaningful cuisine (many family staples are just "American" or
   none — that's fine; don't force it).
