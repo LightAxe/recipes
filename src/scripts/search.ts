@@ -356,6 +356,8 @@ function wire(input: HTMLInputElement, results: HTMLElement, opts: WireOpts): vo
       setChecked(initial.courses);
       writeURL(false);
       void run();
+    } else if (location.search) {
+      writeURL(false);
     }
   }
 
